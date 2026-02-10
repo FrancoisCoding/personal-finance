@@ -22,12 +22,17 @@ const TransactionsTableView = <T,>({
   return (
     <div
       className={cn(
-        'max-h-[60vh] overflow-auto rounded-lg border border-border/60 bg-background/70',
+        'max-h-[60vh] overflow-auto rounded-2xl border border-border/60 bg-card/80 shadow-sm',
         className
       )}
     >
       <Table>
-        <TableHeader className='sticky top-0 z-10 bg-background/95 backdrop-blur'>
+        <TableHeader
+          className={
+            'sticky top-0 z-10 border-b border-border/60 ' +
+            'bg-background/95 backdrop-blur'
+          }
+        >
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -41,7 +46,7 @@ const TransactionsTableView = <T,>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      'text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground',
+                      'text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground',
                       alignRight && 'text-right'
                     )}
                   >
@@ -84,7 +89,13 @@ const TransactionsTableView = <T,>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow
+              key={row.id}
+              className={
+                'border-b border-border/40 transition-colors hover:bg-muted/30 ' +
+                'last:border-0'
+              }
+            >
               {row.getVisibleCells().map((cell) => (
                 <TableCell
                   key={cell.id}

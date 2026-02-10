@@ -396,7 +396,7 @@ export function useSyncTransactions() {
 
   return useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/plaid/sync-transactions', {
+      const res = await fetch('/api/teller/sync-transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
@@ -446,6 +446,37 @@ export function useDeleteAccount() {
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete account',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useDeleteAllAccounts() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/accounts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) throw new Error('Failed to delete all accounts')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      toast({
+        title: 'Accounts deleted',
+        description: 'All accounts have been removed successfully.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Delete failed',
+        description: error.message || 'Failed to delete all accounts',
         variant: 'destructive',
       })
     },
@@ -561,6 +592,73 @@ export function useCreateSubscription() {
       toast({
         title: 'Error',
         description: error.message || 'Failed to create subscription',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useUpdateSubscription() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string
+      updates: Partial<Subscription>
+    }) => {
+      const res = await fetch(`/api/subscriptions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      if (!res.ok) throw new Error('Failed to update subscription')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
+      toast({
+        title: 'Subscription updated',
+        description: 'Your subscription has been updated successfully.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Update failed',
+        description: error.message || 'Failed to update subscription',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useDeleteSubscription() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (subscriptionId: string) => {
+      const res = await fetch(`/api/subscriptions/${subscriptionId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) throw new Error('Failed to delete subscription')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
+      toast({
+        title: 'Subscription removed',
+        description: 'The subscription has been deleted successfully.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Delete failed',
+        description: error.message || 'Failed to delete subscription',
         variant: 'destructive',
       })
     },

@@ -28,11 +28,11 @@ export function RemindersCard({
 
   return (
     <Card
-      className={`bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
     >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Reminders
           </CardTitle>
           {onAddReminder && (
@@ -40,7 +40,7 @@ export function RemindersCard({
               variant="ghost"
               size="sm"
               onClick={onAddReminder}
-              className="h-8 px-3 text-xs font-medium text-blue-700 hover:bg-blue-50/50"
+              className="h-8 px-3 text-xs font-medium text-blue-700 hover:bg-blue-50/50 dark:text-blue-300 dark:hover:bg-blue-500/10"
             >
               Add
             </Button>
@@ -50,21 +50,23 @@ export function RemindersCard({
       <CardContent className="space-y-4">
         {/* Upcoming Reminders */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-600">Upcoming</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">
+            Upcoming
+          </h4>
 
           {upcomingReminders.length > 0 ? (
             upcomingReminders.map((reminder) => (
               <div
                 key={reminder.id}
-                className="flex items-center justify-between p-3 bg-white/80 rounded-lg border border-border/60 hover:bg-white transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/40 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {reminder.title}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {reminder.date} at {reminder.time}
                     </p>
                   </div>
@@ -74,7 +76,7 @@ export function RemindersCard({
                     variant="ghost"
                     size="sm"
                     onClick={() => onToggleReminder(reminder.id)}
-                    className="h-6 px-2 text-xs font-medium text-green-700 hover:bg-green-50/50"
+                    className="h-6 px-2 text-xs font-medium text-green-700 hover:bg-green-50/50 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                   >
                     Done
                   </Button>
@@ -102,15 +104,15 @@ export function RemindersCard({
             {completedReminders.map((reminder) => (
               <div
                 key={reminder.id}
-                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/20"
+                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/30"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 line-through">
+                    <p className="text-sm font-medium text-foreground/80 line-through">
                       {reminder.title}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {reminder.date} at {reminder.time}
                     </p>
                   </div>
@@ -127,7 +129,7 @@ export function RemindersCard({
               variant="outline"
               size="sm"
               onClick={onAddReminder}
-              className="w-full border-dashed border-border/70 hover:border-blue-200/60 hover:bg-blue-50/40"
+              className="w-full border-dashed border-border/70 hover:border-blue-200/60 hover:bg-blue-50/40 dark:hover:border-blue-400/40 dark:hover:bg-blue-500/10"
             >
               Add Reminder
             </Button>

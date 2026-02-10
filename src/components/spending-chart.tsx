@@ -38,10 +38,14 @@ export function SpendingChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{data.category}</p>
-          <p className="text-sm text-gray-600">{formatCurrency(data.amount)}</p>
-          <p className="text-xs text-gray-500">{data.percentage.toFixed(1)}%</p>
+        <div className="bg-background p-3 border border-border/60 rounded-lg shadow-lg">
+          <p className="font-medium text-foreground">{data.category}</p>
+          <p className="text-sm text-muted-foreground">
+            {formatCurrency(data.amount)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {data.percentage.toFixed(1)}%
+          </p>
         </div>
       )
     }
@@ -50,20 +54,22 @@ export function SpendingChart({
 
   return (
     <Card
-      className={`bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
     >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Spending Breakdown
           </CardTitle>
           <div className="text-right">
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-foreground">
               {formatCurrency(totalSpending)}
             </div>
             <div
               className={`flex items-center space-x-1 text-sm ${
-                isPositive ? 'text-green-600' : 'text-red-600'
+                isPositive
+                  ? 'text-emerald-600 dark:text-emerald-300'
+                  : 'text-rose-600 dark:text-rose-300'
               }`}
             >
               <span>
@@ -100,11 +106,13 @@ export function SpendingChart({
 
           {/* Category List */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-600">Categories</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Categories
+            </h4>
             {data.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/30"
               >
                 <div className="flex items-center space-x-3">
                   <div
@@ -112,16 +120,16 @@ export function SpendingChart({
                     style={{ backgroundColor: item.color }}
                   ></div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {item.category}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {item.percentage.toFixed(1)}% of total
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {formatCurrency(item.amount)}
                   </p>
                 </div>

@@ -22,18 +22,18 @@ export function NetWorthCard({
   const liabilitiesPercent =
     totalBalance > 0 ? (liabilities / totalBalance) * 100 : 0
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-gray-50/50 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Net Worth
           </CardTitle>
           {changePercent !== 0 && (
             <div
               className={`flex items-center space-x-1 text-xs font-semibold ${
-                isChangePositive ? 'text-green-600' : 'text-red-600'
+                isChangePositive
+                  ? 'text-emerald-600 dark:text-emerald-300'
+                  : 'text-rose-600 dark:text-rose-300'
               }`}
             >
               <span>
@@ -46,10 +46,10 @@ export function NetWorthCard({
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2">
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-3xl font-bold text-foreground">
             {formatCurrency(netWorth)}
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {totalBalance > 0
               ? 'Assets vs liabilities across connected accounts.'
               : 'Connect accounts to calculate your net worth.'}
@@ -57,27 +57,27 @@ export function NetWorthCard({
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-gray-500">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Assets
               </span>
-              <div className="text-lg font-semibold text-emerald-600">
+              <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-300">
                 {formatCurrency(assets)}
               </div>
             </div>
             <div className="text-right space-y-1">
-              <span className="text-xs uppercase tracking-[0.2em] text-gray-500">
+              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 Liabilities
               </span>
-              <div className="text-lg font-semibold text-rose-600">
+              <div className="text-lg font-semibold text-rose-600 dark:text-rose-300">
                 {formatCurrency(liabilities)}
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <span>{assetsPercent.toFixed(0)}% assets</span>
               <span>{liabilitiesPercent.toFixed(0)}% liabilities</span>
             </div>

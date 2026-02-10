@@ -300,34 +300,32 @@ export function AIFinancialInsights({
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high':
-        return 'text-red-600 bg-red-50/50 border-red-200/60'
+        return 'text-rose-600 dark:text-rose-300 bg-rose-500/10 border-rose-500/30'
       case 'medium':
-        return 'text-yellow-600 bg-yellow-50/50 border-yellow-200/60'
+        return 'text-amber-600 dark:text-amber-300 bg-amber-500/10 border-amber-500/30'
       case 'low':
-        return 'text-green-600 bg-green-50/50 border-green-200/60'
+        return 'text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
       default:
         return 'text-muted-foreground bg-muted/30 border-border/60'
     }
   }
 
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             AI Financial Insights
           </CardTitle>
           <Badge
             variant="outline"
-            className="text-purple-600 bg-purple-50/50 border-purple-200/60"
+            className="text-violet-600 dark:text-violet-300 bg-violet-500/10 border-violet-500/30"
           >
             AI Powered
           </Badge>
         </div>
         {lastAnalysis && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Last analyzed: {lastAnalysis.toLocaleTimeString()}
           </p>
         )}
@@ -336,7 +334,9 @@ export function AIFinancialInsights({
         {isAnalyzing ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3"></div>
-            <p className="text-sm text-gray-600">Analyzing your finances...</p>
+            <p className="text-sm text-muted-foreground">
+              Analyzing your finances...
+            </p>
           </div>
         ) : insights.length > 0 ? (
           <div className="space-y-4">
@@ -344,10 +344,10 @@ export function AIFinancialInsights({
               return (
                 <div
                   key={insight.id}
-                  className="p-4 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow"
+                  className="p-4 rounded-lg border border-border/60 bg-muted/30 hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-900">
+                    <h4 className="text-sm font-medium text-foreground">
                       {insight.title}
                     </h4>
                     <Badge
@@ -358,13 +358,13 @@ export function AIFinancialInsights({
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-gray-600 mb-3">
+                  <p className="text-xs text-muted-foreground mb-3">
                     {insight.description}
                   </p>
 
                   {insight.percentage !== undefined && (
                     <div className="mb-3">
-                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>Progress</span>
                         <span>{insight.percentage.toFixed(1)}%</span>
                       </div>
@@ -375,7 +375,7 @@ export function AIFinancialInsights({
                   {insight.recommendations &&
                     insight.recommendations.length > 0 && (
                       <div className="mb-3">
-                        <h5 className="text-xs font-medium text-gray-700 mb-2">
+                        <h5 className="text-xs font-medium text-foreground mb-2">
                           Recommendations:
                         </h5>
                         <ul className="space-y-1">
@@ -384,7 +384,7 @@ export function AIFinancialInsights({
                             .map((rec, index) => (
                               <li
                                 key={index}
-                                className="text-xs text-gray-600 flex items-start space-x-2"
+                                className="text-xs text-muted-foreground flex items-start space-x-2"
                               >
                                 <div className="w-1 h-1 bg-purple-400 rounded-full mt-1.5 flex-shrink-0"></div>
                                 <span>{rec}</span>
@@ -395,7 +395,7 @@ export function AIFinancialInsights({
                     )}
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                       <span>
                         Confidence: {Math.round(insight.confidence * 100)}%
                       </span>
@@ -421,7 +421,7 @@ export function AIFinancialInsights({
           </div>
         )}
 
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-border/60">
           <Button
             variant="outline"
             size="sm"

@@ -49,6 +49,7 @@ model VerificationToken {
 model FinancialAccount {
   id                String  @id @default(cuid())
   userId            String
+  tellerAccountId   String? @unique
   name              String
   type              AccountType
   balance           Float   @default(0)
@@ -80,7 +81,7 @@ model Transaction {
   recurringId       String?
   tags              String[] @default([])
   notes             String?
-  plaidTransactionId String? @unique
+  tellerTransactionId String? @unique
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -207,22 +208,24 @@ model User {
   budgets           Budget[]
   goals             Goal[]
   subscriptions     Subscription[]
-  plaidItems        PlaidItem[]
+  tellerEnrollments TellerEnrollment[]
 
   @@map("users")
 }
 
-model PlaidItem {
-  id                String  @id @default(cuid())
+model TellerEnrollment {
+  id                String   @id @default(cuid())
   userId            String
-  itemId            String  @unique
+  enrollmentId      String   @unique
   accessToken       String
+  institutionName   String?
+  environment       String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("plaid_items")
+  @@map("teller_enrollments")
 }
 
 enum AccountType {

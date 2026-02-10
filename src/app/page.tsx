@@ -5,8 +5,8 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Spotlight } from '@/components/ui/spotlight'
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
 import { FadeIn } from '@/components/motion/fade-in'
+import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
 import {
-  TrendingUp,
   Shield,
   Zap,
   Brain,
@@ -69,6 +69,15 @@ const features = [
     iconClass: 'bg-teal-500/15 text-teal-600 dark:text-teal-300',
   },
 ]
+
+const netWorthSummaryItems = [
+  { label: 'Monthly income', value: 14200 },
+  { label: 'Essentials', value: 6040 },
+  { label: 'Investments', value: 2910 },
+  { label: 'Cash reserve', value: 9880 },
+]
+
+const netWorthForecastHeights = [40, 62, 52, 74, 58, 82, 64]
 
 const testimonials = [
   {
@@ -195,55 +204,12 @@ export default function LandingPage() {
 
           <FadeIn delay={0.22} className="relative">
             <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-r from-emerald-400/25 via-cyan-400/25 to-amber-300/25 blur-3xl" />
-            <div className="relative rounded-[28px] border border-border/60 bg-card/80 p-6 shadow-2xl backdrop-blur">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Net worth
-                  </p>
-                  <p className="font-display text-3xl mt-2">$128,420</p>
-                </div>
-                <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-300">
-                  <TrendingUp className="h-4 w-4" />
-                  +12.4%
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <p className="text-xs text-muted-foreground">Monthly income</p>
-                  <p className="text-lg font-semibold mt-2">$14,200</p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <p className="text-xs text-muted-foreground">Essentials</p>
-                  <p className="text-lg font-semibold mt-2">$6,040</p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <p className="text-xs text-muted-foreground">Investments</p>
-                  <p className="text-lg font-semibold mt-2">$2,910</p>
-                </div>
-                <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
-                  <p className="text-xs text-muted-foreground">Cash reserve</p>
-                  <p className="text-lg font-semibold mt-2">$9,880</p>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Spending forecast</span>
-                  <span>Next 30 days</span>
-                </div>
-                <div className="mt-3 grid grid-cols-7 gap-2 items-end h-20">
-                  {[40, 62, 52, 74, 58, 82, 64].map((height, index) => (
-                    <div
-                      key={`bar-${index}`}
-                      className="rounded-full bg-gradient-to-t from-emerald-500/80 to-cyan-400/70"
-                      style={{ height: `${height}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <NetWorthSummaryCard
+              netWorth={128420}
+              changePercent={12.4}
+              summaryItems={netWorthSummaryItems}
+              forecastHeights={netWorthForecastHeights}
+            />
           </FadeIn>
         </div>
       </section>

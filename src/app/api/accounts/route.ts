@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
@@ -66,6 +67,51 @@ export async function POST(request: NextRequest) {
     console.error('Error creating account:', error)
     return NextResponse.json(
       { error: 'Failed to create account' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userId = session.user.id
+
+    await prisma.transaction.deleteMany({
+      where: { userId },
+    })
+
+    await prisma.financialAccount.deleteMany({
+      where: { userId },
+    })
+
+    try {
+      await prisma.tellerEnrollment.deleteMany({
+        where: { userId },
+      })
+    } catch (error) {
+      if (
+        !(
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2021'
+        )
+      ) {
+        throw error
+      }
+    }
+
+    return NextResponse.json({
+      message: 'All accounts deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting all accounts:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete all accounts' },
       { status: 500 }
     )
   }

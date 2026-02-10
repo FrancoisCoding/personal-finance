@@ -30,15 +30,15 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
   const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { date: string; income: number; expenses: number } }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{label}</p>
-          <p className="text-sm text-green-600">
+        <div className="bg-background p-3 border border-border/60 rounded-lg shadow-lg">
+          <p className="font-medium text-foreground">{label}</p>
+          <p className="text-sm text-emerald-600 dark:text-emerald-300">
             Income: {formatCurrency(payload[0]?.value || 0)}
           </p>
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-rose-600 dark:text-rose-300">
             Expenses: {formatCurrency(payload[1]?.value || 0)}
           </p>
-          <p className="text-sm text-blue-600">
+          <p className="text-sm text-sky-600 dark:text-sky-300">
             Net:{' '}
             {formatCurrency(
               (payload[0]?.value || 0) - (payload[1]?.value || 0)
@@ -51,21 +51,19 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
   }
 
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-green-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Cash Flow
           </CardTitle>
           <div className="text-right">
             <div
-              className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}
+              className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}
             >
               {formatCurrency(netCashFlow)}
             </div>
-            <div className="text-xs text-gray-500">Net cash flow</div>
+            <div className="text-xs text-muted-foreground">Net cash flow</div>
           </div>
         </div>
       </CardHeader>
@@ -73,25 +71,25 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
         <div className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 rounded-lg border border-green-200/60 bg-green-50/40">
-              <div className="text-lg font-bold text-green-700">
+            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-300">
                 {formatCurrency(totalIncome)}
               </div>
-              <div className="text-xs text-gray-500">Total Income</div>
+              <div className="text-xs text-muted-foreground">Total Income</div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-red-200/60 bg-red-50/40">
-              <div className="text-lg font-bold text-red-700">
+            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
+              <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
                 {formatCurrency(totalExpenses)}
               </div>
-              <div className="text-xs text-gray-500">Total Expenses</div>
+              <div className="text-xs text-muted-foreground">Total Expenses</div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-blue-200/60 bg-blue-50/40">
+            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
               <div
-                className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-green-700' : 'text-red-700'}`}
+                className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}
               >
                 {formatCurrency(netCashFlow)}
               </div>
-              <div className="text-xs text-gray-500">Net Flow</div>
+              <div className="text-xs text-muted-foreground">Net Flow</div>
             </div>
           </div>
 
@@ -99,16 +97,20 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeOpacity={0.25}
+                />
                 <XAxis
                   dataKey="date"
-                  stroke="#6b7280"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -141,11 +143,11 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
           <div className="flex items-center justify-center space-x-6">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600">Income</span>
+              <span className="text-sm text-muted-foreground">Income</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-600">Expenses</span>
+              <span className="text-sm text-muted-foreground">Expenses</span>
             </div>
           </div>
         </div>

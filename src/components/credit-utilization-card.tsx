@@ -45,31 +45,36 @@ export function CreditUtilizationCard({
     if (utilization < 10)
       return {
         status: 'excellent',
-        color: 'text-green-600',
-        bgColor: 'bg-green-50/50',
+        color: 'text-emerald-600 dark:text-emerald-300',
+        bgColor: 'bg-emerald-50/60 dark:bg-emerald-500/15',
+        progressColor: '#10b981',
       }
     if (utilization < 30)
       return {
         status: 'good',
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50/50',
+        color: 'text-sky-600 dark:text-sky-300',
+        bgColor: 'bg-sky-50/60 dark:bg-sky-500/15',
+        progressColor: '#0ea5e9',
       }
     if (utilization < 50)
       return {
         status: 'fair',
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50/50',
+        color: 'text-amber-600 dark:text-amber-300',
+        bgColor: 'bg-amber-50/60 dark:bg-amber-500/15',
+        progressColor: '#f59e0b',
       }
     if (utilization < 70)
       return {
         status: 'poor',
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50/50',
+        color: 'text-orange-600 dark:text-orange-300',
+        bgColor: 'bg-orange-50/60 dark:bg-orange-500/15',
+        progressColor: '#f97316',
       }
     return {
       status: 'very_poor',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50/50',
+      color: 'text-rose-600 dark:text-rose-300',
+      bgColor: 'bg-rose-50/60 dark:bg-rose-500/15',
+      progressColor: '#f43f5e',
     }
   }
 
@@ -123,12 +128,10 @@ export function CreditUtilizationCard({
   const recommendations = getRecommendations()
 
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Credit Utilization
           </CardTitle>
           <Badge
@@ -143,7 +146,7 @@ export function CreditUtilizationCard({
         {/* Overall Utilization */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">
+            <span className="text-sm font-medium text-muted-foreground">
               Overall Utilization
             </span>
             <span className={`text-lg font-bold ${utilizationStatus.color}`}>
@@ -155,14 +158,11 @@ export function CreditUtilizationCard({
             className="h-3"
             style={
               {
-                '--progress-background': utilizationStatus.color.replace(
-                  'text-',
-                  ''
-                ),
+                '--progress-background': utilizationStatus.progressColor,
               } as React.CSSProperties
             }
           />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-muted-foreground">
             <span>0%</span>
             <span>30%</span>
             <span>50%</span>
@@ -173,42 +173,46 @@ export function CreditUtilizationCard({
 
         {/* Summary Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-white rounded-lg border border-gray-100">
+          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Total Balance</span>
+              <span className="text-sm text-muted-foreground">
+                Total Balance
+              </span>
             </div>
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-foreground">
               {formatCurrency(totalBalance)}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Across {creditCards.length} cards
             </div>
           </div>
-          <div className="p-4 bg-white rounded-lg border border-gray-100">
+          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Available Credit</span>
+              <span className="text-sm text-muted-foreground">
+                Available Credit
+              </span>
             </div>
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-foreground">
               {formatCurrency(totalLimit - totalBalance)}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               of {formatCurrency(totalLimit)}
             </div>
           </div>
         </div>
 
         {/* Monthly Interest Cost */}
-        <div className="rounded-lg border border-red-200/60 bg-red-50/50 p-4">
+        <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-red-700">
+              <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
                 Monthly Interest Cost
               </div>
-              <div className="text-xs text-red-600">
+              <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
                 Based on {averageAPR.toFixed(1)}% average APR
               </div>
             </div>
-            <div className="text-lg font-bold text-red-700">
+            <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
               {formatCurrency(monthlyInterestCost)}
             </div>
           </div>
@@ -217,7 +221,7 @@ export function CreditUtilizationCard({
         {/* Individual Cards */}
         {creditCards.length > 0 ? (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-600">
+            <h4 className="text-sm font-medium text-muted-foreground">
               Individual Cards
             </h4>
             {creditCards.map((card) => {
@@ -227,10 +231,10 @@ export function CreditUtilizationCard({
               return (
                 <div
                   key={card.id}
-                  className="p-3 bg-white rounded-lg border border-gray-100"
+                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-foreground">
                       {card.name}
                     </span>
                     <Badge
@@ -240,7 +244,7 @@ export function CreditUtilizationCard({
                       {cardUtilization.toFixed(1)}%
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {formatCurrency(card.balance)} /{' '}
                       {formatCurrency(card.limit)}
@@ -268,12 +272,12 @@ export function CreditUtilizationCard({
         )}
 
         {/* Recommendations */}
-        <div className="rounded-lg border border-blue-200/60 bg-blue-50/50 p-4">
+        <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
           <div className="mb-3">
-            <h4 className="text-sm font-medium text-blue-900">
+            <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
               {recommendations.title}
             </h4>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="text-xs text-sky-600/90 dark:text-sky-200/80 mt-1">
               {recommendations.description}
             </p>
           </div>
@@ -281,7 +285,7 @@ export function CreditUtilizationCard({
             {recommendations.actions.map((action, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-2 text-xs text-blue-800"
+                className="flex items-center space-x-2 text-xs text-sky-700 dark:text-sky-100"
               >
                 <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                 <span>{action}</span>

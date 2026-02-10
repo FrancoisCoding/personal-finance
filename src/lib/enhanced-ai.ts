@@ -270,19 +270,21 @@ export function analyzeSpendingPatterns(
     {} as Record<string, any[]>
   )
 
-  const totalSpent = currentMonthTransactions.reduce(
+  const monthTotalSpent = currentMonthTransactions.reduce(
     (sum, t) => sum + Math.abs(t.amount),
     0
   )
 
   return Object.entries(categoryGroups)
     .map(([category, transactions]) => {
-      const totalSpent = (transactions as any[]).reduce(
+      const categoryTotalSpent = (transactions as any[]).reduce(
         (sum: number, t: any) => sum + Math.abs(t.amount),
         0
       )
-      const averagePerTransaction = totalSpent / (transactions as any[]).length
-      const percentageOfTotal = (totalSpent / totalSpent) * 100
+      const averagePerTransaction =
+        categoryTotalSpent / (transactions as any[]).length
+      const percentageOfTotal =
+        monthTotalSpent > 0 ? (categoryTotalSpent / monthTotalSpent) * 100 : 0
 
       const lastMonthAmount = (lastMonthTransactions as any[])
         .filter((t: any) => (t.category || 'Other') === category)
@@ -290,7 +292,7 @@ export function analyzeSpendingPatterns(
 
       const changePercent =
         lastMonthAmount > 0
-          ? ((totalSpent - lastMonthAmount) / lastMonthAmount) * 100
+          ? ((categoryTotalSpent - lastMonthAmount) / lastMonthAmount) * 100
           : 0
 
       let trend: 'increasing' | 'decreasing' | 'stable' = 'stable'
@@ -299,7 +301,7 @@ export function analyzeSpendingPatterns(
 
       return {
         category,
-        totalSpent,
+        totalSpent: categoryTotalSpent,
         averagePerTransaction,
         transactionCount: (transactions as any[]).length,
         percentageOfTotal,
@@ -315,9 +317,23 @@ export function analyzeSpendingPatterns(
  * Generate comprehensive financial insights
  */
 export async function generateEnhancedInsights(
-  transactions: Array<{ id: string; description: string; amount: number; category?: string; date: string | Date; type: string }>,
+  transactions: Array<{
+    id: string
+    description: string
+    amount: number
+    category?: string
+    date: string | Date
+    type: string
+  }>,
   budgets: Array<{ id: string; name: string; amount: number; category?: string }>,
-  goals: Array<{ id: string; name: string; targetAmount: number; currentAmount: number; targetDate?: string | Date; createdAt?: string | Date }>
+  goals: Array<{
+    id: string
+    name: string
+    targetAmount: number
+    currentAmount: number
+    targetDate?: string | Date
+    createdAt?: string | Date
+  }>
 ): Promise<EnhancedInsight[]> {
   const insights: EnhancedInsight[] = []
 
@@ -329,7 +345,9 @@ export async function generateEnhancedInsights(
         id: `budget-${budget.budgetId}`,
         type: 'budget_alert',
         title: `Over Budget: ${budget.budgetName}`,
-        description: `You've spent ${budget.percentage.toFixed(1)}% of your ${budget.budgetName} budget. Consider reducing spending in this category.`,
+        description:
+          `You've spent ${budget.percentage.toFixed(1)}% of your ` +
+          `${budget.budgetName} budget. Consider reducing spending in this category.`,
         severity: 'high',
         actionable: true,
         action: 'Review Budget',
@@ -342,7 +360,9 @@ export async function generateEnhancedInsights(
         id: `budget-warning-${budget.budgetId}`,
         type: 'budget_alert',
         title: `Budget Warning: ${budget.budgetName}`,
-        description: `You've used ${budget.percentage.toFixed(1)}% of your ${budget.budgetName} budget with ${budget.daysLeft} days left in the month.`,
+        description:
+          `You've used ${budget.percentage.toFixed(1)}% of your ` +
+          `${budget.budgetName} budget with ${budget.daysLeft} days left in the month.`,
         severity: 'medium',
         actionable: true,
         action: 'Adjust Spending',
@@ -361,7 +381,10 @@ export async function generateEnhancedInsights(
         id: `goal-${goal.goalId}`,
         type: 'goal_progress',
         title: `Behind on Goal: ${goal.goalName}`,
-        description: `You're ${goal.percentage.toFixed(1)}% toward your ${goal.goalName} goal. You need to save ${goal.monthlyRequired.toFixed(0)} per month to reach your target.`,
+        description:
+          `You're ${goal.percentage.toFixed(1)}% toward your ${goal.goalName} ` +
+          `goal. You need to save ${goal.monthlyRequired.toFixed(0)} per month ` +
+          'to reach your target.',
         severity: 'medium',
         actionable: true,
         action: 'Review Goal',
@@ -374,7 +397,9 @@ export async function generateEnhancedInsights(
         id: `goal-ahead-${goal.goalId}`,
         type: 'goal_progress',
         title: `Ahead on Goal: ${goal.goalName}`,
-        description: `Great progress! You're ${goal.percentage.toFixed(1)}% toward your ${goal.goalName} goal and ahead of schedule.`,
+        description:
+          `Great progress! You're ${goal.percentage.toFixed(1)}% toward your ` +
+          `${goal.goalName} goal and ahead of schedule.`,
         severity: 'low',
         actionable: false,
         value: goal.currentAmount,
@@ -392,7 +417,10 @@ export async function generateEnhancedInsights(
       id: 'spending-pattern',
       type: 'spending_pattern',
       title: `High Spending in ${topSpendingCategory.category}`,
-      description: `${topSpendingCategory.category} accounts for ${topSpendingCategory.percentageOfTotal.toFixed(1)}% of your spending this month. Consider if this aligns with your priorities.`,
+      description:
+        `${topSpendingCategory.category} accounts for ` +
+        `${topSpendingCategory.percentageOfTotal.toFixed(1)}% of your spending ` +
+        'this month. Consider if this aligns with your priorities.',
       severity: 'medium',
       actionable: true,
       action: 'Review Spending',
@@ -419,7 +447,9 @@ export async function generateEnhancedInsights(
       id: 'savings-opportunity',
       type: 'savings_opportunity',
       title: 'Low Savings Rate',
-      description: `Your savings rate is ${savingsRate.toFixed(1)}%. Consider increasing your savings to 20% or more for better financial security.`,
+      description:
+        `Your savings rate is ${savingsRate.toFixed(1)}%. ` +
+        'Consider increasing your savings to 20% or more for better financial security.',
       severity: 'medium',
       actionable: true,
       action: 'Create Budget',

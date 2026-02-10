@@ -17,10 +17,13 @@ const nextConfig = {
     // Hugging Face (public key)
     NEXT_PUBLIC_HF_TOKEN: process.env.NEXT_PUBLIC_HF_TOKEN,
 
-    // Plaid
-    PLAID_CLIENT_ID: process.env.PLAID_CLIENT_ID,
-    PLAID_SECRET: process.env.PLAID_SECRET,
-    PLAID_ENV: process.env.PLAID_ENV,
+    // Teller
+    NEXT_PUBLIC_TELLER_APPLICATION_ID:
+      process.env.NEXT_PUBLIC_TELLER_APPLICATION_ID,
+    NEXT_PUBLIC_TELLER_ENV: process.env.NEXT_PUBLIC_TELLER_ENV,
+    TELLER_ENV: process.env.TELLER_ENV,
+    TELLER_CERT_PATH: process.env.TELLER_CERT_PATH,
+    TELLER_KEY_PATH: process.env.TELLER_KEY_PATH,
 
     // Email
     EMAIL_SERVER_HOST: process.env.EMAIL_SERVER_HOST,

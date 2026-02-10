@@ -23,7 +23,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { SearchBar } from '@/components/ui/search-bar'
-import useTable from '@/hooks/use-table'
+import useTransactionsTable from '@/hooks/use-transactions-table'
 import { useToast } from '@/hooks/use-toast'
 import {
   DollarSign,
@@ -262,7 +262,9 @@ export default function TransactionsPage() {
 
       toast({
         title: 'Bulk categorization complete',
-        description: `Successfully categorized ${successCount} transactions${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+        description: `Successfully categorized ${successCount} transactions${
+          errorCount > 0 ? `, ${errorCount} failed` : ''
+        }.`,
       })
     } catch (error) {
       console.error('Bulk categorization failed:', error)
@@ -286,7 +288,7 @@ export default function TransactionsPage() {
     [categorizingTransactions, handleAutoCategorize, isLoading]
   )
 
-  const { table, globalFilter, setGlobalFilter } = useTable({
+  const { table, globalFilter, setGlobalFilter } = useTransactionsTable({
     data: tableData,
     columns,
   })
@@ -347,18 +349,30 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">
-            Track and manage your financial transactions with AI-powered
-            categorization
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-2">
+          <div
+            className={
+              'inline-flex items-center gap-2 rounded-full border border-border/60 ' +
+              'bg-muted/30 px-3 py-1 text-xs text-muted-foreground'
+            }
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            Transaction activity
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Transactions
+          </h1>
+          <p className="max-w-xl text-sm text-muted-foreground">
+            Track and manage your transaction history with smart
+            categorization.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
+            variant="outline"
             onClick={handleBulkCategorize}
             disabled={isLoading || bulkCategorizing}
           >
@@ -367,7 +381,7 @@ export default function TransactionsPage() {
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            {bulkCategorizing ? 'Categorizing...' : 'Auto-Categorize All'}
+            {bulkCategorizing ? 'Categorizing...' : 'Auto-Categorize'}
           </Button>
           <Button onClick={() => setShowAddTransactionModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
@@ -376,55 +390,100 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* AI Status Checker */}
-      <AIStatusChecker />
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="border-border/60 bg-card/80 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totalIncome)}
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Total income
+                </p>
+                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
+                  {formatCurrency(totalIncome)}
+                </p>
+              </div>
+              <div
+                className={
+                  'flex h-10 w-10 items-center justify-center rounded-full ' +
+                  'bg-emerald-500/10 text-emerald-500'
+                }
+              >
+                <TrendingUp className="h-5 w-5" />
+              </div>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Filtered transactions
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-border/60 bg-card/80 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Expenses
-            </CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(totalExpenses)}
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Total expenses
+                </p>
+                <p className="text-2xl font-semibold text-rose-600 dark:text-rose-300">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+              <div
+                className={
+                  'flex h-10 w-10 items-center justify-center rounded-full ' +
+                  'bg-rose-500/10 text-rose-500'
+                }
+              >
+                <TrendingDown className="h-5 w-5" />
+              </div>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Outflows this view
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-border/60 bg-card/80 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Amount</CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${netAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}
-            >
-              {formatCurrency(netAmount)}
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Net amount
+                </p>
+                <p
+                  className={`text-2xl font-semibold ${
+                    netAmount >= 0
+                      ? 'text-emerald-600 dark:text-emerald-300'
+                      : 'text-rose-600 dark:text-rose-300'
+                  }`}
+                >
+                  {formatCurrency(netAmount)}
+                </p>
+              </div>
+              <div
+                className={
+                  'flex h-10 w-10 items-center justify-center rounded-full ' +
+                  'bg-slate-500/10 text-slate-500'
+                }
+              >
+                <DollarSign className="h-5 w-5" />
+              </div>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Income minus expenses
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      <div className="max-w-3xl">
+        <AIStatusChecker />
+      </div>
+
       {/* Transactions List */}
-      <Card>
-        <CardHeader>
+      <Card className="border-border/60 bg-card/80 shadow-sm">
+        <CardHeader className="border-b border-border/60">
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>
             {filteredCount} transactions match your filters
@@ -502,7 +561,12 @@ export default function TransactionsPage() {
           </div>
 
           {filteredCount === 0 ? (
-            <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center">
+            <div
+              className={
+                'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                'px-4 py-8 text-center'
+              }
+            >
               <p className="text-sm font-medium text-foreground">
                 No transactions found
               </p>

@@ -59,11 +59,11 @@ export function AIInsightsCard({
   const getSeverityColor = (severity: Insight['severity']) => {
     switch (severity) {
       case 'high':
-        return 'bg-red-50/60 text-red-700 border-red-200/60'
+        return 'bg-rose-500/10 text-rose-600 dark:text-rose-300 border-rose-500/30'
       case 'medium':
-        return 'bg-yellow-50/60 text-yellow-700 border-yellow-200/60'
+        return 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30'
       case 'low':
-        return 'bg-green-50/60 text-green-700 border-green-200/60'
+        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
       default:
         return 'bg-muted/30 text-muted-foreground border-border/60'
     }
@@ -72,31 +72,29 @@ export function AIInsightsCard({
   const getInsightColor = (type: Insight['type']) => {
     switch (type) {
       case 'spending_pattern':
-        return 'text-blue-600 bg-blue-50/60'
+        return 'text-sky-600 dark:text-sky-300 bg-sky-500/10'
       case 'budget_alert':
-        return 'text-red-600 bg-red-50/60'
+        return 'text-rose-600 dark:text-rose-300 bg-rose-500/10'
       case 'savings_opportunity':
-        return 'text-green-600 bg-green-50/60'
+        return 'text-emerald-600 dark:text-emerald-300 bg-emerald-500/10'
       case 'subscription_review':
-        return 'text-purple-600 bg-purple-50/60'
+        return 'text-violet-600 dark:text-violet-300 bg-violet-500/10'
       case 'goal_progress':
-        return 'text-orange-600 bg-orange-50/60'
+        return 'text-amber-600 dark:text-amber-300 bg-amber-500/10'
       default:
         return 'text-muted-foreground bg-muted/30'
     }
   }
 
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-indigo-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <Brain className="h-5 w-5 text-indigo-600" />
+            <div className="p-2 rounded-lg bg-muted/40">
+              <Brain className="h-5 w-5 text-violet-600 dark:text-violet-300" />
             </div>
-            <CardTitle className="text-lg font-semibold text-gray-700">
+            <CardTitle className="text-lg font-semibold text-foreground">
               AI Insights
             </CardTitle>
           </div>
@@ -110,7 +108,7 @@ export function AIInsightsCard({
           insights.map((insight) => (
             <div
               key={insight.id}
-              className="p-4 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow"
+              className="p-4 rounded-lg border border-border/60 bg-muted/30 hover:shadow-sm transition-shadow"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3 flex-1">
@@ -121,7 +119,7 @@ export function AIInsightsCard({
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="text-sm font-medium text-gray-900">
+                      <h4 className="text-sm font-medium text-foreground">
                         {insight.title}
                       </h4>
                       <Badge
@@ -131,11 +129,11 @@ export function AIInsightsCard({
                         {insight.severity}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-muted-foreground mb-2">
                       {insight.description}
                     </p>
                     {insight.value && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {insight.percentage &&
                           `${insight.percentage.toFixed(1)}% `}
                         {formatCurrency(insight.value)}
@@ -168,7 +166,7 @@ export function AIInsightsCard({
         )}
 
         {/* Quick Actions */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 border-t border-border/60">
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" size="sm" className="text-xs">
               <Brain className="h-3 w-3 mr-1" />

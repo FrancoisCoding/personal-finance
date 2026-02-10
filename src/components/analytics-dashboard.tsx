@@ -153,17 +153,15 @@ export function AnalyticsDashboard({
   ]
 
   return (
-    <Card
-      className={`bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-slate-800/70 border-0 shadow-lg ${className}`}
-    >
+    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-gray-700">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Financial Analytics
           </CardTitle>
           <Badge
             variant="outline"
-            className="text-blue-600 bg-blue-50/50 border-blue-200/60"
+            className="text-sky-600 dark:text-sky-300 bg-sky-500/10 border-sky-500/30"
           >
             Advanced
           </Badge>
@@ -172,24 +170,28 @@ export function AnalyticsDashboard({
       <CardContent className="space-y-6">
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-white rounded-lg border border-gray-100">
+          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Avg Daily Spend</span>
+              <span className="text-sm text-muted-foreground">
+                Avg Daily Spend
+              </span>
             </div>
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-foreground">
               {formatCurrency(
                 transactions
                   .filter((t) => t.type === 'EXPENSE')
                   .reduce((sum, t) => sum + Math.abs(t.amount), 0) / 30
               )}
             </div>
-            <div className="text-xs text-gray-500">Last 30 days</div>
+            <div className="text-xs text-muted-foreground">Last 30 days</div>
           </div>
-          <div className="p-4 bg-white rounded-lg border border-gray-100">
+          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Savings Rate</span>
+              <span className="text-sm text-muted-foreground">
+                Savings Rate
+              </span>
             </div>
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-foreground">
               {(() => {
                 const income = transactions
                   .filter((t) => t.type === 'INCOME')
@@ -202,13 +204,13 @@ export function AnalyticsDashboard({
                   : '0%'
               })()}
             </div>
-            <div className="text-xs text-gray-500">This month</div>
+            <div className="text-xs text-muted-foreground">This month</div>
           </div>
         </div>
 
         {/* Spending by Category */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-600">
+          <h4 className="text-sm font-medium text-muted-foreground">
             Spending by Category
           </h4>
           <div className="h-48">
@@ -243,15 +245,19 @@ export function AnalyticsDashboard({
 
         {/* Monthly Trend */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-600">
+          <h4 className="text-sm font-medium text-muted-foreground">
             Monthly Spending Trend
           </h4>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeOpacity={0.25}
+                />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
                 <Tooltip
                   formatter={(value) => formatCurrency(value as number)}
                 />
@@ -265,27 +271,27 @@ export function AnalyticsDashboard({
         {/* Budget Performance */}
         {budgetPerformance.length > 0 && (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-600">
+            <h4 className="text-sm font-medium text-muted-foreground">
               Budget Performance
             </h4>
             <div className="space-y-2">
               {budgetPerformance.slice(0, 3).map((budget) => (
                 <div
                   key={budget.id}
-                  className="p-3 bg-white rounded-lg border border-gray-100"
+                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-foreground">
                       {budget.category}
                     </span>
                     <Badge
                       variant="outline"
                       className={
                         budget.status === 'over'
-                          ? 'text-red-600 bg-red-50/50 border-red-200/60'
+                          ? 'text-rose-600 dark:text-rose-300 bg-rose-500/10 border-rose-500/30'
                           : budget.status === 'warning'
-                            ? 'text-yellow-600 bg-yellow-50/50 border-yellow-200/60'
-                            : 'text-green-600 bg-green-50/50 border-green-200/60'
+                            ? 'text-amber-600 dark:text-amber-300 bg-amber-500/10 border-amber-500/30'
+                            : 'text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30'
                       }
                     >
                       {budget.status === 'over'
@@ -295,7 +301,7 @@ export function AnalyticsDashboard({
                           : 'On Track'}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                     <span>
                       {formatCurrency(budget.spent)} /{' '}
                       {formatCurrency(budget.amount)}

@@ -40,12 +40,14 @@ export const createTransactionColumns = ({
 
       return (
         <div className='space-y-1'>
-          <p className='text-sm font-medium'>
+          <p className='text-sm font-semibold text-foreground'>
             {highlightText(description, globalFilter)}
           </p>
-          <p className='text-xs text-muted-foreground'>
-            {highlightText(dateLabel, globalFilter)}
-          </p>
+          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+            <span>{highlightText(dateLabel, globalFilter)}</span>
+            <span className='h-1 w-1 rounded-full bg-muted-foreground/50' />
+            <span>{row.original.accountName}</span>
+          </div>
         </div>
       )
     },
@@ -62,7 +64,10 @@ export const createTransactionColumns = ({
 
       return (
         <span
-          className='inline-flex items-center gap-2 rounded-full border px-2 py-1 text-xs'
+          className={
+            'inline-flex items-center gap-2 rounded-full border px-3 py-1 ' +
+            'text-xs font-medium'
+          }
           style={{
             color: row.original.categoryColor,
             backgroundColor: `${row.original.categoryColor}1A`,
@@ -102,7 +107,9 @@ export const createTransactionColumns = ({
       return (
         <div
           className={`text-right text-sm font-semibold ${
-            row.original.type === 'INCOME' ? 'text-green-600' : 'text-red-600'
+            row.original.type === 'INCOME'
+              ? 'text-emerald-600 dark:text-emerald-300'
+              : 'text-rose-600 dark:text-rose-300'
           }`}
         >
           {row.original.type === 'INCOME' ? '+' : '-'}

@@ -40,7 +40,9 @@ const MIN_ROW_HEIGHT = 40
 const DEFAULT_ROW_HEIGHT = 60
 
 const globalFilterFn: FilterFn<unknown> = (row, _columnId, filterValue) => {
-  const searchValue = String(filterValue ?? '').toLowerCase().trim()
+  const searchValue = String(filterValue ?? '')
+    .toLowerCase()
+    .trim()
 
   if (!searchValue) {
     return true
@@ -135,8 +137,7 @@ const TableComponent = <TData,>({
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [internalGlobalFilter, setInternalGlobalFilter] =
-    useState(globalFilter)
+  const [internalGlobalFilter, setInternalGlobalFilter] = useState(globalFilter)
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
   const [rowHeights, setRowHeights] = useState<Record<string, number>>({})
   const [resizingRow, setResizingRow] = useState<string | null>(null)
@@ -165,7 +166,9 @@ const TableComponent = <TData,>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
     getFilteredRowModel: enableFiltering ? getFilteredRowModel() : undefined,
-    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
+    getPaginationRowModel: enablePagination
+      ? getPaginationRowModel()
+      : undefined,
     globalFilterFn,
     enableGlobalFilter: enableFiltering,
     enableColumnResizing,
@@ -211,14 +214,14 @@ const TableComponent = <TData,>({
       <div
         className={cn(
           'relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto'
+          'overflow-auto [scrollbar-gutter:stable]'
         )}
         style={stickyHeader ? { maxHeight } : undefined}
       >
         {stickyHeader && (
-          <div className='pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm' />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm" />
         )}
-        <table className='w-full border-collapse text-sm'>
+        <table className="w-full border-collapse text-sm">
           <thead
             className={cn(
               'bg-muted shadow-sm',
@@ -270,20 +273,20 @@ const TableComponent = <TData,>({
                               header.getContext()
                             )}
                         {canSort && (
-                          <span className='text-muted-foreground/70'>
+                          <span className="text-muted-foreground/70">
                             {sorted === 'asc' ? (
-                              <ChevronUp className='h-4 w-4' />
+                              <ChevronUp className="h-4 w-4" />
                             ) : sorted === 'desc' ? (
-                              <ChevronDown className='h-4 w-4' />
+                              <ChevronDown className="h-4 w-4" />
                             ) : (
-                              <ChevronsUpDown className='h-4 w-4' />
+                              <ChevronsUpDown className="h-4 w-4" />
                             )}
                           </span>
                         )}
                       </div>
                       {enableColumnResizing && header.column.getCanResize() && (
                         <button
-                          type='button'
+                          type="button"
                           aria-label={`Resize ${String(
                             header.column.columnDef.header
                           )} column`}
@@ -302,10 +305,10 @@ const TableComponent = <TData,>({
                           )}
                           onClick={(event) => event.stopPropagation()}
                         >
-                          <div className='absolute inset-0 flex flex-col items-center justify-center gap-0.5 pointer-events-none opacity-60'>
-                            <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
-                            <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
-                            <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 pointer-events-none opacity-60">
+                            <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
+                            <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
+                            <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
                           </div>
                         </button>
                       )}
@@ -315,12 +318,12 @@ const TableComponent = <TData,>({
               </tr>
             ))}
           </thead>
-          <tbody className='divide-y divide-border/40'>
+          <tbody className="divide-y divide-border/40">
             {rows.length > 0 ? (
               rows.map((row) => (
                 <tr
                   key={row.id}
-                  className='hover:bg-muted/30 transition-colors relative'
+                  className="hover:bg-muted/30 transition-colors relative"
                   style={{
                     height: rowHeights[row.id]
                       ? `${rowHeights[row.id]}px`
@@ -351,11 +354,11 @@ const TableComponent = <TData,>({
                   ))}
                   {enableRowResizing && (
                     <td
-                      className='absolute bottom-0 left-0 right-0 h-0 p-0'
+                      className="absolute bottom-0 left-0 right-0 h-0 p-0"
                       style={{ zIndex: 10 }}
                     >
                       <button
-                        type='button'
+                        type="button"
                         aria-label={`Resize row ${row.id}`}
                         onMouseDown={(event) =>
                           handleRowResize(row.id, event.clientY)
@@ -376,10 +379,10 @@ const TableComponent = <TData,>({
                           'transition-all duration-150'
                         )}
                       >
-                        <div className='absolute inset-0 flex items-center justify-center gap-0.5 pointer-events-none opacity-60'>
-                          <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
-                          <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
-                          <div className='h-0.5 w-0.5 rounded-full bg-foreground/60' />
+                        <div className="absolute inset-0 flex items-center justify-center gap-0.5 pointer-events-none opacity-60">
+                          <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
+                          <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
+                          <div className="h-0.5 w-0.5 rounded-full bg-foreground/60" />
                         </div>
                       </button>
                     </td>
@@ -390,7 +393,7 @@ const TableComponent = <TData,>({
               <tr>
                 <td
                   colSpan={columnCount}
-                  className='px-4 py-12 text-center text-muted-foreground'
+                  className="px-4 py-12 text-center text-muted-foreground"
                 >
                   {emptyMessage}
                 </td>
@@ -403,32 +406,32 @@ const TableComponent = <TData,>({
       {enablePagination && rows.length > 0 && (
         <>
           {compactPagination ? (
-            <div className='flex items-center justify-center gap-2 px-2 py-2 border-t border-border/60'>
+            <div className="flex items-center justify-center gap-2 px-2 py-2 border-t border-border/60">
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className='rounded p-1 text-muted-foreground hover:bg-muted/30 disabled:opacity-30 disabled:cursor-not-allowed'
-                aria-label='Previous page'
-                type='button'
+                className="rounded p-1 text-muted-foreground hover:bg-muted/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Previous page"
+                type="button"
               >
-                <ChevronUp className='h-4 w-4 rotate-[-90deg]' />
+                <ChevronUp className="h-4 w-4 rotate-[-90deg]" />
               </button>
-              <span className='text-xs text-muted-foreground min-w-[3rem] text-center'>
+              <span className="text-xs text-muted-foreground min-w-[3rem] text-center">
                 {(paginationState?.pageIndex ?? 0) + 1}/{table.getPageCount()}
               </span>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className='rounded p-1 text-muted-foreground hover:bg-muted/30 disabled:opacity-30 disabled:cursor-not-allowed'
-                aria-label='Next page'
-                type='button'
+                className="rounded p-1 text-muted-foreground hover:bg-muted/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Next page"
+                type="button"
               >
-                <ChevronUp className='h-4 w-4 rotate-90' />
+                <ChevronUp className="h-4 w-4 rotate-90" />
               </button>
             </div>
           ) : (
-            <div className='flex flex-col gap-3 border-t border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+            <div className="flex flex-col gap-3 border-t border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>
                   {table.getPageCount() === 1 ? (
                     `${table.getFilteredRowModel().rows.length} result${
@@ -452,9 +455,9 @@ const TableComponent = <TData,>({
                 </span>
               </div>
 
-              <div className='flex flex-wrap items-center gap-4'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-xs text-muted-foreground'>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
                     Rows per page:
                   </span>
                   <select
@@ -476,40 +479,40 @@ const TableComponent = <TData,>({
                   </select>
                 </div>
 
-                <div className='flex items-center gap-1'>
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => table.setPageIndex(0)}
                     disabled={!table.getCanPreviousPage()}
-                    className='rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed'
-                    type='button'
+                    className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                    type="button"
                   >
                     {'<<'}
                   </button>
                   <button
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
-                    className='rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed'
-                    type='button'
+                    className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                    type="button"
                   >
                     {'<'}
                   </button>
-                  <span className='px-2 text-xs text-muted-foreground'>
+                  <span className="px-2 text-xs text-muted-foreground">
                     Page {(paginationState?.pageIndex ?? 0) + 1} of{' '}
                     {table.getPageCount()}
                   </span>
                   <button
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
-                    className='rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed'
-                    type='button'
+                    className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                    type="button"
                   >
                     {'>'}
                   </button>
                   <button
                     onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                     disabled={!table.getCanNextPage()}
-                    className='rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed'
-                    type='button'
+                    className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                    type="button"
                   >
                     {'>>'}
                   </button>
@@ -559,13 +562,13 @@ const TableSkeleton = <TData,>({
       <div
         className={cn(
           'relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto'
+          'overflow-auto [scrollbar-gutter:stable]'
         )}
         style={{ maxHeight }}
       >
-        <div className='pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm' />
-        <table className='w-full border-collapse text-sm'>
-          <thead className='sticky top-0 z-20 bg-muted shadow-sm'>
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm" />
+        <table className="w-full border-collapse text-sm">
+          <thead className="sticky top-0 z-20 bg-muted shadow-sm">
             <tr>
               {columns.map((column, index) => (
                 <th
@@ -585,20 +588,20 @@ const TableSkeleton = <TData,>({
                   {typeof column.header === 'string' ? (
                     column.header
                   ) : (
-                    <Skeleton className='h-4 w-20' />
+                    <Skeleton className="h-4 w-20" />
                   )}
                 </th>
               ))}
             </tr>
           </thead>
 
-          <tbody className='divide-y divide-border/40'>
+          <tbody className="divide-y divide-border/40">
             {skeletonRows.map((_, rowIndex) => (
-              <tr key={rowIndex} className='animate-pulse'>
+              <tr key={rowIndex} className="animate-pulse">
                 {columns.map((column, columnIndex) => (
                   <td
                     key={column.id ?? columnIndex}
-                    className='px-4 py-3'
+                    className="px-4 py-3"
                     style={{
                       width: column.size,
                       minWidth: column.minSize,
@@ -606,8 +609,8 @@ const TableSkeleton = <TData,>({
                     }}
                   >
                     {column.id === 'actions' ? (
-                      <div className='flex justify-center'>
-                        <MoreHorizontal className='h-5 w-5 text-muted-foreground/40' />
+                      <div className="flex justify-center">
+                        <MoreHorizontal className="h-5 w-5 text-muted-foreground/40" />
                       </div>
                     ) : (
                       <Skeleton
@@ -632,25 +635,25 @@ const TableSkeleton = <TData,>({
       {showPagination && (
         <>
           {compactPagination ? (
-            <div className='flex items-center justify-center gap-2 px-2 py-2 border-t border-border/60'>
-              <Skeleton className='h-6 w-6 rounded' />
-              <Skeleton className='h-4 w-12' />
-              <Skeleton className='h-6 w-6 rounded' />
+            <div className="flex items-center justify-center gap-2 px-2 py-2 border-t border-border/60">
+              <Skeleton className="h-6 w-6 rounded" />
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-6 w-6 rounded" />
             </div>
           ) : (
-            <div className='flex flex-col gap-3 border-t border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
-              <Skeleton className='h-4 w-48' />
-              <div className='flex items-center gap-4'>
-                <div className='flex items-center gap-2'>
-                  <Skeleton className='h-4 w-24' />
-                  <Skeleton className='h-8 w-16 rounded' />
+            <div className="flex flex-col gap-3 border-t border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <Skeleton className="h-4 w-48" />
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16 rounded" />
                 </div>
-                <div className='flex items-center gap-1'>
-                  <Skeleton className='h-8 w-8 rounded' />
-                  <Skeleton className='h-8 w-8 rounded' />
-                  <Skeleton className='h-4 w-20 mx-2' />
-                  <Skeleton className='h-8 w-8 rounded' />
-                  <Skeleton className='h-8 w-8 rounded' />
+                <div className="flex items-center gap-1">
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-4 w-20 mx-2" />
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-8 w-8 rounded" />
                 </div>
               </div>
             </div>

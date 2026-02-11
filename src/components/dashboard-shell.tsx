@@ -103,7 +103,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       }
     })
     return Array.from(deduped.values())
-  }, [searchHistory, searchSuggestions])
+  }, [navigation, quickQuestions, searchHistory])
 
   const suggestion = useMemo(() => {
     const trimmed = searchValue.trim()

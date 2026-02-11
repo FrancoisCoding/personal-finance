@@ -25,6 +25,7 @@ import { CreditUtilizationCard } from '@/components/credit-utilization-card'
 import { AnalyticsDashboard } from '@/components/analytics-dashboard'
 import { AddReminderModal } from '@/components/add-reminder-modal'
 import { AIFinancialInsights } from '@/components/ai-financial-insights'
+import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
 import {
   useAccounts,
@@ -159,6 +160,134 @@ export default function DashboardPage() {
       })),
     [goals]
   )
+
+  const normalizeDonationRecipient = useCallback((description: string) => {
+    const trimmedDescription = description.trim()
+    if (!trimmedDescription) return 'Unknown recipient'
+
+    const upperDescription = trimmedDescription.toUpperCase()
+    const splitTokens = [
+      ' ID ',
+      ' ID:',
+      ' PPD ',
+      ' WEB ',
+      ' ACH ',
+      ' POS ',
+      ' TRANSFER ',
+      ' PAYMENT ',
+      ' DEBIT ',
+      ' CREDIT ',
+    ]
+    let cutoffIndex = trimmedDescription.length
+
+    splitTokens.forEach((token) => {
+      const tokenIndex = upperDescription.indexOf(token)
+      if (tokenIndex > 0 && tokenIndex < cutoffIndex) {
+        cutoffIndex = tokenIndex
+      }
+    })
+
+    const cleaned = trimmedDescription
+      .slice(0, cutoffIndex)
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+
+    return cleaned || trimmedDescription
+  }, [])
+
+  const donationSummary = useMemo(() => {
+    const donationCategoryNames = new Set([
+      'charity',
+      'donation',
+      'donations',
+      'giving',
+      'tithe',
+      'tithes',
+      'offering',
+      'offerings',
+    ])
+    const donationKeywords = [
+      'donation',
+      'charity',
+      'church',
+      'tithe',
+      'offering',
+      'giving',
+      'igreja',
+    ]
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const donationTransactions = transformedTransactions.filter(
+      (transaction) => {
+        if (transaction.type !== 'EXPENSE') return false
+        const transactionDate = new Date(transaction.date)
+        if (transactionDate < thirtyDaysAgo) return false
+        const category = transaction.category?.toLowerCase() ?? ''
+        const description = transaction.description.toLowerCase()
+
+        return (
+          donationCategoryNames.has(category) ||
+          donationKeywords.some((keyword) => description.includes(keyword))
+        )
+      }
+    )
+
+    const recipientMap = new Map<
+      string,
+      {
+        name: string
+        total: number
+        count: number
+        lastDate: string
+        lastTimestamp: number
+      }
+    >()
+
+    donationTransactions.forEach((transaction) => {
+      const recipientName = normalizeDonationRecipient(transaction.description)
+      const existing = recipientMap.get(recipientName)
+      const transactionDate = new Date(transaction.date)
+      const formattedDate = transactionDate.toLocaleDateString('en-US')
+      const timestamp = transactionDate.getTime()
+      const updatedTotal = Math.abs(transaction.amount)
+
+      if (!existing) {
+        recipientMap.set(recipientName, {
+          name: recipientName,
+          total: updatedTotal,
+          count: 1,
+          lastDate: formattedDate,
+          lastTimestamp: timestamp,
+        })
+        return
+      }
+
+      existing.total += updatedTotal
+      existing.count += 1
+      if (timestamp > existing.lastTimestamp) {
+        existing.lastDate = formattedDate
+        existing.lastTimestamp = timestamp
+      }
+      recipientMap.set(recipientName, existing)
+    })
+
+    const entries = Array.from(recipientMap.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4)
+      .map(({ lastTimestamp, ...entry }) => entry)
+
+    const total = donationTransactions.reduce(
+      (sum, transaction) => sum + Math.abs(transaction.amount),
+      0
+    )
+
+    return {
+      entries,
+      total,
+      hasData: donationTransactions.length > 0,
+    }
+  }, [normalizeDonationRecipient, transformedTransactions])
 
   // Generate insights when data changes
   useEffect(() => {
@@ -599,6 +728,13 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
+
+            <DonationsCard
+              entries={donationSummary.entries}
+              total={donationSummary.total}
+              hasData={donationSummary.hasData}
+              className="h-full"
+            />
           </div>
         </div>
       </FadeIn>

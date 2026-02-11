@@ -73,7 +73,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
             )}
             <aside
               className={cn(
-                'fixed inset-y-6 left-4 z-50 w-[260px] translate-x-[-120%] rounded-[24px] border border-border/60 bg-white/90 p-5 shadow-lg transition-transform duration-200 dark:bg-slate-950/95 lg:static lg:translate-x-0 lg:shadow-sm',
+                'fixed inset-y-6 left-4 z-50 w-[260px] translate-x-[-120%] rounded-[24px] border border-border/60 bg-white/90 p-5 shadow-lg transition-transform duration-200 dark:bg-slate-950/95 lg:static lg:translate-x-0 lg:self-start lg:h-fit lg:shadow-sm',
                 isSidebarOpen && 'translate-x-0'
               )}
             >

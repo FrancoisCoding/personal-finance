@@ -38,6 +38,7 @@ import {
 } from '@/components/notification-system'
 
 // utils
+import { highlightText } from '@/lib/table'
 import { cn } from '@/lib/utils'
 import { sidebarOpenAtom } from '@/store/ui-atoms'
 
@@ -116,6 +117,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     )
     return match ?? ''
   }, [searchValue, suggestionPool])
+
+  const normalizedSearch = searchValue.trim().toLowerCase()
 
   const storeSearchHistory = (value: string) => {
     const trimmedValue = value.trim()
@@ -383,11 +386,16 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                                   className={
                                     'flex w-full items-center justify-between rounded-xl ' +
                                     'px-3 py-2 text-left text-sm transition-colors ' +
-                                    'hover:bg-muted/40'
+                                    (normalizedSearch &&
+                                    item.name
+                                      .toLowerCase()
+                                      .includes(normalizedSearch)
+                                      ? 'bg-muted/40'
+                                      : 'hover:bg-muted/40')
                                   }
                                 >
                                   <span className="text-foreground">
-                                    {item.name}
+                                    {highlightText(item.name, searchValue)}
                                   </span>
                                   <span className="text-xs text-muted-foreground">
                                     Go to page
@@ -418,11 +426,16 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                                       className={
                                         'flex w-full items-center justify-between rounded-xl ' +
                                         'px-3 py-2 text-left text-sm transition-colors ' +
-                                        'hover:bg-muted/40'
+                                        (normalizedSearch &&
+                                        item
+                                          .toLowerCase()
+                                          .includes(normalizedSearch)
+                                          ? 'bg-muted/40'
+                                          : 'hover:bg-muted/40')
                                       }
                                     >
                                       <span className="text-foreground">
-                                        {item}
+                                        {highlightText(item, searchValue)}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
                                         Ask again
@@ -445,11 +458,16 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                                 className={
                                   'flex w-full items-start justify-between rounded-xl ' +
                                   'px-3 py-2 text-left text-sm transition-colors ' +
-                                  'hover:bg-muted/40'
+                                  (normalizedSearch &&
+                                  question
+                                    .toLowerCase()
+                                    .includes(normalizedSearch)
+                                    ? 'bg-muted/40'
+                                    : 'hover:bg-muted/40')
                                 }
                               >
                                 <span className="text-foreground">
-                                  {question}
+                                  {highlightText(question, searchValue)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   Ask

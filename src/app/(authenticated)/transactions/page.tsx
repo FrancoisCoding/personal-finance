@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import {
   useTransactions,
   useCategories,
@@ -54,8 +54,6 @@ import { createTransactionColumns } from '@/tableColumnDefinitions/transactions'
 export default function TransactionsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { data: transactions = [], isLoading } = useTransactions()
   const { data: categories = [] } = useCategories()
@@ -101,39 +99,6 @@ export default function TransactionsPage() {
       }),
     [transactions, selectedCategory, selectedType]
   )
-
-  useEffect(() => {
-    if (!transactions.length) return
-
-    const counts = new Map<string, number>()
-    const trackSuggestion = (value?: string) => {
-      if (!value) return
-      const trimmed = value.trim()
-      if (trimmed.length < 3 || trimmed.length > 48) return
-      counts.set(trimmed, (counts.get(trimmed) ?? 0) + 1)
-    }
-
-    transactions.forEach((transaction) => {
-      trackSuggestion(transaction.description)
-      trackSuggestion(transaction.categoryRelation?.name)
-      trackSuggestion(transaction.category)
-      trackSuggestion(transaction.account?.name)
-    })
-
-    const suggestions = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([value]) => value)
-      .slice(0, 12)
-
-    try {
-      localStorage.setItem(
-        'finance-search-suggestions',
-        JSON.stringify(suggestions)
-      )
-    } catch (error) {
-      console.warn('Failed to save search suggestions', error)
-    }
-  }, [transactions])
 
   const tableData = useMemo(() => {
     const categoryMap = new Map(categories.map((cat) => [cat.id, cat]))
@@ -258,16 +223,6 @@ export default function TransactionsPage() {
     columns,
   })
 
-  const searchParam = searchParams.get('search') ?? ''
-
-  useEffect(() => {
-    const normalizedFilter = String(globalFilter ?? '')
-    if (searchParam !== normalizedFilter) {
-      setGlobalFilter(searchParam)
-      table.setPageIndex(0)
-    }
-  }, [globalFilter, searchParam, setGlobalFilter, table])
-
   const filteredRows = table.getFilteredRowModel().rows
   const filteredCount = filteredRows.length
   const totalIncome = filteredRows.reduce((sum, row) => {
@@ -285,17 +240,8 @@ export default function TransactionsPage() {
   const netAmount = totalIncome - totalExpenses
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextValue = event.target.value
-    setGlobalFilter(nextValue)
+    setGlobalFilter(event.target.value)
     table.setPageIndex(0)
-    const nextParams = new URLSearchParams(searchParams.toString())
-    if (nextValue.trim()) {
-      nextParams.set('search', nextValue.trim())
-    } else {
-      nextParams.delete('search')
-    }
-    const nextQuery = nextParams.toString()
-    router.replace(`${pathname}${nextQuery ? `?${nextQuery}` : ''}`)
   }
 
   const handleCategoryChange = (value: string) => {

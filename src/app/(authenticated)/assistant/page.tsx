@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -107,6 +107,7 @@ const formatMessageTime = (date: Date) =>
 export default function FinancialAssistantPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { data: transactions = [], isLoading: isTransactionsLoading } =
     useTransactions()
@@ -119,6 +120,7 @@ export default function FinancialAssistantPage() {
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const lastQuestionRef = useRef<string | null>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -133,8 +135,8 @@ export default function FinancialAssistantPage() {
     }
   }, [session, status, router])
 
-  const handleSendMessage = async () => {
-    const trimmed = input.trim()
+  const handleSendMessage = async (overrideMessage?: string) => {
+    const trimmed = (overrideMessage ?? input).trim()
     if (!trimmed || isLoading) return
 
     const userMessage: Message = {
@@ -225,6 +227,15 @@ export default function FinancialAssistantPage() {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    const questionParam = searchParams.get('question') ?? ''
+    const trimmed = questionParam.trim()
+    if (!trimmed || status !== 'authenticated' || isLoading) return
+    if (lastQuestionRef.current === trimmed) return
+    lastQuestionRef.current = trimmed
+    handleSendMessage(trimmed)
+  }, [searchParams, status, isLoading, handleSendMessage])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {

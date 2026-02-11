@@ -102,6 +102,39 @@ export default function TransactionsPage() {
     [transactions, selectedCategory, selectedType]
   )
 
+  useEffect(() => {
+    if (!transactions.length) return
+
+    const counts = new Map<string, number>()
+    const trackSuggestion = (value?: string) => {
+      if (!value) return
+      const trimmed = value.trim()
+      if (trimmed.length < 3 || trimmed.length > 48) return
+      counts.set(trimmed, (counts.get(trimmed) ?? 0) + 1)
+    }
+
+    transactions.forEach((transaction) => {
+      trackSuggestion(transaction.description)
+      trackSuggestion(transaction.categoryRelation?.name)
+      trackSuggestion(transaction.category)
+      trackSuggestion(transaction.account?.name)
+    })
+
+    const suggestions = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([value]) => value)
+      .slice(0, 12)
+
+    try {
+      localStorage.setItem(
+        'finance-search-suggestions',
+        JSON.stringify(suggestions)
+      )
+    } catch (error) {
+      console.warn('Failed to save search suggestions', error)
+    }
+  }, [transactions])
+
   const tableData = useMemo(() => {
     const categoryMap = new Map(categories.map((cat) => [cat.id, cat]))
     const accountMap = new Map(accounts.map((account) => [account.id, account]))

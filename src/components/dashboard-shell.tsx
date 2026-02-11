@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
@@ -53,6 +53,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const searchParams = useSearchParams()
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
+  const [searchHistory, setSearchHistory] = useState<string[]>([])
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
@@ -66,17 +69,62 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
   useEffect(() => {
     const paramValue = searchParams.get('search') ?? ''
-    if (pathname === '/transactions') {
-      if (paramValue !== searchValue) {
-        setSearchValue(paramValue)
-      }
-      return
-    }
-
-    if (searchValue !== '') {
-      setSearchValue('')
+    if (pathname === '/transactions' && paramValue !== searchValue) {
+      setSearchValue(paramValue)
     }
   }, [pathname, searchParams, searchValue])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('finance-search-history')
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setSearchHistory(parsed.filter((item) => typeof item === 'string'))
+      }
+    } catch (error) {
+      console.warn('Failed to load search history', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('finance-search-suggestions')
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setSearchSuggestions(parsed.filter((item) => typeof item === 'string'))
+      }
+    } catch (error) {
+      console.warn('Failed to load search suggestions', error)
+    }
+  }, [])
+
+  const suggestionPool = useMemo(() => {
+    const combined = [...searchHistory, ...searchSuggestions]
+    const deduped = new Map<string, string>()
+    combined.forEach((item) => {
+      const trimmed = item.trim()
+      if (!trimmed) return
+      const key = trimmed.toLowerCase()
+      if (!deduped.has(key)) {
+        deduped.set(key, trimmed)
+      }
+    })
+    return Array.from(deduped.values())
+  }, [searchHistory, searchSuggestions])
+
+  const suggestion = useMemo(() => {
+    const trimmed = searchValue.trim()
+    if (!trimmed) return ''
+    const lower = trimmed.toLowerCase()
+    const match = suggestionPool.find(
+      (item) =>
+        item.toLowerCase().startsWith(lower) &&
+        item.toLowerCase() !== lower
+    )
+    return match ?? ''
+  }, [searchValue, suggestionPool])
 
   const handleSearchSubmit = () => {
     const trimmedValue = searchValue.trim()
@@ -87,10 +135,45 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       return
     }
 
+    setSearchHistory((prev) => {
+      const next = [
+        trimmedValue,
+        ...prev.filter(
+          (item) => item.toLowerCase() !== trimmedValue.toLowerCase()
+        ),
+      ].slice(0, 8)
+      try {
+        localStorage.setItem(
+          'finance-search-history',
+          JSON.stringify(next)
+        )
+      } catch (error) {
+        console.warn('Failed to save search history', error)
+      }
+      return next
+    })
+
     router.push(`/transactions?search=${encodeURIComponent(trimmedValue)}`)
   }
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowRight' && suggestion) {
+      const input = searchInputRef.current
+      const selectionStart = input?.selectionStart ?? 0
+      const selectionEnd = input?.selectionEnd ?? 0
+      if (selectionStart === selectionEnd && selectionEnd === searchValue.length) {
+        event.preventDefault()
+        setSearchValue(suggestion)
+        requestAnimationFrame(() => {
+          searchInputRef.current?.setSelectionRange(
+            suggestion.length,
+            suggestion.length
+          )
+        })
+      }
+      return
+    }
+
     if (event.key === 'Enter') {
       event.preventDefault()
       handleSearchSubmit()
@@ -200,12 +283,24 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
                 <div className="flex flex-1 items-center justify-end gap-3">
                   <div className="relative hidden max-w-xs flex-1 items-center md:flex">
+                    {suggestion && searchValue.trim() && (
+                      <div
+                        className={
+                          'pointer-events-none absolute inset-y-0 left-10 right-4 ' +
+                          'flex items-center text-sm text-muted-foreground/50'
+                        }
+                      >
+                        <span className="text-transparent">{searchValue}</span>
+                        <span>{suggestion.slice(searchValue.length)}</span>
+                      </div>
+                    )}
                     <Input
                       placeholder="Search here"
                       className="h-10 rounded-full border-border/60 bg-muted/30 pl-10 text-sm"
                       value={searchValue}
                       onChange={(event) => setSearchValue(event.target.value)}
                       onKeyDown={handleSearchKeyDown}
+                      ref={searchInputRef}
                     />
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
                   </div>

@@ -143,13 +143,13 @@ export function SpendingChart({
                 <div
                   key={`${item.category}-${index}`}
                   className={
-                    'flex items-center justify-between rounded-lg border ' +
-                    'border-border/60 bg-muted/20 px-3 py-2'
+                    'flex flex-col gap-2 rounded-lg border border-border/60 ' +
+                    'bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between'
                   }
                 >
-                  <div className="flex items-center space-x-3 min-w-0">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div
-                      className="h-3 w-3 rounded-full shrink-0"
+                      className="h-3 w-3 shrink-0 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
                     <div className="min-w-0">
@@ -161,7 +161,7 @@ export function SpendingChart({
                       </p>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="shrink-0 text-left sm:min-w-[96px] sm:text-right">
                     <p className="text-sm font-semibold text-foreground tabular-nums">
                       {formatCurrency(item.amount)}
                     </p>

@@ -8,13 +8,15 @@ import { FormModal } from '@/components/ui/form-modal'
 import { useToast } from '@/hooks/use-toast'
 import type { Category } from '@/hooks/use-finance-data'
 
+type TBudgetPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+
 interface CreateBudgetModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (budgetData: {
     name: string
     amount: number
-    period: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+    period: TBudgetPeriod
     categoryId?: string
     startDate: Date
     endDate?: Date
@@ -33,10 +35,18 @@ export function CreateBudgetModal({
 }: CreateBudgetModalProps) {
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    amount: string
+    period: TBudgetPeriod
+    categoryId: string
+    startDate: string
+    endDate: string
+    isRecurring: boolean
+  }>({
     name: '',
     amount: '',
-    period: 'MONTHLY' as const,
+    period: 'MONTHLY',
     categoryId: '',
     startDate: '',
     endDate: '',
@@ -155,7 +165,10 @@ export function CreateBudgetModal({
               id="period"
               value={formData.period}
               onChange={(e) =>
-                setFormData({ ...formData, period: e.target.value as any })
+                setFormData({
+                  ...formData,
+                  period: e.target.value as TBudgetPeriod,
+                })
               }
               className="w-full p-2 border rounded-md bg-background text-foreground"
             >

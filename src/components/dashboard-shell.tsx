@@ -144,6 +144,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }
 
   const handleNavigate = (href: string) => {
+    searchInputRef.current?.blur()
     setIsSearchOpen(false)
     router.push(href)
   }
@@ -151,6 +152,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const handleAskAssistant = (question: string) => {
     const trimmed = question.trim()
     if (!trimmed) return
+    searchInputRef.current?.blur()
     storeSearchHistory(trimmed)
     setIsSearchOpen(false)
     router.push(`/assistant?question=${encodeURIComponent(trimmed)}`)

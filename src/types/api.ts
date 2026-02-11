@@ -1,5 +1,5 @@
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   message?: string
   error?: string
@@ -151,4 +151,4 @@ interface ApiTypeMap {
   goal: GoalApiResponse
   subscription: SubscriptionApiResponse
   bulkCategorize: BulkCategorizeResponse
-} 
+}

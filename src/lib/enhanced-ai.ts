@@ -61,6 +61,13 @@ export interface AutoCategorizationResult {
   reason: string
 }
 
+type TSpendingPatternTransaction = {
+  date: string | Date
+  type: string
+  amount: number
+  category?: string
+}
+
 /**
  * Automatically categorize transactions based on description patterns
  */
@@ -235,12 +242,7 @@ export function analyzeGoalProgress(
  * Analyze spending patterns and trends
  */
 export function analyzeSpendingPatterns(
-  transactions: Array<{
-    date: string | Date
-    type: string
-    amount: number
-    category?: string
-  }>
+  transactions: TSpendingPatternTransaction[]
 ): SpendingPattern[] {
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
@@ -262,15 +264,15 @@ export function analyzeSpendingPatterns(
   )
 
   const categoryGroups = currentMonthTransactions.reduce(
-    (acc, t) => {
-      const category = t.category || 'Other'
+    (acc, transaction) => {
+      const category = transaction.category || 'Other'
       if (!acc[category]) {
         acc[category] = []
       }
-      acc[category].push(t)
+      acc[category].push(transaction)
       return acc
     },
-    {} as Record<string, any[]>
+    {} as Record<string, TSpendingPatternTransaction[]>
   )
 
   const monthTotalSpent = currentMonthTransactions.reduce(
@@ -278,20 +280,24 @@ export function analyzeSpendingPatterns(
     0
   )
 
-  return Object.entries(categoryGroups)
-    .map(([category, transactions]) => {
-      const categoryTotalSpent = (transactions as any[]).reduce(
-        (sum: number, t: any) => sum + Math.abs(t.amount),
+  return (
+    Object.entries(categoryGroups) as Array<
+      [string, TSpendingPatternTransaction[]]
+    >
+  )
+    .map(([category, groupedTransactions]) => {
+      const categoryTotalSpent = groupedTransactions.reduce(
+        (sum, transaction) => sum + Math.abs(transaction.amount),
         0
       )
       const averagePerTransaction =
-        categoryTotalSpent / (transactions as any[]).length
+        categoryTotalSpent / groupedTransactions.length
       const percentageOfTotal =
         monthTotalSpent > 0 ? (categoryTotalSpent / monthTotalSpent) * 100 : 0
 
-      const lastMonthAmount = (lastMonthTransactions as any[])
-        .filter((t: any) => (t.category || 'Other') === category)
-        .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0)
+      const lastMonthAmount = lastMonthTransactions
+        .filter((transaction) => (transaction.category || 'Other') === category)
+        .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0)
 
       const changePercent =
         lastMonthAmount > 0
@@ -306,7 +312,7 @@ export function analyzeSpendingPatterns(
         category,
         totalSpent: categoryTotalSpent,
         averagePerTransaction,
-        transactionCount: (transactions as any[]).length,
+        transactionCount: groupedTransactions.length,
         percentageOfTotal,
         trend,
         lastMonthAmount,

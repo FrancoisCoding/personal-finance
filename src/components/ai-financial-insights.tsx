@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -70,7 +70,7 @@ export function AIFinancialInsights({
   const [lastAnalysis, setLastAnalysis] = useState<Date | null>(null)
 
   // Generate AI insights
-  const generateInsights = async () => {
+  const generateInsights = useCallback(async () => {
     setIsAnalyzing(true)
 
     try {
@@ -298,13 +298,13 @@ export function AIFinancialInsights({
     } finally {
       setIsAnalyzing(false)
     }
-  }
+  }, [budgets, goals, transactions])
 
   useEffect(() => {
     if (transactions.length > 0 && budgets.length > 0 && goals.length > 0) {
       generateInsights()
     }
-  }, [transactions, budgets, goals])
+  }, [generateInsights, transactions.length, budgets.length, goals.length])
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -320,7 +320,9 @@ export function AIFinancialInsights({
   }
 
   return (
-    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
+    <Card
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">

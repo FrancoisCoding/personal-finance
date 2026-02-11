@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { FormModal } from '@/components/ui/form-modal'
 
 import { useToast } from '@/hooks/use-toast'
+
+type TSubscriptionBillingCycle = 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
 // Simplified Category type that matches what the hooks return
 interface SimpleCategory {
   id: string
@@ -22,7 +24,7 @@ interface CreateSubscriptionModalProps {
   onSubmit: (subscriptionData: {
     name: string
     amount: number
-    billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
+    billingCycle: TSubscriptionBillingCycle
     nextBillingDate: Date
     categoryId?: string
     notes?: string
@@ -40,10 +42,17 @@ export function CreateSubscriptionModal({
 }: CreateSubscriptionModalProps) {
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    amount: string
+    billingCycle: TSubscriptionBillingCycle
+    nextBillingDate: string
+    categoryId: string
+    notes: string
+  }>({
     name: '',
     amount: '',
-    billingCycle: 'MONTHLY' as const,
+    billingCycle: 'MONTHLY',
     nextBillingDate: '',
     categoryId: '',
     notes: '',
@@ -156,7 +165,7 @@ export function CreateSubscriptionModal({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  billingCycle: e.target.value as any,
+                  billingCycle: e.target.value as TSubscriptionBillingCycle,
                 })
               }
               className="w-full p-2 border rounded-md bg-background text-foreground"

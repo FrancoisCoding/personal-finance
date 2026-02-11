@@ -11,8 +11,7 @@ import {
   useUpdateTransaction,
 } from '@/hooks/use-finance-data'
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal'
-import DataTablePaginationControls from '@/components/transactions/data-table-pagination-controls'
-import TransactionsTableView from '@/components/transactions/transactions-table-view'
+import { Table, TableSkeleton } from '@/components/table'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -401,7 +400,9 @@ export default function TransactionsPage() {
         <CardHeader className="border-b border-border/60">
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>
-            {filteredCount} transactions match your filters
+            {isLoading
+              ? 'Loading transactions...'
+              : `${filteredCount} transactions match your filters`}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -413,10 +414,12 @@ export default function TransactionsPage() {
                 placeholder="Search transactions"
                 value={String(globalFilter ?? '')}
                 onChange={handleSearchChange}
+                disabled={isLoading}
               />
               <Select
                 value={selectedCategory}
                 onValueChange={handleCategoryChange}
+                disabled={isLoading}
               >
                 <SelectTrigger className="h-9 w-full sm:w-[180px]">
                   <SelectValue placeholder="Category" />
@@ -430,7 +433,11 @@ export default function TransactionsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={selectedType} onValueChange={handleTypeChange}>
+              <Select
+                value={selectedType}
+                onValueChange={handleTypeChange}
+                disabled={isLoading}
+              >
                 <SelectTrigger className="h-9 w-full sm:w-[160px]">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
@@ -445,7 +452,7 @@ export default function TransactionsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" disabled={isLoading}>
                     Columns
                   </Button>
                 </DropdownMenuTrigger>
@@ -469,13 +476,15 @@ export default function TransactionsPage() {
                     ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled={isLoading}>
                 Export
               </Button>
             </div>
           </div>
 
-          {filteredCount === 0 ? (
+          {isLoading ? (
+            <TableSkeleton columns={columns} rowCount={6} maxHeight="60vh" />
+          ) : filteredCount === 0 ? (
             <div
               className={
                 'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
@@ -490,10 +499,12 @@ export default function TransactionsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-border/60">
-              <TransactionsTableView table={table} className="border-0" />
-              <DataTablePaginationControls table={table} />
-            </div>
+            <Table
+              table={table}
+              columns={columns}
+              maxHeight="60vh"
+              pageSizeOptions={[10, 20, 50, 100]}
+            />
           )}
         </CardContent>
       </Card>

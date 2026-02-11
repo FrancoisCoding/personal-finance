@@ -210,11 +210,14 @@ const TableComponent = <TData,>({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto p-2'
+          'relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
+          'overflow-auto'
         )}
         style={stickyHeader ? { maxHeight } : undefined}
       >
+        {stickyHeader && (
+          <div className='pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm' />
+        )}
         <table className='w-full border-collapse text-sm'>
           <thead
             className={cn(
@@ -555,11 +558,12 @@ const TableSkeleton = <TData,>({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto p-2'
+          'relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
+          'overflow-auto'
         )}
         style={{ maxHeight }}
       >
+        <div className='pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-2xl bg-muted shadow-sm' />
         <table className='w-full border-collapse text-sm'>
           <thead className='sticky top-0 z-20 bg-muted shadow-sm'>
             <tr>

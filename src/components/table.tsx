@@ -213,7 +213,7 @@ const TableComponent = <TData,>({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
+          'table-scroll relative rounded-2xl border border-border/60 bg-card/80 shadow-sm',
           'overflow-auto [scrollbar-gutter:stable]'
         )}
         style={stickyHeader ? { maxHeight } : undefined}

@@ -197,6 +197,15 @@
   background: hsl(var(--foreground));
 }
 
+.table-scroll {
+  scrollbar-gutter: stable;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  margin-top: 48px;
+  margin-bottom: 8px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

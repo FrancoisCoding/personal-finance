@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -83,8 +84,65 @@ export default function AccountsPage() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 lg:px-8">
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card
+              key={`account-summary-${index}`}
+              className="border-border/60 bg-card/80 shadow-sm"
+            >
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-6 w-28" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Card
+                key={`account-card-${index}`}
+                className="border-border/60 bg-card/80 shadow-sm"
+              >
+                <CardContent className="space-y-5 p-5">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-11 w-11 rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, tileIndex) => (
+                      <Skeleton
+                        key={`account-tile-${index}-${tileIndex}`}
+                        className="h-16 w-full rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }

@@ -41,6 +41,12 @@ export function Navbar() {
   if (!session) {
     return (
       <nav className="bg-background border-b">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+        >
+          Skip to main content
+        </a>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -62,6 +68,12 @@ export function Navbar() {
 
   return (
     <nav className="bg-background border-b">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -70,6 +82,7 @@ export function Navbar() {
               size="icon"
               className="mr-2 lg:hidden"
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -93,6 +106,7 @@ export function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`text-sm font-medium transition-colors relative ${
                     isActive
                       ? 'text-foreground'
@@ -118,6 +132,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
+                  aria-label="Open user menu"
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
@@ -166,6 +181,9 @@ export function Navbar() {
               size="icon"
               className="lg:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
               {isMobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -178,7 +196,7 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden">
+          <div className="lg:hidden" id="mobile-navigation">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
@@ -186,6 +204,7 @@ export function Navbar() {
                   <Link
                     key={item.name}
                     href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`flex items-center space-x-2 text-base font-medium px-3 py-2 rounded-md transition-colors ${
                       isActive
                         ? 'text-foreground bg-accent'

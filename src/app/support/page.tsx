@@ -36,7 +36,17 @@ const faqItems = [
 export default function SupportPage() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-12 space-y-10">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="container mx-auto px-4 py-12 space-y-10"
+      >
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Support
@@ -76,7 +86,7 @@ export default function SupportPage() {
             ))}
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   )
 }

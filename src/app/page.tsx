@@ -106,6 +106,12 @@ const testimonials = [
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -133,226 +139,228 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section className="relative py-20 px-4">
-        <Spotlight
-          className="-top-48 left-0 hidden md:block"
-          fill="hsl(var(--primary))"
-        />
-        <Spotlight
-          className="-top-32 right-0 hidden lg:block"
-          fill="hsl(var(--accent-foreground))"
-        />
-        <div className="container mx-auto grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
-          <div className="flex flex-col gap-8">
-            <FadeIn delay={0.05}>
-              <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/60 bg-card/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground shadow-sm">
-                <span className="text-primary">AI</span>
-                Cashflow autopilot
-              </div>
-            </FadeIn>
-            <div className="space-y-6">
-              <FadeIn delay={0.12}>
-                <TextGenerateEffect
-                  as="h1"
-                  words="Manage money with calm, confident clarity."
-                  className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight"
-                />
+      <main id="main-content" tabIndex={-1}>
+        <section className="relative py-20 px-4">
+          <Spotlight
+            className="-top-48 left-0 hidden md:block"
+            fill="hsl(var(--primary))"
+          />
+          <Spotlight
+            className="-top-32 right-0 hidden lg:block"
+            fill="hsl(var(--accent-foreground))"
+          />
+          <div className="container mx-auto grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
+            <div className="flex flex-col gap-8">
+              <FadeIn delay={0.05}>
+                <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/60 bg-card/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground shadow-sm">
+                  <span className="text-primary">AI</span>
+                  Cashflow autopilot
+                </div>
               </FadeIn>
-              <FadeIn delay={0.2}>
-                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-                  FinanceFlow blends real-time data, smart categorization, and
-                  tailored guidance so you always know what to do next.
-                </p>
+              <div className="space-y-6">
+                <FadeIn delay={0.12}>
+                  <TextGenerateEffect
+                    as="h1"
+                    words="Manage money with calm, confident clarity."
+                    className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight"
+                  />
+                </FadeIn>
+                <FadeIn delay={0.2}>
+                  <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+                    FinanceFlow blends real-time data, smart categorization, and
+                    tailored guidance so you always know what to do next.
+                  </p>
+                </FadeIn>
+              </div>
+              <FadeIn delay={0.3}>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link href="/auth/register">
+                    <Button size="lg" className="text-base sm:text-lg">
+                      Start free trial
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/auth/login">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="text-base sm:text-lg"
+                    >
+                      View live demo
+                    </Button>
+                  </Link>
+                </div>
+              </FadeIn>
+              <FadeIn delay={0.38}>
+                <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    No credit card required
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    Cancel anytime
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    Syncs in minutes
+                  </div>
+                </div>
               </FadeIn>
             </div>
-            <FadeIn delay={0.3}>
-              <div className="flex flex-col sm:flex-row gap-4">
+
+            <FadeIn delay={0.22} className="relative">
+              <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-r from-emerald-400/25 via-cyan-400/25 to-amber-300/25 blur-3xl" />
+              <NetWorthSummaryCard
+                netWorth={128420}
+                changePercent={12.4}
+                summaryItems={netWorthSummaryItems}
+                forecastRange={netWorthForecastRange}
+              />
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="relative py-20 px-4">
+          <div className="container mx-auto">
+            <FadeIn className="text-center mb-16">
+              <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
+                A modern finance workspace that feels effortless.
+              </h2>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Every view is crafted to surface what matters now and what matters
+                next. No clutter, just clarity.
+              </p>
+            </FadeIn>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature, index) => {
+                const Icon = feature.icon
+                return (
+                  <FadeIn
+                    key={feature.title}
+                    delay={0.08 * index}
+                    className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${feature.tone} opacity-0 transition duration-300 group-hover:opacity-100`}
+                    />
+                    <div className="relative">
+                      <div
+                        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${feature.iconClass}`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </FadeIn>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <FadeIn className="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-10 text-white shadow-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div>
+                  <div className="text-4xl font-semibold mb-2">10,000+</div>
+                  <div className="text-white/80">Active users</div>
+                </div>
+                <div>
+                  <div className="text-4xl font-semibold mb-2">$50M+</div>
+                  <div className="text-white/80">Tracked assets</div>
+                </div>
+                <div>
+                  <div className="text-4xl font-semibold mb-2">99.9%</div>
+                  <div className="text-white/80">Verified uptime</div>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <FadeIn className="text-center mb-16">
+              <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
+                Loved by builders, advisors, and founders.
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                A modern experience that feels premium on day one and keeps
+                getting smarter.
+              </p>
+            </FadeIn>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {testimonials.map((testimonial, index) => (
+                <FadeIn
+                  key={testimonial.name}
+                  delay={0.08 * index}
+                  className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm"
+                >
+                  <div className="flex items-center mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={`star-${testimonial.name}-${i}`}
+                        className="h-5 w-5 text-amber-400 fill-current"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground mb-6">
+                    "{testimonial.quote}"
+                  </p>
+                  <div className="flex items-center">
+                    <div
+                      className={`mr-3 flex h-10 w-10 items-center justify-center rounded-full ${testimonial.accent}`}
+                    >
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold">{testimonial.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {testimonial.role}
+                      </div>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 px-4">
+          <div className="container mx-auto">
+            <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-12 text-white shadow-2xl">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" />
+              <div className="relative text-center">
+                <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
+                  Ready for a clearer financial story?
+                </h2>
+                <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+                  Join thousands of teams using FinanceFlow to plan with
+                  confidence and move faster every month.
+                </p>
                 <Link href="/auth/register">
-                  <Button size="lg" className="text-base sm:text-lg">
-                    Start free trial
+                  <Button
+                    size="lg"
+                    className="text-base sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
+                  >
+                    Get started free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/auth/login">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="text-base sm:text-lg"
-                  >
-                    View live demo
-                  </Button>
-                </Link>
-              </div>
-            </FadeIn>
-            <FadeIn delay={0.38}>
-              <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  No credit card required
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  Cancel anytime
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary" />
-                  Syncs in minutes
-                </div>
               </div>
             </FadeIn>
           </div>
-
-          <FadeIn delay={0.22} className="relative">
-            <div className="absolute -inset-6 rounded-[32px] bg-gradient-to-r from-emerald-400/25 via-cyan-400/25 to-amber-300/25 blur-3xl" />
-            <NetWorthSummaryCard
-              netWorth={128420}
-              changePercent={12.4}
-              summaryItems={netWorthSummaryItems}
-              forecastRange={netWorthForecastRange}
-            />
-          </FadeIn>
-        </div>
-      </section>
-
-      <section className="relative py-20 px-4">
-        <div className="container mx-auto">
-          <FadeIn className="text-center mb-16">
-            <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
-              A modern finance workspace that feels effortless.
-            </h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Every view is crafted to surface what matters now and what matters
-              next. No clutter, just clarity.
-            </p>
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
-              return (
-                <FadeIn
-                  key={feature.title}
-                  delay={0.08 * index}
-                  className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-                >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.tone} opacity-0 transition duration-300 group-hover:opacity-100`}
-                  />
-                  <div className="relative">
-                    <div
-                      className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${feature.iconClass}`}
-                    >
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </div>
-                </FadeIn>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <FadeIn className="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-10 text-white shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-semibold mb-2">10,000+</div>
-                <div className="text-white/80">Active users</div>
-              </div>
-              <div>
-                <div className="text-4xl font-semibold mb-2">$50M+</div>
-                <div className="text-white/80">Tracked assets</div>
-              </div>
-              <div>
-                <div className="text-4xl font-semibold mb-2">99.9%</div>
-                <div className="text-white/80">Verified uptime</div>
-              </div>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <FadeIn className="text-center mb-16">
-            <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
-              Loved by builders, advisors, and founders.
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A modern experience that feels premium on day one and keeps
-              getting smarter.
-            </p>
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <FadeIn
-                key={testimonial.name}
-                delay={0.08 * index}
-                className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm"
-              >
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={`star-${testimonial.name}-${i}`}
-                      className="h-5 w-5 text-amber-400 fill-current"
-                    />
-                  ))}
-                </div>
-                <p className="text-muted-foreground mb-6">
-                  "{testimonial.quote}"
-                </p>
-                <div className="flex items-center">
-                  <div
-                    className={`mr-3 flex h-10 w-10 items-center justify-center rounded-full ${testimonial.accent}`}
-                  >
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.role}
-                    </div>
-                  </div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-12 text-white shadow-2xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" />
-            <div className="relative text-center">
-              <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
-                Ready for a clearer financial story?
-              </h2>
-              <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                Join thousands of teams using FinanceFlow to plan with
-                confidence and move faster every month.
-              </p>
-              <Link href="/auth/register">
-                <Button
-                  size="lg"
-                  className="text-base sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
-                >
-                  Get started free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <footer className="border-t border-border/60 bg-background py-12 px-4">
         <div className="container mx-auto">

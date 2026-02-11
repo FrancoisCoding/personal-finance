@@ -700,7 +700,6 @@ export function useUpdateTransaction() {
 
 export function useSeedCategories() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
 
   return useMutation({
     mutationFn: async () => {
@@ -713,10 +712,6 @@ export function useSeedCategories() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      toast({
-        title: 'Categories created',
-        description: 'Default categories have been created for you.',
-      })
     },
     onError: (error) => {
       toast({

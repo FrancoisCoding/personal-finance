@@ -28,13 +28,42 @@ export function SpendingChart({
   previousMonthTotal,
   className = '',
 }: SpendingChartProps) {
+  const sortedData = [...data].sort((a, b) => b.amount - a.amount)
+  const topItems = sortedData.slice(0, 4)
+  const remainingTotal = sortedData
+    .slice(4)
+    .reduce((sum, item) => sum + item.amount, 0)
+  const totalAmount = sortedData.reduce((sum, item) => sum + item.amount, 0)
+  const displayData = [
+    ...topItems,
+    ...(remainingTotal > 0
+      ? [
+          {
+            category: 'Other',
+            amount: remainingTotal,
+            percentage: totalAmount > 0 ? (remainingTotal / totalAmount) * 100 : 0,
+            color: '#94a3b8',
+          },
+        ]
+      : []),
+  ].map((item) => ({
+    ...item,
+    percentage: totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0,
+  }))
+
   const changePercent =
     previousMonthTotal > 0
       ? ((totalSpending - previousMonthTotal) / previousMonthTotal) * 100
       : 0
   const isPositive = changePercent <= 0
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: SpendingData }> }) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean
+    payload?: Array<{ payload: SpendingData }>
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
@@ -83,11 +112,11 @@ export function SpendingChart({
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pie Chart */}
-          <div className="h-64">
+          <div className="h-52 sm:h-60">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={data}
+                  data={displayData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -95,7 +124,7 @@ export function SpendingChart({
                   paddingAngle={2}
                   dataKey="amount"
                 >
-                  {data.map((entry, index) => (
+                  {displayData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -109,32 +138,37 @@ export function SpendingChart({
             <h4 className="text-sm font-medium text-muted-foreground">
               Categories
             </h4>
-            {data.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/30"
-              >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {item.category}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.percentage.toFixed(1)}% of total
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {displayData.map((item, index) => (
+                <div
+                  key={`${item.category}-${index}`}
+                  className={
+                    'flex items-center justify-between rounded-lg border ' +
+                    'border-border/60 bg-muted/20 px-3 py-2'
+                  }
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div
+                      className="h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {item.category}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.percentage.toFixed(1)}% of total
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-foreground tabular-nums">
+                      {formatCurrency(item.amount)}
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-foreground">
-                    {formatCurrency(item.amount)}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </CardContent>

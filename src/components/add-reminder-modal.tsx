@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, type ButtonProps } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -30,11 +30,15 @@ interface AddReminderModalProps {
     date: Date
     completed: boolean
   }) => void
+  buttonLabel?: string
+  buttonVariant?: ButtonProps['variant']
   className?: string
 }
 
 export function AddReminderModal({
   onReminderAdded,
+  buttonLabel = 'Add Reminder',
+  buttonVariant = 'outline',
   className = '',
 }: AddReminderModalProps) {
   const [open, setOpen] = useState(false)
@@ -100,8 +104,12 @@ export function AddReminderModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className={`text-xs ${className}`}>
-          Add Reminder
+        <Button
+          variant={buttonVariant}
+          size="sm"
+          className={`text-xs ${className}`}
+        >
+          {buttonLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

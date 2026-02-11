@@ -13,7 +13,6 @@ import {
 import { AddTransactionModal } from '@/components/transactions/add-transaction-modal'
 import DataTablePaginationControls from '@/components/transactions/data-table-pagination-controls'
 import TransactionsTableView from '@/components/transactions/transactions-table-view'
-import { AIStatusChecker } from '@/components/ai-status-checker'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -27,9 +26,7 @@ import useTransactionsTable from '@/hooks/use-transactions-table'
 import { useToast } from '@/hooks/use-toast'
 import {
   DollarSign,
-  Loader2,
   Plus,
-  Sparkles,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react'
@@ -71,7 +68,6 @@ export default function TransactionsPage() {
   const [categorizingTransactions, setCategorizingTransactions] = useState<
     Set<string>
   >(new Set())
-  const [bulkCategorizing, setBulkCategorizing] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -167,11 +163,17 @@ export default function TransactionsPage() {
       const result = await response.json()
 
       // Update the transaction with the AI categorization
+      const matchedCategory = categories.find(
+        (category) =>
+          category.name.toLowerCase() === result.category?.toLowerCase()
+      )
+
       updateTransactionMutation.mutate(
         {
           id: transactionId,
           updates: {
             category: result.category,
+            categoryId: matchedCategory?.id,
           },
         },
         {
@@ -204,77 +206,6 @@ export default function TransactionsPage() {
         newSet.delete(transactionId)
         return newSet
       })
-    }
-  }
-
-  // Handle bulk categorization
-  const handleBulkCategorize = async () => {
-    const uncategorizedTransactions = transactions.filter((t) => !t.categoryId)
-
-    if (uncategorizedTransactions.length === 0) {
-      toast({
-        title: 'No transactions to categorize',
-        description: 'All transactions are already categorized.',
-      })
-      return
-    }
-
-    setBulkCategorizing(true)
-
-    try {
-      toast({
-        title: 'Bulk categorizing transactions...',
-        description: `AI is analyzing ${uncategorizedTransactions.length} transactions...`,
-      })
-
-      const response = await fetch('/api/ai/bulk-categorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactions: uncategorizedTransactions,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to categorize transactions')
-      }
-
-      const results = await response.json()
-
-      // Update all transactions with their AI categorization
-      let successCount = 0
-      let errorCount = 0
-
-      for (const [transactionId, result] of Object.entries(results)) {
-        try {
-          await updateTransactionMutation.mutateAsync({
-            id: transactionId,
-            updates: {
-              category: (result as any).category,
-            },
-          })
-          successCount++
-        } catch (error) {
-          console.error(`Failed to update transaction ${transactionId}:`, error)
-          errorCount++
-        }
-      }
-
-      toast({
-        title: 'Bulk categorization complete',
-        description: `Successfully categorized ${successCount} transactions${
-          errorCount > 0 ? `, ${errorCount} failed` : ''
-        }.`,
-      })
-    } catch (error) {
-      console.error('Bulk categorization failed:', error)
-      toast({
-        title: 'Bulk categorization failed',
-        description: 'Failed to categorize transactions. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setBulkCategorizing(false)
     }
   }
 
@@ -371,18 +302,6 @@ export default function TransactionsPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={handleBulkCategorize}
-            disabled={isLoading || bulkCategorizing}
-          >
-            {bulkCategorizing ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
-            )}
-            {bulkCategorizing ? 'Categorizing...' : 'Auto-Categorize'}
-          </Button>
           <Button onClick={() => setShowAddTransactionModal(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Transaction
@@ -475,10 +394,6 @@ export default function TransactionsPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="max-w-3xl">
-        <AIStatusChecker />
       </div>
 
       {/* Transactions List */}

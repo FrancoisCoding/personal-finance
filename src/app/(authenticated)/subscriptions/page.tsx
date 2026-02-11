@@ -147,18 +147,6 @@ export default function SubscriptionsPage() {
     }
   }, [status, router])
 
-  if (status === 'loading' || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary" />
-      </div>
-    )
-  }
-
-  if (!session) {
-    return null
-  }
-
   const activeSubscriptions = subscriptions.filter((s) => s.isActive)
   const totalMonthlyCost = activeSubscriptions.reduce((sum, sub) => {
     const multiplier =
@@ -339,6 +327,26 @@ export default function SubscriptionsPage() {
     (sum, item) => sum + item.monthlyEquivalent,
     0
   )
+
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div
+            className={
+              'mx-auto h-32 w-32 animate-spin rounded-full border-b-2 ' +
+              'border-primary'
+            }
+          />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return null
+  }
 
   const handleAddDetectedSubscription = (detected: {
     id: string

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
 import { AddCreditCardModal } from '@/components/add-credit-card-modal'
 
@@ -260,7 +259,12 @@ export function CreditUtilizationCard({
             })}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center">
+          <div
+            className={
+              'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+              'px-4 py-6 text-center'
+            }
+          >
             <p className="text-sm font-medium text-foreground">
               No credit cards added
             </p>
@@ -295,11 +299,8 @@ export function CreditUtilizationCard({
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1">
           <AddCreditCardModal />
-          <Button variant="outline" size="sm" className="text-xs">
-            Pay Down Balances
-          </Button>
         </div>
       </CardContent>
     </Card>

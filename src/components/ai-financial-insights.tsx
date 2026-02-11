@@ -107,7 +107,10 @@ export function AIFinancialInsights({
           id: 'high-category-spending',
           type: 'spending_pattern',
           title: `High Spending in ${topCategory.category}`,
-          description: `${topCategory.category} accounts for ${(((topCategory.amount as number) / totalSpending) * 100).toFixed(1)}% of your total spending.`,
+          description:
+            `${topCategory.category} accounts for ` +
+            `${(((topCategory.amount as number) / totalSpending) * 100).toFixed(1)}% ` +
+            'of your total spending.',
           severity: 'medium',
           actionable: true,
           action: 'Review Budget',
@@ -139,7 +142,9 @@ export function AIFinancialInsights({
           id: 'low-savings-rate',
           type: 'savings_opportunity',
           title: 'Low Savings Rate',
-          description: `Your savings rate is ${savingsRate.toFixed(1)}%. Financial experts recommend saving at least 20% of your income.`,
+          description:
+            `Your savings rate is ${savingsRate.toFixed(1)}%. ` +
+            'Financial experts recommend saving at least 20% of your income.',
           severity: 'high',
           actionable: true,
           action: 'Increase Savings',
@@ -167,7 +172,9 @@ export function AIFinancialInsights({
             id: `budget-over-${budget.id}`,
             type: 'budget_alert',
             title: `Over Budget: ${budget.category}`,
-            description: `You've exceeded your ${budget.category} budget by ${formatCurrency(spent - budget.amount)}.`,
+            description:
+              `You've exceeded your ${budget.category} budget by ` +
+              `${formatCurrency(spent - budget.amount)}.`,
             severity: 'high',
             actionable: true,
             action: 'Adjust Budget',
@@ -265,7 +272,9 @@ export function AIFinancialInsights({
           id: 'large-transactions',
           type: 'anomaly_detection',
           title: 'Unusual Spending Detected',
-          description: `Found ${largeTransactions.length} transaction(s) significantly larger than your average.`,
+          description:
+            `Found ${largeTransactions.length} transaction(s) ` +
+            'significantly larger than your average.',
           severity: 'medium',
           actionable: true,
           action: 'Review Transactions',
@@ -333,7 +342,12 @@ export function AIFinancialInsights({
       <CardContent className="space-y-4">
         {isAnalyzing ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3"></div>
+            <div
+              className={
+                'mx-auto mb-3 h-8 w-8 animate-spin rounded-full ' +
+                'border-b-2 border-purple-600'
+              }
+            />
             <p className="text-sm text-muted-foreground">
               Analyzing your finances...
             </p>
@@ -344,7 +358,10 @@ export function AIFinancialInsights({
               return (
                 <div
                   key={insight.id}
-                  className="p-4 rounded-lg border border-border/60 bg-muted/30 hover:shadow-sm transition-shadow"
+                  className={
+                    'rounded-lg border border-border/60 bg-muted/30 p-4 ' +
+                    'transition-shadow hover:shadow-sm'
+                  }
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h4 className="text-sm font-medium text-foreground">
@@ -386,7 +403,12 @@ export function AIFinancialInsights({
                                 key={index}
                                 className="text-xs text-muted-foreground flex items-start space-x-2"
                               >
-                                <div className="w-1 h-1 bg-purple-400 rounded-full mt-1.5 flex-shrink-0"></div>
+                                <div
+                                  className={
+                                    'mt-1.5 h-1 w-1 flex-shrink-0 rounded-full ' +
+                                    'bg-purple-400'
+                                  }
+                                />
                                 <span>{rec}</span>
                               </li>
                             ))}
@@ -394,16 +416,12 @@ export function AIFinancialInsights({
                       </div>
                     )}
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                      <span>
-                        Confidence: {Math.round(insight.confidence * 100)}%
-                      </span>
-                    </div>
-                    {insight.actionable && (
-                      <Button variant="outline" size="sm" className="text-xs">
-                        {insight.action}
-                      </Button>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <span>
+                      Confidence: {Math.round(insight.confidence * 100)}%
+                    </span>
+                    {insight.actionable && insight.action && (
+                      <span>Next step: {insight.action}</span>
                     )}
                   </div>
                 </div>
@@ -411,7 +429,12 @@ export function AIFinancialInsights({
             })}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center">
+          <div
+            className={
+              'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+              'px-4 py-6 text-center'
+            }
+          >
             <p className="text-sm font-medium text-foreground">
               No insights available
             </p>
@@ -431,7 +454,12 @@ export function AIFinancialInsights({
           >
             {isAnalyzing ? (
               <>
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-600 mr-2"></div>
+                <div
+                  className={
+                    'mr-2 h-3 w-3 animate-spin rounded-full border-b-2 ' +
+                    'border-purple-600'
+                  }
+                />
                 Analyzing...
               </>
             ) : (

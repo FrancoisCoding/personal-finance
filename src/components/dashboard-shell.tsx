@@ -4,7 +4,7 @@
 import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useAtom } from 'jotai'
 import {
@@ -50,11 +50,11 @@ export interface IDashboardShellProps {
 export function DashboardShell({ children, session }: IDashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
-  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([])
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const blurTimeoutRef = useRef<number | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const navigation = [
@@ -66,13 +66,6 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   ]
 
   const closeSidebar = () => setIsSidebarOpen(false)
-
-  useEffect(() => {
-    const paramValue = searchParams.get('search') ?? ''
-    if (pathname === '/transactions' && paramValue !== searchValue) {
-      setSearchValue(paramValue)
-    }
-  }, [pathname, searchParams, searchValue])
 
   useEffect(() => {
     try {
@@ -87,21 +80,19 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     }
   }, [])
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('finance-search-suggestions')
-      if (!stored) return
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed)) {
-        setSearchSuggestions(parsed.filter((item) => typeof item === 'string'))
-      }
-    } catch (error) {
-      console.warn('Failed to load search suggestions', error)
-    }
-  }, [])
+  const quickQuestions = [
+    'Give me a quick summary of my spending in the last 30 days.',
+    'What are my top three expense categories right now?',
+    'How much cash do I have across checking and savings?',
+    'Show me upcoming subscriptions and monthly totals.',
+  ]
 
   const suggestionPool = useMemo(() => {
-    const combined = [...searchHistory, ...searchSuggestions]
+    const combined = [
+      ...searchHistory,
+      ...navigation.map((item) => item.name),
+      ...quickQuestions,
+    ]
     const deduped = new Map<string, string>()
     combined.forEach((item) => {
       const trimmed = item.trim()
@@ -126,14 +117,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     return match ?? ''
   }, [searchValue, suggestionPool])
 
-  const handleSearchSubmit = () => {
-    const trimmedValue = searchValue.trim()
-    if (!trimmedValue) {
-      if (pathname === '/transactions') {
-        router.push('/transactions')
-      }
-      return
-    }
+  const storeSearchHistory = (value: string) => {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) return
 
     setSearchHistory((prev) => {
       const next = [
@@ -152,8 +138,37 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       }
       return next
     })
+  }
 
-    router.push(`/transactions?search=${encodeURIComponent(trimmedValue)}`)
+  const handleNavigate = (href: string) => {
+    setIsSearchOpen(false)
+    router.push(href)
+  }
+
+  const handleAskAssistant = (question: string) => {
+    const trimmed = question.trim()
+    if (!trimmed) return
+    storeSearchHistory(trimmed)
+    setIsSearchOpen(false)
+    router.push(`/assistant?question=${encodeURIComponent(trimmed)}`)
+  }
+
+  const handleSearchSubmit = () => {
+    const trimmedValue = searchValue.trim()
+    if (!trimmedValue) return
+
+    const lower = trimmedValue.toLowerCase()
+    const navMatch =
+      navigation.find((item) => item.name.toLowerCase() === lower) ??
+      navigation.find((item) => item.name.toLowerCase().startsWith(lower)) ??
+      navigation.find((item) => item.name.toLowerCase().includes(lower))
+
+    if (navMatch) {
+      handleNavigate(navMatch.href)
+      return
+    }
+
+    handleAskAssistant(trimmedValue)
   }
 
   const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -178,6 +193,20 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       event.preventDefault()
       handleSearchSubmit()
     }
+  }
+
+  const handleSearchFocus = () => {
+    if (blurTimeoutRef.current) {
+      window.clearTimeout(blurTimeoutRef.current)
+      blurTimeoutRef.current = null
+    }
+    setIsSearchOpen(true)
+  }
+
+  const handleSearchBlur = () => {
+    blurTimeoutRef.current = window.setTimeout(() => {
+      setIsSearchOpen(false)
+    }, 150)
   }
 
   return (
@@ -300,9 +329,137 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       value={searchValue}
                       onChange={(event) => setSearchValue(event.target.value)}
                       onKeyDown={handleSearchKeyDown}
+                      onFocus={handleSearchFocus}
+                      onBlur={handleSearchBlur}
                       ref={searchInputRef}
                     />
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
+                    {isSearchOpen && (
+                      <div
+                        className={
+                          'absolute left-0 right-0 top-[calc(100%+0.5rem)] ' +
+                          'z-50 rounded-2xl border border-border/60 bg-background ' +
+                          'p-2 shadow-xl'
+                        }
+                        onMouseDown={(event) => event.preventDefault()}
+                      >
+                        <div className="space-y-2">
+                          {searchValue.trim() && (
+                            <button
+                              type="button"
+                              onClick={() => handleAskAssistant(searchValue)}
+                              className={
+                                'flex w-full items-center justify-between rounded-xl ' +
+                                'px-3 py-2 text-left text-sm transition-colors ' +
+                                'hover:bg-muted/40'
+                              }
+                            >
+                              <span className="font-medium text-foreground">
+                                Ask Financial Assistant
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {searchValue.trim()}
+                              </span>
+                            </button>
+                          )}
+
+                          <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                            Navigate
+                          </div>
+                          <div className="space-y-1">
+                            {navigation
+                              .filter((item) => {
+                                if (!searchValue.trim()) return true
+                                return item.name
+                                  .toLowerCase()
+                                  .includes(searchValue.toLowerCase())
+                              })
+                              .slice(0, 5)
+                              .map((item) => (
+                                <button
+                                  key={item.href}
+                                  type="button"
+                                  onClick={() => handleNavigate(item.href)}
+                                  className={
+                                    'flex w-full items-center justify-between rounded-xl ' +
+                                    'px-3 py-2 text-left text-sm transition-colors ' +
+                                    'hover:bg-muted/40'
+                                  }
+                                >
+                                  <span className="text-foreground">
+                                    {item.name}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Go to page
+                                  </span>
+                                </button>
+                              ))}
+                          </div>
+
+                          {searchHistory.length > 0 && (
+                            <>
+                              <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                                Recent
+                              </div>
+                              <div className="space-y-1">
+                                {searchHistory
+                                  .filter((item) => {
+                                    if (!searchValue.trim()) return true
+                                    return item
+                                      .toLowerCase()
+                                      .includes(searchValue.toLowerCase())
+                                  })
+                                  .slice(0, 4)
+                                  .map((item) => (
+                                    <button
+                                      key={item}
+                                      type="button"
+                                      onClick={() => handleAskAssistant(item)}
+                                      className={
+                                        'flex w-full items-center justify-between rounded-xl ' +
+                                        'px-3 py-2 text-left text-sm transition-colors ' +
+                                        'hover:bg-muted/40'
+                                      }
+                                    >
+                                      <span className="text-foreground">
+                                        {item}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        Ask again
+                                      </span>
+                                    </button>
+                                  ))}
+                              </div>
+                            </>
+                          )}
+
+                          <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                            Suggested questions
+                          </div>
+                          <div className="space-y-1">
+                            {quickQuestions.map((question) => (
+                              <button
+                                key={question}
+                                type="button"
+                                onClick={() => handleAskAssistant(question)}
+                                className={
+                                  'flex w-full items-start justify-between rounded-xl ' +
+                                  'px-3 py-2 text-left text-sm transition-colors ' +
+                                  'hover:bg-muted/40'
+                                }
+                              >
+                                <span className="text-foreground">
+                                  {question}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  Ask
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <NotificationBell />
                   <ThemeToggle />

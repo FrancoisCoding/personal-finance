@@ -211,7 +211,7 @@ const TableComponent = <TData,>({
       <div
         className={cn(
           'rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto p-3'
+          'overflow-auto p-2'
         )}
         style={stickyHeader ? { maxHeight } : undefined}
       >
@@ -555,7 +555,7 @@ const TableSkeleton = <TData,>({
       <div
         className={cn(
           'rounded-2xl border border-border/60 bg-card/80 shadow-sm',
-          'overflow-auto p-3'
+          'overflow-auto p-2'
         )}
         style={{ maxHeight }}
       >

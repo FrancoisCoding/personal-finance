@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   useTransactions,
   useCategories,
@@ -54,6 +54,8 @@ import { createTransactionColumns } from '@/tableColumnDefinitions/transactions'
 export default function TransactionsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { data: transactions = [], isLoading } = useTransactions()
   const { data: categories = [] } = useCategories()
@@ -223,6 +225,16 @@ export default function TransactionsPage() {
     columns,
   })
 
+  const searchParam = searchParams.get('search') ?? ''
+
+  useEffect(() => {
+    const normalizedFilter = String(globalFilter ?? '')
+    if (searchParam !== normalizedFilter) {
+      setGlobalFilter(searchParam)
+      table.setPageIndex(0)
+    }
+  }, [globalFilter, searchParam, setGlobalFilter, table])
+
   const filteredRows = table.getFilteredRowModel().rows
   const filteredCount = filteredRows.length
   const totalIncome = filteredRows.reduce((sum, row) => {
@@ -240,8 +252,17 @@ export default function TransactionsPage() {
   const netAmount = totalIncome - totalExpenses
 
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setGlobalFilter(event.target.value)
+    const nextValue = event.target.value
+    setGlobalFilter(nextValue)
     table.setPageIndex(0)
+    const nextParams = new URLSearchParams(searchParams.toString())
+    if (nextValue.trim()) {
+      nextParams.set('search', nextValue.trim())
+    } else {
+      nextParams.delete('search')
+    }
+    const nextQuery = nextParams.toString()
+    router.replace(`${pathname}${nextQuery ? `?${nextQuery}` : ''}`)
   }
 
   const handleCategoryChange = (value: string) => {

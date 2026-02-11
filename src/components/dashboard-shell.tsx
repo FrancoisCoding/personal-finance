@@ -4,7 +4,8 @@
 import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
@@ -48,7 +49,10 @@ export interface IDashboardShellProps {
 /** Dashboard shell with modern sidebar and top navigation. */
 export function DashboardShell({ children, session }: IDashboardShellProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
+  const [searchValue, setSearchValue] = useState('')
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
@@ -59,6 +63,39 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   ]
 
   const closeSidebar = () => setIsSidebarOpen(false)
+
+  useEffect(() => {
+    const paramValue = searchParams.get('search') ?? ''
+    if (pathname === '/transactions') {
+      if (paramValue !== searchValue) {
+        setSearchValue(paramValue)
+      }
+      return
+    }
+
+    if (searchValue !== '') {
+      setSearchValue('')
+    }
+  }, [pathname, searchParams, searchValue])
+
+  const handleSearchSubmit = () => {
+    const trimmedValue = searchValue.trim()
+    if (!trimmedValue) {
+      if (pathname === '/transactions') {
+        router.push('/transactions')
+      }
+      return
+    }
+
+    router.push(`/transactions?search=${encodeURIComponent(trimmedValue)}`)
+  }
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleSearchSubmit()
+    }
+  }
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -166,6 +203,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     <Input
                       placeholder="Search here"
                       className="h-10 rounded-full border-border/60 bg-muted/30 pl-10 text-sm"
+                      value={searchValue}
+                      onChange={(event) => setSearchValue(event.target.value)}
+                      onKeyDown={handleSearchKeyDown}
                     />
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
                   </div>

@@ -475,7 +475,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((transaction) => {
                   const categoryName =
@@ -559,7 +559,7 @@ export default function DashboardPage() {
                 <CardTitle>Budget Progress</CardTitle>
                 <CardDescription>This month's spending</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {budgets.length > 0 ? (
                   <div className="space-y-3">
                     {budgets.slice(0, 3).map((budget) => (
@@ -593,7 +593,7 @@ export default function DashboardPage() {
                 <CardTitle>Financial Goals</CardTitle>
                 <CardDescription>Track your progress</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {goals.length > 0 ? (
                   <div className="space-y-3">
                     {goals.slice(0, 3).map((goal) => (

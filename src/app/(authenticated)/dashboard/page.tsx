@@ -22,7 +22,6 @@ import { SpendingChart } from '@/components/spending-chart'
 import { CashFlowChart } from '@/components/cash-flow-chart'
 import { FinancialOverviewCards } from '@/components/financial-overview-cards'
 import { CreditUtilizationCard } from '@/components/credit-utilization-card'
-import { BulkCategorizeModal } from '@/components/bulk-categorize-modal'
 import { AnalyticsDashboard } from '@/components/analytics-dashboard'
 import { AddReminderModal } from '@/components/add-reminder-modal'
 import { AIFinancialInsights } from '@/components/ai-financial-insights'
@@ -50,6 +49,24 @@ export default function DashboardPage() {
   const { data: session } = useSession()
   const [insights, setInsights] = useState<any[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [reminders, setReminders] = useState([
+    {
+      id: '1',
+      title: 'Review monthly budget',
+      date: '2024-01-15',
+      time: '10:00 AM',
+      completed: false,
+      type: 'budget' as const,
+    },
+    {
+      id: '2',
+      title: 'Pay credit card bill',
+      date: '2024-01-20',
+      time: '2:00 PM',
+      completed: false,
+      type: 'bill' as const,
+    },
+  ])
   const { addNotification } = useNotifications()
   const queryClient = useQueryClient()
 
@@ -171,14 +188,6 @@ export default function DashboardPage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5)
 
-  // Count uncategorized transactions
-  const uncategorizedCount = transactions.filter(
-    (t) =>
-      !t.categoryId &&
-      !t.categoryRelation?.name &&
-      (!t.category || t.category === 'Other')
-  ).length
-
   // Prepare spending chart data
   const spendingData = analyzeSpendingPatterns(transformedTransactions).map(
     (pattern) => ({
@@ -217,26 +226,6 @@ export default function DashboardPage() {
     }
   }).reverse()
 
-  // Mock reminders data (you can replace with real data)
-  const reminders = [
-    {
-      id: '1',
-      title: 'Review monthly budget',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      completed: false,
-      type: 'budget' as const,
-    },
-    {
-      id: '2',
-      title: 'Pay credit card bill',
-      date: '2024-01-20',
-      time: '2:00 PM',
-      completed: false,
-      type: 'bill' as const,
-    },
-  ]
-
   // Calculate net worth (simplified - you can enhance this)
   const assets = totalBalance
   const liabilities = 0 // You can add credit card balances, loans, etc.
@@ -257,9 +246,9 @@ export default function DashboardPage() {
     { label: 'Cash reserve', value: cashReserve },
   ]
   const hasNetWorthData = accounts.length > 0 || transactions.length > 0
-  const dailyExpenses = Array.from({ length: 7 }, (_, index) => {
+  const dailyExpenses = Array.from({ length: 30 }, (_, index) => {
     const day = new Date()
-    day.setDate(day.getDate() - (6 - index))
+    day.setDate(day.getDate() - (29 - index))
     const dayStart = new Date(day)
     dayStart.setHours(0, 0, 0, 0)
     const dayEnd = new Date(day)
@@ -276,16 +265,43 @@ export default function DashboardPage() {
       })
       .reduce((total, transaction) => total + Math.abs(transaction.amount), 0)
   })
-  const maxDailyExpense = Math.max(0, ...dailyExpenses)
-  const hasForecast = maxDailyExpense > 0
-  const forecastAverage = hasForecast
-    ? dailyExpenses.reduce((sum, value) => sum + value, 0) /
-      dailyExpenses.length
-    : undefined
+  const recentWindow = 7
+  const recentExpenses = dailyExpenses.slice(-recentWindow)
+  const recentAverage =
+    recentExpenses.length > 0
+      ? recentExpenses.reduce((sum, value) => sum + value, 0) /
+        recentExpenses.length
+      : 0
+  const rangeSource = dailyExpenses.filter((value) => value > 0)
+  const rangeValues = rangeSource.length >= 5 ? rangeSource : dailyExpenses
+  const sortedRangeValues = [...rangeValues].sort((a, b) => a - b)
+  const getRangePercentile = (percentile: number) => {
+    if (sortedRangeValues.length === 0) {
+      return 0
+    }
+    const index = Math.round((sortedRangeValues.length - 1) * percentile)
+    return sortedRangeValues[Math.min(sortedRangeValues.length - 1, index)]
+  }
+  const hasForecast = sortedRangeValues.some((value) => value > 0)
+  const forecastAverage =
+    hasForecast && recentAverage > 0 ? recentAverage : undefined
   const forecastProjected =
     forecastAverage !== undefined ? forecastAverage * 30 : undefined
-  const netWorthForecastHeights = hasForecast
-    ? dailyExpenses.map((value) => (value / maxDailyExpense) * 100)
+  const rawRangeLow = getRangePercentile(0.25)
+  const rawRangeTypical = getRangePercentile(0.5)
+  const rawRangeHigh = getRangePercentile(0.85)
+  const normalizedLow = Math.min(rawRangeLow, rawRangeTypical, rawRangeHigh)
+  const normalizedHigh = Math.max(rawRangeLow, rawRangeTypical, rawRangeHigh)
+  const normalizedTypical = Math.min(
+    Math.max(rawRangeTypical, normalizedLow),
+    normalizedHigh
+  )
+  const forecastRange = hasForecast
+    ? {
+        low: normalizedLow,
+        typical: normalizedTypical,
+        high: normalizedHigh,
+      }
     : undefined
 
   return (
@@ -350,7 +366,7 @@ export default function DashboardPage() {
           <NetWorthSummaryCard
             netWorth={netWorth}
             summaryItems={netWorthSummaryItems}
-            forecastHeights={netWorthForecastHeights}
+            forecastRange={forecastRange}
             forecastAverage={forecastAverage}
             forecastProjected={forecastProjected}
             hasData={hasNetWorthData}
@@ -369,15 +385,40 @@ export default function DashboardPage() {
           <div className="h-full">
             <RemindersCard
               reminders={reminders}
-              onAddReminder={() => console.log('Add reminder')}
-              onToggleReminder={(id) => console.log('Toggle reminder', id)}
-              className="h-full"
-            />
-            <AddReminderModal
-              onReminderAdded={(reminder) => {
-                console.log('Reminder added:', reminder)
-                // In a real app, you'd update the reminders state
+              action={
+                <AddReminderModal
+                  onReminderAdded={(reminder) => {
+                    const reminderDate = new Date(reminder.date)
+                    setReminders((prev) => [
+                      {
+                        id: reminder.id,
+                        title: reminder.title,
+                        date: reminderDate.toLocaleDateString('en-US'),
+                        time: reminderDate.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        }),
+                        completed: false,
+                        type: 'custom',
+                      },
+                      ...prev,
+                    ])
+                  }}
+                  buttonLabel="Add"
+                  buttonVariant="ghost"
+                  className={
+                    'h-8 px-3 text-xs font-medium text-blue-700 ' +
+                    'hover:bg-blue-50/50 dark:text-blue-300 ' +
+                    'dark:hover:bg-blue-500/10'
+                  }
+                />
+              }
+              onToggleReminder={(id) => {
+                setReminders((prev) =>
+                  prev.filter((reminder) => reminder.id !== id)
+                )
               }}
+              className="h-full"
             />
           </div>
         </div>
@@ -432,11 +473,6 @@ export default function DashboardPage() {
                     Your latest financial activity
                   </CardDescription>
                 </div>
-                {uncategorizedCount > 0 && (
-                  <BulkCategorizeModal
-                    uncategorizedCount={uncategorizedCount}
-                  />
-                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">

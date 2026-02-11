@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { DashboardShell } from '@/components/dashboard-shell'
+import { AutoCategorizeModal } from '@/components/auto-categorize-modal'
 
 export default function AuthenticatedLayout({
   children,
@@ -40,6 +41,9 @@ export default function AuthenticatedLayout({
   }
 
   return (
-    <DashboardShell session={session}>{children}</DashboardShell>
+    <DashboardShell session={session}>
+      <AutoCategorizeModal />
+      {children}
+    </DashboardShell>
   )
 }

@@ -15,7 +15,11 @@ export interface INetWorthSummaryCardProps {
   netWorth: number
   changePercent?: number
   summaryItems: INetWorthSummaryItem[]
-  forecastHeights?: number[]
+  forecastRange?: {
+    low: number
+    typical: number
+    high: number
+  }
   forecastAverage?: number
   forecastProjected?: number
   hasData?: boolean
@@ -27,7 +31,7 @@ export function NetWorthSummaryCard({
   netWorth,
   changePercent,
   summaryItems,
-  forecastHeights,
+  forecastRange,
   forecastAverage,
   forecastProjected,
   hasData = true,
@@ -37,12 +41,19 @@ export function NetWorthSummaryCard({
     hasData && changePercent !== undefined && changePercent !== 0
   const isChangePositive = (changePercent ?? 0) >= 0
   const ChangeIcon = isChangePositive ? TrendingUp : TrendingDown
-  const hasForecast = Boolean(forecastHeights && forecastHeights.length > 0)
-  const forecastColumnCount = forecastHeights?.length ?? 0
-  const averageHeight = hasForecast
-    ? forecastHeights!.reduce((sum, value) => sum + value, 0) /
-      forecastHeights!.length
-    : 0
+  const hasForecast =
+    Boolean(forecastRange) &&
+    Boolean(
+      forecastRange &&
+        (forecastRange.low > 0 ||
+          forecastRange.typical > 0 ||
+          forecastRange.high > 0)
+    )
+  const safeForecastRange = forecastRange ?? {
+    low: 0,
+    typical: 0,
+    high: 0,
+  }
 
   return (
     <div
@@ -120,36 +131,57 @@ export function NetWorthSummaryCard({
               </div>
             </div>
             {hasForecast ? (
-              <div className="relative mt-4 h-24">
-                <div
-                  className="grid h-full items-end gap-2"
-                  style={{
-                    gridTemplateColumns: `repeat(${forecastColumnCount}, minmax(0, 1fr))`,
-                  }}
-                >
-                  {forecastHeights?.map((height, index) => (
-                    <div
-                      key={`forecast-bar-${index}`}
-                      className={
-                        'rounded-full bg-gradient-to-t from-emerald-500/80 ' +
-                        'via-emerald-400/70 to-cyan-400/70'
-                      }
-                      style={{
-                        height: `${Math.min(Math.max(height, 0), 100)}%`,
-                        opacity: index === forecastHeights.length - 1 ? 1 : 0.85,
-                      }}
-                    />
-                  ))}
-                </div>
+              <div className="mt-4 rounded-2xl border border-border/60 bg-background/60 p-4">
                 <div
                   className={
-                    'pointer-events-none absolute left-0 right-0 border-t ' +
-                    'border-dashed border-emerald-400/40'
+                    'flex items-center justify-between text-[11px] uppercase ' +
+                    'tracking-[0.2em] text-muted-foreground'
                   }
-                  style={{
-                    bottom: `${Math.min(Math.max(averageHeight, 0), 100)}%`,
-                  }}
-                />
+                >
+                  <span>Daily range</span>
+                  <span>Last 30 days</span>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div
+                    className={
+                      'rounded-xl border border-border/60 bg-background/80 ' +
+                      'p-2 text-center'
+                    }
+                  >
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      Low
+                    </p>
+                    <p className="text-sm font-semibold text-foreground mt-1">
+                      {formatCurrency(safeForecastRange.low)}
+                    </p>
+                  </div>
+                  <div
+                    className={
+                      'rounded-xl border border-border/60 bg-background/80 ' +
+                      'p-2 text-center'
+                    }
+                  >
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      Typical
+                    </p>
+                    <p className="text-sm font-semibold text-foreground mt-1">
+                      {formatCurrency(safeForecastRange.typical)}
+                    </p>
+                  </div>
+                  <div
+                    className={
+                      'rounded-xl border border-border/60 bg-background/80 ' +
+                      'p-2 text-center'
+                    }
+                  >
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      High
+                    </p>
+                    <p className="text-sm font-semibold text-foreground mt-1">
+                      {formatCurrency(safeForecastRange.high)}
+                    </p>
+                  </div>
+                </div>
               </div>
             ) : (
               <div

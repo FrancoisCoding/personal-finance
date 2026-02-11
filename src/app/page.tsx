@@ -77,7 +77,7 @@ const netWorthSummaryItems = [
   { label: 'Cash reserve', value: 9880 },
 ]
 
-const netWorthForecastHeights = [40, 62, 52, 74, 58, 82, 64]
+const netWorthForecastRange = { low: 120, typical: 165, high: 210 }
 
 const testimonials = [
   {
@@ -208,7 +208,7 @@ export default function LandingPage() {
               netWorth={128420}
               changePercent={12.4}
               summaryItems={netWorthSummaryItems}
-              forecastHeights={netWorthForecastHeights}
+              forecastRange={netWorthForecastRange}
             />
           </FadeIn>
         </div>

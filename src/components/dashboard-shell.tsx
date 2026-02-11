@@ -135,9 +135,6 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }, [searchValue, suggestionPool])
 
   const normalizedSearch = searchValue.trim().toLowerCase()
-  const askOptionMeta = searchValue.trim()
-    ? optionLookup.get(`ask:${searchValue.trim()}`)
-    : undefined
 
   const storeSearchHistory = (value: string) => {
     const trimmedValue = value.trim()
@@ -361,6 +358,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     })
     return map
   }, [optionList])
+
+  const askOptionMeta = searchValue.trim()
+    ? optionLookup.get(`ask:${searchValue.trim()}`)
+    : undefined
 
   const activeOptionId =
     activeOptionIndex >= 0 ? optionList[activeOptionIndex]?.id : undefined

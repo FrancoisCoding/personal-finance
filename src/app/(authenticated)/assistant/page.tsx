@@ -538,7 +538,7 @@ export default function FinancialAssistantPage() {
                     Press Enter to send, Shift + Enter for a new line.
                   </p>
                   <Button
-                    onClick={handleSendMessage}
+                    onClick={() => handleSendMessage()}
                     disabled={isLoading || !input.trim()}
                     className="gap-2"
                   >

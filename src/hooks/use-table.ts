@@ -5,6 +5,7 @@ import {
   ColumnDef,
   ColumnFiltersState,
   ColumnPinningState,
+  FilterFn,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -46,10 +47,7 @@ export default function useTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter,
-    },
-    globalFilterFn: 'fuzzy',
+    globalFilterFn: fuzzyFilter as FilterFn<TData>,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

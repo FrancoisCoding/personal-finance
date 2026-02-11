@@ -45,7 +45,16 @@ import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
-  const [reminders, setReminders] = useState([
+  const [reminders, setReminders] = useState<
+    Array<{
+      id: string
+      title: string
+      date: string
+      time: string
+      completed: boolean
+      type: 'budget' | 'bill' | 'goal' | 'custom'
+    }>
+  >([
     {
       id: '1',
       title: 'Review monthly budget',

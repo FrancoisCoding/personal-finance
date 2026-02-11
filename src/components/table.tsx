@@ -169,7 +169,7 @@ const TableComponent = <TData,>({
     getPaginationRowModel: enablePagination
       ? getPaginationRowModel()
       : undefined,
-    globalFilterFn,
+    globalFilterFn: globalFilterFn as FilterFn<TData>,
     enableGlobalFilter: enableFiltering,
     enableColumnResizing,
     columnResizeMode: 'onChange',

@@ -74,12 +74,12 @@ const getMostCommon = (values: Array<string | null | undefined>) => {
   }
   let top: string | undefined
   let max = 0
-  for (const [value, count] of counts.entries()) {
+  counts.forEach((count, value) => {
     if (count > max) {
       max = count
       top = value
     }
-  }
+  })
   return top
 }
 

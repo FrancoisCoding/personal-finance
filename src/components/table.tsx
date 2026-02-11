@@ -218,8 +218,8 @@ const TableComponent = <TData,>({
         <table className='w-full border-collapse text-sm'>
           <thead
             className={cn(
-              'bg-card bg-opacity-100',
-              stickyHeader && 'sticky top-0 z-10'
+              'bg-muted shadow-sm',
+              stickyHeader && 'sticky top-0 z-20'
             )}
           >
             {table.getHeaderGroups().map((headerGroup) => (
@@ -237,7 +237,8 @@ const TableComponent = <TData,>({
                       className={cn(
                         'relative px-4 py-3 text-left text-[11px] font-semibold',
                         'uppercase tracking-[0.2em] text-muted-foreground',
-                        'border-b border-border/60 bg-card bg-opacity-100',
+                        'border-b border-border/70 bg-muted',
+                        stickyHeader && 'sticky top-0 z-20',
                         canSort &&
                           'cursor-pointer select-none hover:bg-muted/30',
                         alignRight && 'text-right'
@@ -560,7 +561,7 @@ const TableSkeleton = <TData,>({
         style={{ maxHeight }}
       >
         <table className='w-full border-collapse text-sm'>
-          <thead className='sticky top-0 z-10 bg-card bg-opacity-100'>
+          <thead className='sticky top-0 z-20 bg-muted shadow-sm'>
             <tr>
               {columns.map((column, index) => (
                 <th
@@ -568,7 +569,8 @@ const TableSkeleton = <TData,>({
                   className={cn(
                     'px-4 py-3 text-left text-[11px] font-semibold uppercase',
                     'tracking-[0.2em] text-muted-foreground',
-                    'border-b border-border/60 bg-card bg-opacity-100'
+                    'border-b border-border/70 bg-muted',
+                    'sticky top-0 z-20'
                   )}
                   style={{
                     width: column.size,

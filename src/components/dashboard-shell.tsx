@@ -13,7 +13,6 @@ import {
   Search,
   Receipt,
   Sparkles,
-  Target,
   Wallet,
   X,
 } from 'lucide-react'
@@ -55,10 +54,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
     { name: 'Accounts', href: '/accounts', icon: Wallet },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Budgets', href: '/budgets', icon: Wallet },
-    { name: 'Goals', href: '/goals', icon: Target },
     { name: 'Subscriptions', href: '/subscriptions', icon: CreditCard },
-    { name: 'AI Chat', href: '/ai-chat', icon: Sparkles },
+    { name: 'Financial Assistant', href: '/assistant', icon: Sparkles },
   ]
 
   const closeSidebar = () => setIsSidebarOpen(false)

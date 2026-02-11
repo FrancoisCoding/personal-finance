@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Menu, X, TrendingUp, Target, Settings, Wallet } from 'lucide-react'
+import { Menu, X, TrendingUp, Settings, Sparkles, Wallet } from 'lucide-react'
 import { useAtom } from 'jotai'
 import { sidebarOpenAtom } from '@/store/ui-atoms'
 import { Logo, LogoCompact } from '@/components/logo'
@@ -34,10 +34,8 @@ export function Navbar() {
     { name: 'Dashboard', href: '/dashboard', icon: TrendingUp },
     { name: 'Accounts', href: '/accounts', icon: Wallet },
     { name: 'Transactions', href: '/transactions', icon: TrendingUp },
-    { name: 'Budgets', href: '/budgets', icon: Target },
-    { name: 'Goals', href: '/goals', icon: Target },
     { name: 'Subscriptions', href: '/subscriptions', icon: Settings },
-    { name: 'AI Chat', href: '/ai-chat', icon: Settings },
+    { name: 'Financial Assistant', href: '/assistant', icon: Sparkles },
   ]
 
   if (!session) {

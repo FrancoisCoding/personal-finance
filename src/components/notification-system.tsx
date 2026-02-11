@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useRef,
+  useId,
 } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -258,6 +259,15 @@ function NotificationItem({ notification }: { notification: Notification }) {
           : 'border-border/60'
       )}
       onClick={() => markAsRead(notification.id)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${notification.title}. ${notification.message}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          markAsRead(notification.id)
+        }
+      }}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -345,6 +355,8 @@ export function NotificationCenter() {
     showNotificationCenter,
     setShowNotificationCenter,
   } = useNotifications()
+  const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -398,6 +410,18 @@ export function NotificationCenter() {
     (notification) => notification.read
   )
 
+  useEffect(() => {
+    if (!showNotificationCenter) return
+    panelRef.current?.focus()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowNotificationCenter(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showNotificationCenter, setShowNotificationCenter])
+
   if (!showNotificationCenter) return null
 
   return (
@@ -405,8 +429,16 @@ export function NotificationCenter() {
       <div
         className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
         onClick={() => setShowNotificationCenter(false)}
+        aria-hidden="true"
       />
-      <div className="absolute right-4 top-4 bottom-4 w-full max-w-md">
+      <div
+        className="absolute right-4 top-4 bottom-4 w-full max-w-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        ref={panelRef}
+      >
         <div
           className={
             'flex h-full flex-col rounded-2xl border border-border/60 ' +
@@ -418,7 +450,10 @@ export function NotificationCenter() {
               <div>
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-muted-foreground" />
-                  <p className="text-lg font-semibold text-foreground">
+                  <p
+                    className="text-lg font-semibold text-foreground"
+                    id={titleId}
+                  >
                     Notifications
                   </p>
                   {unreadCount > 0 && (
@@ -606,7 +641,12 @@ export function NotificationCenter() {
 
 // Notification bell component
 export function NotificationBell() {
-  const { unreadCount, setShowNotificationCenter } = useNotifications()
+  const { unreadCount, showNotificationCenter, setShowNotificationCenter } =
+    useNotifications()
+  const hasUnread = unreadCount > 0
+  const label = hasUnread
+    ? `Notifications (${unreadCount} unread)`
+    : 'Notifications'
 
   return (
     <Button
@@ -614,6 +654,9 @@ export function NotificationBell() {
       size="sm"
       className="relative p-2"
       onClick={() => setShowNotificationCenter(true)}
+      aria-label={label}
+      aria-haspopup="dialog"
+      aria-expanded={showNotificationCenter}
     >
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
@@ -703,6 +746,7 @@ export function ToastNotification({
               size="sm"
               className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => removeNotification(notification.id)}
+              aria-label="Dismiss notification"
             >
               <X className="h-3 w-3" />
             </Button>
@@ -721,7 +765,12 @@ export function ToastContainer() {
     .slice(0, 3)
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div
+      className="fixed top-4 right-4 z-50 space-y-2"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {toastNotifications.map((notification) => (
         <ToastNotification key={notification.id} notification={notification} />
       ))}

@@ -5,7 +5,15 @@ import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useId,
+  type FocusEvent,
+  type KeyboardEvent,
+} from 'react'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
@@ -57,6 +65,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const blurTimeoutRef = useRef<number | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchPanelId = useId()
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
@@ -214,8 +223,21 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     }, 150)
   }
 
+  const handleSearchContainerBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return
+    }
+    setIsSearchOpen(false)
+  }
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+      >
+        Skip to main content
+      </a>
       <div className="relative min-h-screen px-4 py-6 lg:px-8 lg:py-8">
         <div className="grid min-h-[calc(100vh-3rem)] grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
             {isSidebarOpen && (
@@ -248,6 +270,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                   size="icon"
                   className="lg:hidden flex-shrink-0"
                   onClick={closeSidebar}
+                  aria-label="Close sidebar"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -273,6 +296,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       key={item.name}
                       href={item.href}
                       onClick={closeSidebar}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
                         'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
                         isActive
@@ -306,6 +330,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     size="icon"
                     className="lg:hidden"
                     onClick={() => setIsSidebarOpen(true)}
+                    aria-label="Open sidebar"
                   >
                     <Menu className="h-5 w-5" />
                   </Button>
@@ -329,6 +354,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       </div>
                     )}
                     <Input
+                      type="search"
                       placeholder="Search here"
                       className="h-10 rounded-full border-border/60 bg-muted/30 pl-10 text-sm"
                       value={searchValue}
@@ -336,17 +362,25 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       onKeyDown={handleSearchKeyDown}
                       onFocus={handleSearchFocus}
                       onBlur={handleSearchBlur}
+                      aria-label="Search the app"
+                      aria-expanded={isSearchOpen}
+                      aria-controls={searchPanelId}
                       ref={searchInputRef}
                     />
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
                     {isSearchOpen && (
                       <div
+                        id={searchPanelId}
+                        role="region"
+                        aria-label="Search suggestions"
                         className={
                           'absolute left-0 right-0 top-[calc(100%+0.5rem)] ' +
                           'z-50 rounded-2xl border border-border/60 bg-background ' +
                           'p-2 shadow-xl'
                         }
                         onMouseDown={(event) => event.preventDefault()}
+                        onFocusCapture={handleSearchFocus}
+                        onBlurCapture={handleSearchContainerBlur}
                       >
                         <div className="space-y-2">
                           {searchValue.trim() && (
@@ -489,6 +523,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       <Button
                         variant="ghost"
                         className="relative h-9 w-9 rounded-full"
+                        aria-label="Open user menu"
                       >
                         <Avatar className="h-9 w-9">
                           <AvatarImage
@@ -530,9 +565,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                 </div>
               </div>
 
-              <div className="flex-1 p-4 lg:p-6">
+              <main id="main-content" tabIndex={-1} className="flex-1 p-4 lg:p-6">
                 {children}
-              </div>
+              </main>
             </div>
         </div>
       </div>

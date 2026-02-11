@@ -56,6 +56,7 @@ interface NotificationContextType {
   ) => void
   markAsRead: (id: string) => void
   markAllAsRead: () => void
+  clearRead: () => void
   removeNotification: (id: string) => void
   clearAll: () => void
   showNotificationCenter: boolean
@@ -100,6 +101,10 @@ export function NotificationProvider({
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
 
+  const clearRead = () => {
+    setNotifications((prev) => prev.filter((notification) => !notification.read))
+  }
+
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
@@ -116,6 +121,7 @@ export function NotificationProvider({
         addNotification,
         markAsRead,
         markAllAsRead,
+        clearRead,
         removeNotification,
         clearAll,
         showNotificationCenter,
@@ -141,19 +147,35 @@ export function useNotifications() {
 // Individual notification item
 function NotificationItem({ notification }: { notification: Notification }) {
   const { markAsRead, removeNotification } = useNotifications()
+  const isUnread = !notification.read
 
   const getIcon = () => {
     switch (notification.type) {
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />
+        return <CheckCircle className="h-4 w-4" />
       case 'error':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />
+        return <AlertTriangle className="h-4 w-4" />
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />
+        return <AlertTriangle className="h-4 w-4" />
       case 'info':
-        return <Info className="h-5 w-5 text-blue-500" />
+        return <Info className="h-4 w-4" />
       default:
-        return <Info className="h-5 w-5 text-gray-500" />
+        return <Info className="h-4 w-4" />
+    }
+  }
+
+  const getIconTone = () => {
+    switch (notification.type) {
+      case 'success':
+        return 'bg-emerald-500/15 text-emerald-500'
+      case 'error':
+        return 'bg-rose-500/15 text-rose-500'
+      case 'warning':
+        return 'bg-amber-500/15 text-amber-500'
+      case 'info':
+        return 'bg-sky-500/15 text-sky-500'
+      default:
+        return 'bg-muted/40 text-muted-foreground'
     }
   }
 
@@ -189,32 +211,46 @@ function NotificationItem({ notification }: { notification: Notification }) {
   return (
     <Card
       className={cn(
-        'rounded-xl border border-border/60 bg-muted/20 transition-colors ' +
-          'hover:bg-muted/30 cursor-pointer',
-        !notification.read && 'border-sky-500/30 bg-sky-500/10'
+        'cursor-pointer rounded-2xl border transition-all ' +
+          'bg-background/60 hover:bg-muted/30',
+        isUnread
+          ? 'border-emerald-500/30 bg-emerald-500/5 shadow-sm'
+          : 'border-border/60'
       )}
       onClick={() => markAsRead(notification.id)}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex-shrink-0">{getIcon()}</div>
-          <div className="min-w-0 flex-1">
+          <div
+            className={cn(
+              'mt-0.5 flex h-9 w-9 items-center justify-center rounded-full',
+              getIconTone()
+            )}
+          >
+            {getIcon()}
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              <div className="min-w-0 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="text-sm font-semibold text-foreground">
                     {notification.title}
                   </h4>
+                  {isUnread && (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-500">
+                      New
+                    </span>
+                  )}
                   {notification.category && (
                     <Badge
                       variant="outline"
-                      className={cn('text-xs', getCategoryColor())}
+                      className={cn('text-[10px]', getCategoryColor())}
                     >
                       {getCategoryName(notification.category) || 'Unknown'}
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground">
                   {notification.message}
                 </p>
               </div>
@@ -226,11 +262,12 @@ function NotificationItem({ notification }: { notification: Notification }) {
                   e.stopPropagation()
                   removeNotification(notification.id)
                 }}
+                aria-label="Dismiss notification"
               >
                 <X className="h-3 w-3" />
               </Button>
             </div>
-            <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(notification.timestamp, {
                   addSuffix: true,
@@ -263,6 +300,7 @@ export function NotificationCenter() {
     notifications,
     unreadCount,
     markAllAsRead,
+    clearRead,
     clearAll,
     showNotificationCenter,
     setShowNotificationCenter,
@@ -270,6 +308,12 @@ export function NotificationCenter() {
 
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
+
+  const unreadNotifications = notifications.filter(
+    (notification) => !notification.read
+  )
+  const readNotifications = notifications.filter((notification) => notification.read)
+  const readCount = readNotifications.length
 
   const filteredNotifications = notifications.filter((notification) => {
     if (filter === 'unread' && notification.read) return false
@@ -289,6 +333,29 @@ export function NotificationCenter() {
         .map((n) => getCategoryName(n.category))
         .filter((category): category is string => category !== null)
     )
+  ).sort((a, b) => a.localeCompare(b))
+
+  const categoryCounts = categories.reduce<Record<string, number>>(
+    (counts, category) => {
+      counts[category] = notifications.filter(
+        (notification) => getCategoryName(notification.category) === category
+      ).length
+      return counts
+    },
+    {}
+  )
+
+  const filterOptions = [
+    { id: 'all', label: 'All', count: notifications.length },
+    { id: 'unread', label: 'Unread', count: unreadNotifications.length },
+    { id: 'read', label: 'Read', count: readCount },
+  ] as const
+
+  const filteredUnread = filteredNotifications.filter(
+    (notification) => !notification.read
+  )
+  const filteredRead = filteredNotifications.filter(
+    (notification) => notification.read
   )
 
   if (!showNotificationCenter) return null
@@ -306,116 +373,132 @@ export function NotificationCenter() {
             'bg-card/95 shadow-2xl'
           }
         >
-          <div
-            className={
-              'flex items-start justify-between gap-4 px-5 py-4 border-b ' +
-              'border-border/60'
-            }
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-muted-foreground" />
-                <p
-                  className={
-                    'text-xs font-semibold uppercase tracking-[0.2em] ' +
-                    'text-muted-foreground'
-                  }
-                >
-                  Alerts
+          <div className="border-b border-border/60 px-5 py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-lg font-semibold text-foreground">
+                    Notifications
+                  </p>
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] text-emerald-500 border-emerald-500/30"
+                    >
+                      {unreadCount} new
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {notifications.length > 0
+                    ? 'Stay on top of your finances with timely alerts.'
+                    : 'You are all caught up.'}
                 </p>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {unreadCount > 0
-                  ? `${unreadCount} unread notifications`
-                  : 'You are all caught up.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllAsRead}
-                disabled={unreadCount === 0}
-                className="h-8 w-8 p-0"
-                aria-label="Mark all as read"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                className="h-8 w-8 p-0"
-                aria-label="Clear all notifications"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowNotificationCenter(false)}
                 className="h-8 w-8 p-0"
-                aria-label="Close alerts panel"
+                aria-label="Close notifications"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                disabled={unreadCount === 0}
+                className="h-8 px-3 text-xs"
+              >
+                Mark all read
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearRead}
+                disabled={readCount === 0}
+                className="h-8 px-3 text-xs"
+              >
+                Clear read
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAll}
+                disabled={notifications.length === 0}
+                className="h-8 px-3 text-xs"
+              >
+                Clear all
+              </Button>
+            </div>
           </div>
 
-          <div className="px-5 py-3 border-b border-border/60">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1 rounded-full bg-muted/40 p-1">
-                {['all', 'unread', 'read'].map((filterOption) => {
-                  const isActive = filter === filterOption
+          <div className="px-5 py-3 border-b border-border/60 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {filterOptions.map((option) => {
+                const isActive = filter === option.id
+                return (
+                  <Button
+                    key={option.id}
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-7 px-3 text-xs rounded-full',
+                      isActive
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                    onClick={() => setFilter(option.id)}
+                  >
+                    {option.label}
+                    <span className="ml-2 text-[10px] text-muted-foreground">
+                      {option.count}
+                    </span>
+                  </Button>
+                )
+              })}
+            </div>
+            {categories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Categories
+                </span>
+                {['all', ...categories].map((category) => {
+                  const isActive = categoryFilter === category
                   return (
                     <Button
-                      key={filterOption}
+                      key={category}
                       variant="ghost"
                       size="sm"
-                      className={
-                        'h-7 px-3 text-xs rounded-full ' +
-                        (isActive
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground')
-                      }
-                      onClick={() => setFilter(filterOption as any)}
+                      className={cn(
+                        'h-7 px-3 text-xs rounded-full',
+                        isActive
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      )}
+                      onClick={() => setCategoryFilter(category)}
                     >
-                      {filterOption.charAt(0).toUpperCase() +
-                        filterOption.slice(1)}
+                      {category === 'all'
+                        ? 'All'
+                        : category.charAt(0).toUpperCase() + category.slice(1)}
+                      {category !== 'all' && (
+                        <span className="ml-2 text-[10px] text-muted-foreground">
+                          {categoryCounts[category] ?? 0}
+                        </span>
+                      )}
                     </Button>
                   )
                 })}
               </div>
-              {categories.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">
-                    Category
-                  </span>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className={
-                      'h-7 rounded-full border border-border/60 ' +
-                      'bg-background px-3 text-xs text-foreground'
-                    }
-                  >
-                    <option value="all">All</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category
-                          ? category.charAt(0).toUpperCase() +
-                            category.slice(1)
-                          : 'Unknown'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-4">
               {filteredNotifications.length === 0 ? (
                 <div
                   className={
@@ -427,16 +510,51 @@ export function NotificationCenter() {
                     No notifications
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    You're all caught up.
+                    Everything is up to date.
                   </p>
                 </div>
+              ) : filter === 'all' ? (
+                <div className="space-y-4">
+                  {filteredUnread.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="uppercase tracking-[0.2em]">New</span>
+                        <span>{filteredUnread.length}</span>
+                      </div>
+                      {filteredUnread.map((notification) => (
+                        <NotificationItem
+                          key={notification.id}
+                          notification={notification}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {filteredRead.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="uppercase tracking-[0.2em]">
+                          Earlier
+                        </span>
+                        <span>{filteredRead.length}</span>
+                      </div>
+                      {filteredRead.map((notification) => (
+                        <NotificationItem
+                          key={notification.id}
+                          notification={notification}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
-                filteredNotifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.id}
-                    notification={notification}
-                  />
-                ))
+                <div className="space-y-3">
+                  {filteredNotifications.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </ScrollArea>

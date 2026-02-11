@@ -24,13 +24,17 @@ export interface FinancialInsight {
   action?: string
 }
 
+const sanitizeEnvValue = (value?: string) =>
+  value ? value.replace(/^['"]|['"]$/g, '').trim() : ''
+
 // OpenRouter configuration
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_API_KEY = sanitizeEnvValue(process.env.OPENROUTER_API_KEY)
 const OPENROUTER_BASE_URL =
-  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free'
-const OPENROUTER_SITE_URL = process.env.OPENROUTER_SITE_URL
-const OPENROUTER_SITE_NAME = process.env.OPENROUTER_SITE_NAME
+  sanitizeEnvValue(process.env.OPENROUTER_BASE_URL) ||
+  'https://openrouter.ai/api/v1'
+const OPENROUTER_MODEL = sanitizeEnvValue(process.env.OPENROUTER_MODEL)
+const OPENROUTER_SITE_URL = sanitizeEnvValue(process.env.OPENROUTER_SITE_URL)
+const OPENROUTER_SITE_NAME = sanitizeEnvValue(process.env.OPENROUTER_SITE_NAME)
 
 function buildOpenRouterHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -106,19 +110,39 @@ async function callOpenRouter(
       throw new Error('OpenRouter API key not configured.')
     }
 
-    console.log('Calling OpenRouter with model:', model)
-
-    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: buildOpenRouterHeaders(),
-      body: JSON.stringify({
-        model,
+    const buildRequestBody = (modelOverride?: string) => {
+      const body: Record<string, unknown> = {
         messages,
         temperature: 0.7,
         top_p: 0.9,
         max_tokens: 200,
-      }),
+      }
+
+      if (modelOverride) {
+        body.model = modelOverride
+      }
+
+      return body
+    }
+
+    console.log(
+      'Calling OpenRouter with model:',
+      model || 'default'
+    )
+
+    let response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: buildOpenRouterHeaders(),
+      body: JSON.stringify(buildRequestBody(model)),
     })
+
+    if (!response.ok && response.status === 404 && model) {
+      response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: buildOpenRouterHeaders(),
+        body: JSON.stringify(buildRequestBody()),
+      })
+    }
 
     if (!response.ok) {
       const errorText = await response.text()

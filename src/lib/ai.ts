@@ -131,9 +131,7 @@ async function callOpenRouter(messages: AIMessage[]): Promise<string> {
 
       if (res.status === 404) {
         const modelName = OPENROUTER_MODEL || 'default'
-        throw new Error(
-          `Model not found: ${modelName}. Try a different model.`
-        )
+        throw new Error(`Model not found: ${modelName}. Try a different model.`)
       }
       if (res.status === 401) {
         throw new Error('Invalid API key. Check your OPENROUTER_API_KEY.')
@@ -724,11 +722,40 @@ function getSimpleCategory(description: string): string {
  * Generate financial insights with fallback
  */
 export async function generateFinancialInsights(
-  transactions: Array<{ id: string; description: string; amount: number; category?: string; date: string | Date; type: string }>,
-  budgets: Array<{ id: string; name: string; amount: number; category?: string }>,
-  goals: Array<{ id: string; name: string; targetAmount: number; currentAmount: number }>
+  transactions: Array<{
+    id: string
+    description: string
+    amount: number
+    category?: string
+    date: string | Date
+    type: string
+  }>,
+  budgets: Array<{
+    id: string
+    name: string
+    amount: number
+    category?: string
+  }>,
+  goals: Array<{
+    id: string
+    name: string
+    targetAmount: number
+    currentAmount: number
+  }>
 ): Promise<FinancialInsight[]> {
   try {
+    const totalSpent = transactions.reduce(
+      (sum, transaction) => sum + Math.abs(transaction.amount || 0),
+      0
+    )
+    const totalBudgeted = budgets.reduce(
+      (sum, budget) => sum + (budget.amount || 0),
+      0
+    )
+    const totalGoalTarget = goals.reduce(
+      (sum, goal) => sum + (goal.targetAmount || 0),
+      0
+    )
     const messages: AIMessage[] = [
       {
         role: 'system',
@@ -736,7 +763,13 @@ export async function generateFinancialInsights(
       },
       {
         role: 'user',
-        content: `${transactions.length} transactions totaling $${transactions.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0)}`,
+        content: `${transactions.length} transactions totaling $${totalSpent}`,
+      },
+      {
+        role: 'user',
+        content:
+          `${budgets.length} budgets totaling $${totalBudgeted} and ` +
+          `${goals.length} goals targeting $${totalGoalTarget}.`,
       },
     ]
 
@@ -757,7 +790,10 @@ export async function generateFinancialInsights(
       {
         type: 'spending_pattern',
         title: 'Spending Summary',
-        description: `You have ${transactions.length} transactions. Review your spending patterns regularly.`,
+        description:
+          `You have ${transactions.length} transactions, ` +
+          `${budgets.length} budgets, and ${goals.length} goals. ` +
+          'Review your spending patterns regularly.',
         severity: 'low',
         actionable: true,
       },
@@ -770,16 +806,36 @@ export async function generateFinancialInsights(
  */
 export async function chatWithAI(
   message: string,
-      context: { transactions: Array<{ description: string; amount: number; category?: string }>; budgets: Array<{ name: string; amount: number }>; goals: Array<{ name: string; targetAmount: number; currentAmount: number }> }
+  context: {
+    transactions: Array<{
+      description: string
+      amount: number
+      category?: string
+    }>
+    budgets: Array<{ name: string; amount: number }>
+    goals: Array<{
+      name: string
+      targetAmount: number
+      currentAmount: number
+    }>
+  }
 ): Promise<string> {
   try {
     console.log('💬 Chat request:', message)
+    const contextSummary =
+      `${context.transactions.length} transactions, ` +
+      `${context.budgets.length} budgets, ` +
+      `${context.goals.length} goals.`
 
     const messages: AIMessage[] = [
       {
         role: 'system',
         content:
           'You are a helpful financial assistant. Give brief, helpful advice.',
+      },
+      {
+        role: 'system',
+        content: `Context summary: ${contextSummary}`,
       },
       {
         role: 'user',

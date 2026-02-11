@@ -13,15 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDistanceToNow } from 'date-fns'
-import {
-  Bell,
-  CheckCircle,
-  AlertTriangle,
-  Info,
-  X,
-  Trash2,
-  Eye,
-} from 'lucide-react'
+import { Bell, CheckCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Utility function to safely extract category name
@@ -106,10 +98,7 @@ export function NotificationProvider({
         try {
           const storageKey = `financeflow.notification.${dedupeKey}`
           const storedTimestamp = window.localStorage.getItem(storageKey)
-          if (
-            storedTimestamp &&
-            now - Number(storedTimestamp) < throttleMs
-          ) {
+          if (storedTimestamp && now - Number(storedTimestamp) < throttleMs) {
             dedupeCacheRef.current.set(dedupeKey, Number(storedTimestamp))
             return
           }
@@ -143,7 +132,9 @@ export function NotificationProvider({
   }
 
   const clearRead = () => {
-    setNotifications((prev) => prev.filter((notification) => !notification.read))
+    setNotifications((prev) =>
+      prev.filter((notification) => !notification.read)
+    )
   }
 
   const removeNotification = (id: string) => {
@@ -364,7 +355,9 @@ export function NotificationCenter() {
   const unreadNotifications = notifications.filter(
     (notification) => !notification.read
   )
-  const readNotifications = notifications.filter((notification) => notification.read)
+  const readNotifications = notifications.filter(
+    (notification) => notification.read
+  )
   const readCount = readNotifications.length
 
   const filteredNotifications = notifications.filter((notification) => {

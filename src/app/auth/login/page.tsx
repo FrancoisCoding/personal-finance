@@ -1,12 +1,18 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { Github, Mail } from 'lucide-react'
@@ -31,18 +37,18 @@ export default function LoginPage() {
 
       if (result?.error) {
         toast({
-          title: "Error",
-          description: "Invalid email or password",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Invalid email or password',
+          variant: 'destructive',
         })
       } else {
         router.push('/dashboard')
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -55,9 +61,9 @@ export default function LoginPage() {
       await signIn(provider, { callbackUrl: '/dashboard' })
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to sign in with " + provider,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to sign in with ' + provider,
+        variant: 'destructive',
       })
       setIsLoading(false)
     }
@@ -66,7 +72,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main
         id="main-content"
         tabIndex={-1}
@@ -126,7 +132,10 @@ export default function LoginPage() {
               {/* Email Form */}
               <form onSubmit={handleEmailSignIn} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Email address
                   </label>
                   <Input
@@ -140,7 +149,10 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Password
                   </label>
                   <Input
@@ -153,19 +165,18 @@ export default function LoginPage() {
                     className="mt-1"
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
               </form>
 
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Don't have an account?{' '}
-                  <Link href="/auth/register" className="text-primary hover:underline">
+                  Don&apos;t have an account?{' '}
+                  <Link
+                    href="/auth/register"
+                    className="text-primary hover:underline"
+                  >
                     Sign up
                   </Link>
                 </p>
@@ -176,4 +187,4 @@ export default function LoginPage() {
       </main>
     </div>
   )
-} 
+}

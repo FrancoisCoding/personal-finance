@@ -1,4 +1,4 @@
-import { categorizeTransaction, generateFinancialInsights } from './ai'
+import { categorizeTransaction } from './ai'
 
 export interface EnhancedInsight {
   id: string
@@ -89,10 +89,7 @@ export async function autoCategorizeTransactions(
         })
       } catch (error) {
         // Fallback to rule-based categorization
-        const fallbackCategory = getFallbackCategory(
-          transaction.description,
-          transaction.amount
-        )
+        const fallbackCategory = getFallbackCategory(transaction.description)
         results.push({
           transactionId: transaction.id,
           suggestedCategory: fallbackCategory,
@@ -191,7 +188,8 @@ export function analyzeGoalProgress(
     const percentage = (currentAmount / goal.targetAmount) * 100
 
     const monthsElapsed = goal.createdAt
-      ? (currentDate.getFullYear() - new Date(goal.createdAt).getFullYear()) * 12 +
+      ? (currentDate.getFullYear() - new Date(goal.createdAt).getFullYear()) *
+          12 +
         (currentDate.getMonth() - new Date(goal.createdAt).getMonth())
       : 0
     const monthsLeft = Math.max(
@@ -237,7 +235,12 @@ export function analyzeGoalProgress(
  * Analyze spending patterns and trends
  */
 export function analyzeSpendingPatterns(
-  transactions: Array<{ date: string | Date; type: string; amount: number; category?: string }>
+  transactions: Array<{
+    date: string | Date
+    type: string
+    amount: number
+    category?: string
+  }>
 ): SpendingPattern[] {
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
@@ -325,7 +328,12 @@ export async function generateEnhancedInsights(
     date: string | Date
     type: string
   }>,
-  budgets: Array<{ id: string; name: string; amount: number; category?: string }>,
+  budgets: Array<{
+    id: string
+    name: string
+    amount: number
+    category?: string
+  }>,
   goals: Array<{
     id: string
     name: string
@@ -464,7 +472,7 @@ export async function generateEnhancedInsights(
 /**
  * Fallback categorization when AI fails
  */
-function getFallbackCategory(description: string, amount: number): string {
+function getFallbackCategory(description: string): string {
   const lowerDesc = description.toLowerCase()
 
   if (

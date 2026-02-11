@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -135,98 +135,103 @@ export default function FinancialAssistantPage() {
     }
   }, [session, status, router])
 
-  const handleSendMessage = async (overrideMessage?: string) => {
-    const trimmed = (overrideMessage ?? input).trim()
-    if (!trimmed || isLoading) return
+  const handleSendMessage = useCallback(
+    async (overrideMessage?: string) => {
+      const trimmed = (overrideMessage ?? input).trim()
+      if (!trimmed || isLoading) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: trimmed,
-      role: 'user',
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-
-    try {
-      const now = new Date()
-      const ninetyDaysAgo = new Date()
-      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-      const accountLookup = new Map(accounts.map((account) => [account.id, account]))
-      const recentTransactions = transactions.filter(
-        (transaction) => new Date(transaction.date) >= ninetyDaysAgo
-      )
-
-      const context = {
-        generatedAt: now.toISOString(),
-        transactions: recentTransactions.map((transaction) => {
-          const account = accountLookup.get(transaction.accountId)
-          return {
-            description: transaction.description,
-            amount: transaction.amount,
-            category:
-              transaction.categoryRelation?.name ||
-              transaction.category ||
-              undefined,
-            type: transaction.type,
-            date: transaction.date,
-            accountId: transaction.accountId,
-            accountName: account?.name ?? transaction.account?.name,
-            accountType: account?.type ?? transaction.account?.type,
-          }
-        }),
-        accounts: accounts.map((account) => ({
-          id: account.id,
-          name: account.name,
-          type: account.type,
-          balance: account.balance,
-          creditLimit: account.creditLimit,
-        })),
-        subscriptions: subscriptions.map((subscription) => ({
-          name: subscription.name,
-          amount: subscription.amount,
-          billingCycle: subscription.billingCycle,
-          nextBillingDate: subscription.nextBillingDate,
-        })),
-      }
-
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, context }),
-      })
-
-      const data = await response.json().catch(() => null)
-      if (!response.ok) {
-        const errorMessage =
-          data?.error || 'Failed to get a response. Please try again.'
-        throw new Error(errorMessage)
-      }
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data?.response || 'No response generated.',
-        role: 'assistant',
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: trimmed,
+        role: 'user',
         timestamp: new Date(),
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
-      console.error('Assistant error:', error)
-      toast({
-        title: 'Assistant error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to get a response. Please check your OpenRouter setup.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      setMessages((prev) => [...prev, userMessage])
+      setInput('')
+      setIsLoading(true)
+
+      try {
+        const now = new Date()
+        const ninetyDaysAgo = new Date()
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+        const accountLookup = new Map(
+          accounts.map((account) => [account.id, account])
+        )
+        const recentTransactions = transactions.filter(
+          (transaction) => new Date(transaction.date) >= ninetyDaysAgo
+        )
+
+        const context = {
+          generatedAt: now.toISOString(),
+          transactions: recentTransactions.map((transaction) => {
+            const account = accountLookup.get(transaction.accountId)
+            return {
+              description: transaction.description,
+              amount: transaction.amount,
+              category:
+                transaction.categoryRelation?.name ||
+                transaction.category ||
+                undefined,
+              type: transaction.type,
+              date: transaction.date,
+              accountId: transaction.accountId,
+              accountName: account?.name ?? transaction.account?.name,
+              accountType: account?.type ?? transaction.account?.type,
+            }
+          }),
+          accounts: accounts.map((account) => ({
+            id: account.id,
+            name: account.name,
+            type: account.type,
+            balance: account.balance,
+            creditLimit: account.creditLimit,
+          })),
+          subscriptions: subscriptions.map((subscription) => ({
+            name: subscription.name,
+            amount: subscription.amount,
+            billingCycle: subscription.billingCycle,
+            nextBillingDate: subscription.nextBillingDate,
+          })),
+        }
+
+        const response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: trimmed, context }),
+        })
+
+        const data = await response.json().catch(() => null)
+        if (!response.ok) {
+          const errorMessage =
+            data?.error || 'Failed to get a response. Please try again.'
+          throw new Error(errorMessage)
+        }
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data?.response || 'No response generated.',
+          role: 'assistant',
+          timestamp: new Date(),
+        }
+
+        setMessages((prev) => [...prev, assistantMessage])
+      } catch (error) {
+        console.error('Assistant error:', error)
+        toast({
+          title: 'Assistant error',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to get a response. Please check your OpenRouter setup.',
+          variant: 'destructive',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [accounts, input, isLoading, subscriptions, toast, transactions]
+  )
 
   useEffect(() => {
     const questionParam = searchParams.get('question') ?? ''
@@ -294,7 +299,10 @@ export default function FinancialAssistantPage() {
               <div className="flex-1 rounded-2xl border border-border/60 bg-muted/15 p-4">
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={`assistant-skeleton-${index}`} className="flex gap-3">
+                    <div
+                      key={`assistant-skeleton-${index}`}
+                      className="flex gap-3"
+                    >
                       <Skeleton className="h-8 w-8 rounded-full" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-3 w-24" />
@@ -400,9 +408,7 @@ export default function FinancialAssistantPage() {
                   <Bot className="h-4 w-4" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">
-                    Financial Assistant
-                  </CardTitle>
+                  <CardTitle className="text-lg">Financial Assistant</CardTitle>
                   <CardDescription>
                     Friendly, clear answers from your real data.
                   </CardDescription>

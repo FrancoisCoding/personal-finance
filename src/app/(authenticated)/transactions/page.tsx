@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
@@ -23,12 +23,7 @@ import {
 import { SearchBar } from '@/components/ui/search-bar'
 import useTransactionsTable from '@/hooks/use-transactions-table'
 import { useToast } from '@/hooks/use-toast'
-import {
-  DollarSign,
-  Plus,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react'
+import { DollarSign, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -52,7 +47,7 @@ import {
 import { createTransactionColumns } from '@/tableColumnDefinitions/transactions'
 
 export default function TransactionsPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
   const { data: transactions = [], isLoading } = useTransactions()
@@ -73,18 +68,6 @@ export default function TransactionsPage() {
       router.push('/auth/login')
     }
   }, [status, router])
-
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
-  if (!session) {
-    return null
-  }
 
   // Filter transactions based on category and type
   const filteredTransactions = useMemo(
@@ -133,80 +116,83 @@ export default function TransactionsPage() {
   }, [accounts, categories, filteredTransactions])
 
   // Handle AI categorization
-  const handleAutoCategorize = async (transactionId: string) => {
-    const transaction = transactions.find((t) => t.id === transactionId)
-    if (!transaction) return
+  const handleAutoCategorize = useCallback(
+    async (transactionId: string) => {
+      const transaction = transactions.find((t) => t.id === transactionId)
+      if (!transaction) return
 
-    // Add to categorizing set
-    setCategorizingTransactions((prev) => new Set(prev).add(transactionId))
+      // Add to categorizing set
+      setCategorizingTransactions((prev) => new Set(prev).add(transactionId))
 
-    try {
-      toast({
-        title: 'Categorizing transaction...',
-        description: 'AI is analyzing your transaction...',
-      })
+      try {
+        toast({
+          title: 'Categorizing transaction...',
+          description: 'AI is analyzing your transaction...',
+        })
 
-      const response = await fetch('/api/ai/categorize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: transaction.description || '',
-          amount: Math.abs(transaction.amount || 0),
-        }),
-      })
+        const response = await fetch('/api/ai/categorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: transaction.description || '',
+            amount: Math.abs(transaction.amount || 0),
+          }),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to categorize transaction')
-      }
-
-      const result = await response.json()
-
-      // Update the transaction with the AI categorization
-      const matchedCategory = categories.find(
-        (category) =>
-          category.name.toLowerCase() === result.category?.toLowerCase()
-      )
-
-      updateTransactionMutation.mutate(
-        {
-          id: transactionId,
-          updates: {
-            category: result.category,
-            categoryId: matchedCategory?.id,
-          },
-        },
-        {
-          onSuccess: () => {
-            toast({
-              title: 'Transaction categorized',
-              description: `Successfully categorized as: ${result.category}`,
-            })
-          },
-          onError: () => {
-            toast({
-              title: 'Update failed',
-              description: 'Categorized but failed to update transaction',
-              variant: 'destructive',
-            })
-          },
+        if (!response.ok) {
+          throw new Error('Failed to categorize transaction')
         }
-      )
-    } catch (error) {
-      console.error('AI categorization failed:', error)
-      toast({
-        title: 'Categorization failed',
-        description: 'Failed to categorize transaction. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      // Remove from categorizing set
-      setCategorizingTransactions((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(transactionId)
-        return newSet
-      })
-    }
-  }
+
+        const result = await response.json()
+
+        // Update the transaction with the AI categorization
+        const matchedCategory = categories.find(
+          (category) =>
+            category.name.toLowerCase() === result.category?.toLowerCase()
+        )
+
+        updateTransactionMutation.mutate(
+          {
+            id: transactionId,
+            updates: {
+              category: result.category,
+              categoryId: matchedCategory?.id,
+            },
+          },
+          {
+            onSuccess: () => {
+              toast({
+                title: 'Transaction categorized',
+                description: `Successfully categorized as: ${result.category}`,
+              })
+            },
+            onError: () => {
+              toast({
+                title: 'Update failed',
+                description: 'Categorized but failed to update transaction',
+                variant: 'destructive',
+              })
+            },
+          }
+        )
+      } catch (error) {
+        console.error('AI categorization failed:', error)
+        toast({
+          title: 'Categorization failed',
+          description: 'Failed to categorize transaction. Please try again.',
+          variant: 'destructive',
+        })
+      } finally {
+        // Remove from categorizing set
+        setCategorizingTransactions((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(transactionId)
+          return newSet
+        })
+      }
+    },
+    [categories, toast, transactions, updateTransactionMutation]
+  )
 
   const columns = useMemo(
     () =>
@@ -296,8 +282,7 @@ export default function TransactionsPage() {
             Transactions
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Track and manage your transaction history with smart
-            categorization.
+            Track and manage your transaction history with smart categorization.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

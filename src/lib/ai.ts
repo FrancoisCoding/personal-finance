@@ -1,16 +1,34 @@
-// huggingfaceUtils.ts
+// hosted-ai.ts
 
 /**
- * Hugging Face Inference API wrapper with debugging
+ * OpenRouter API wrapper
  */
-const HF_TOKEN = process.env.NEXT_PUBLIC_HF_TOKEN!
-if (!HF_TOKEN) {
-  console.error('⚠️ NEXT_PUBLIC_HF_TOKEN is not defined')
-  throw new Error('Hugging Face API token not configured')
-}
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_BASE_URL =
+  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free'
+const OPENROUTER_SITE_URL = process.env.OPENROUTER_SITE_URL
+const OPENROUTER_SITE_NAME = process.env.OPENROUTER_SITE_NAME
 
-// Try a different default model that's more reliable
-const HF_MODEL = process.env.NEXT_PUBLIC_HF_MODEL ?? 'microsoft/DialoGPT-medium'
+function buildOpenRouterHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (OPENROUTER_API_KEY) {
+    headers.Authorization = `Bearer ${OPENROUTER_API_KEY}`
+  }
+
+  if (OPENROUTER_SITE_URL) {
+    headers['HTTP-Referer'] = OPENROUTER_SITE_URL
+  }
+
+  if (OPENROUTER_SITE_NAME) {
+    headers['X-Title'] = OPENROUTER_SITE_NAME
+  }
+
+  return headers
+}
 
 interface AIMessage {
   role: 'system' | 'user'
@@ -21,51 +39,29 @@ interface AIMessage {
  * Test function to check if the API and model are working
  */
 export async function testHuggingFaceAPI(): Promise<void> {
-  const testModels = [
-    'microsoft/DialoGPT-medium',
-    'google/flan-t5-small',
-    'facebook/blenderbot-400M-distill',
-    'gpt2',
-  ]
+  if (!OPENROUTER_API_KEY) {
+    console.log('OpenRouter API key not configured')
+    return
+  }
 
-  console.log('🔍 Testing Hugging Face API...')
-  console.log('Token available:', !!HF_TOKEN)
-  console.log('Token length:', HF_TOKEN?.length)
+  console.log('Testing OpenRouter API...')
+  try {
+    const res = await fetch(`${OPENROUTER_BASE_URL}/models`, {
+      headers: buildOpenRouterHeaders(),
+    })
 
-  for (const model of testModels) {
-    try {
-      const endpoint = `https://api-inference.huggingface.co/models/${model}`
-      console.log(`\n📡 Testing model: ${model}`)
-      console.log(`Endpoint: ${endpoint}`)
+    console.log(`Status: ${res.status} ${res.statusText}`)
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${HF_TOKEN}`,
-        },
-        body: JSON.stringify({
-          inputs: 'Hello, how are you?',
-          parameters: {
-            max_length: 50,
-            temperature: 0.7,
-          },
-        }),
-      })
-
-      console.log(`Status: ${res.status} ${res.statusText}`)
-
-      if (res.ok) {
-        const data = await res.json()
-        console.log('✅ Success! Response:', data)
-        return // Stop on first success
-      } else {
-        const error = await res.text()
-        console.log('❌ Error response:', error)
-      }
-    } catch (error) {
-      console.log('❌ Network error:', error)
+    if (res.ok) {
+      const data = await res.json()
+      console.log('Success! Model count:', data.data?.length || 0)
+      return
     }
+
+    const error = await res.text()
+    console.log('Error response:', error)
+  } catch (error) {
+    console.log('Network error:', error)
   }
 }
 
@@ -81,71 +77,62 @@ function buildPrompt(messages: AIMessage[]): string {
 }
 
 /**
- * Make a request to Hugging Face with better error handling
+ * Make a request to OpenRouter with better error handling
  */
-async function callHuggingFace(messages: AIMessage[]): Promise<string> {
-  const prompt = buildPrompt(messages)
-  const endpoint = `https://api-inference.huggingface.co/models/${HF_MODEL}`
+async function callOpenRouter(messages: AIMessage[]): Promise<string> {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OpenRouter API key not configured')
+  }
 
-  console.log('🚀 Making request to:', endpoint)
-  console.log('📝 Prompt:', prompt.substring(0, 100) + '...')
+  const prompt = buildPrompt(messages)
+  const endpoint = `${OPENROUTER_BASE_URL}/chat/completions`
+
+  console.log('Making request to:', endpoint)
+  console.log('Prompt:', prompt.substring(0, 100) + '...')
 
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${HF_TOKEN}`,
-      },
+      headers: buildOpenRouterHeaders(),
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 100,
-          temperature: 0.7,
-          do_sample: true,
-          return_full_text: false,
-        },
+        model: OPENROUTER_MODEL,
+        messages,
+        max_tokens: 100,
+        temperature: 0.7,
       }),
     })
 
-    console.log('📡 Response status:', res.status, res.statusText)
+    console.log('Response status:', res.status, res.statusText)
 
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('❌ API Error:', errorText)
+      console.error('API Error:', errorText)
 
-      // Check for specific error types
       if (res.status === 404) {
-        throw new Error(`Model not found: ${HF_MODEL}. Try a different model.`)
-      } else if (res.status === 401) {
-        throw new Error('Invalid API token. Check your NEXT_PUBLIC_HF_TOKEN.')
-      } else if (res.status === 503) {
-        throw new Error('Model is loading. Try again in a few seconds.')
-      } else {
-        throw new Error(`API request failed: ${res.status} - ${errorText}`)
+        throw new Error(`Model not found: ${OPENROUTER_MODEL}. Try a different model.`)
       }
+      if (res.status === 401) {
+        throw new Error('Invalid API key. Check your OPENROUTER_API_KEY.')
+      }
+      if (res.status === 429) {
+        throw new Error('Rate limit exceeded. Try again later.')
+      }
+
+      throw new Error(`API request failed: ${res.status} - ${errorText}`)
     }
 
     const data = await res.json()
-    console.log('✅ Raw response:', data)
+    console.log('Raw response:', data)
 
-    // Handle different response formats
-    if (Array.isArray(data)) {
-      if (data[0]?.generated_text) {
-        return data[0].generated_text
-      } else if (data[0]?.text) {
-        return data[0].text
-      }
-    } else if (data.generated_text) {
-      return data.generated_text
-    } else if (data.text) {
-      return data.text
+    const content = data.choices?.[0]?.message?.content
+    if (!content) {
+      console.error('Unexpected response format:', data)
+      throw new Error('Unexpected response format from API')
     }
 
-    console.error('❌ Unexpected response format:', data)
-    throw new Error('Unexpected response format from API')
+    return content
   } catch (error) {
-    console.error('❌ Request failed:', error)
+    console.error('Request failed:', error)
     throw error
   }
 }
@@ -218,7 +205,7 @@ Respond with ONLY the category name.`,
       },
     ]
 
-    const response = await callHuggingFace(messages)
+    const response = await callOpenRouter(messages)
     const category =
       response
         .trim()
@@ -232,7 +219,7 @@ Respond with ONLY the category name.`,
       tags: [category.toLowerCase()],
     }
   } catch (error) {
-    console.error('❌ AI categorization failed, using fallback:', error)
+    console.error('AI categorization failed, using fallback:', error)
     return {
       category: getSimpleCategory(description.toLowerCase()),
       confidence: 0.3,
@@ -729,7 +716,7 @@ export async function generateFinancialInsights(
       },
     ]
 
-    const response = await callHuggingFace(messages)
+    const response = await callOpenRouter(messages)
 
     return [
       {
@@ -741,7 +728,7 @@ export async function generateFinancialInsights(
       },
     ]
   } catch (error) {
-    console.error('❌ AI insights failed:', error)
+    console.error('AI insights failed:', error)
     return [
       {
         type: 'spending_pattern',
@@ -776,13 +763,13 @@ export async function chatWithAI(
       },
     ]
 
-    const response = await callHuggingFace(messages)
+    const response = await callOpenRouter(messages)
     return (
       response.trim() ||
       'I understand your question. Could you please be more specific?'
     )
   } catch (error) {
-    console.error('❌ Chat failed:', error)
+    console.error('Chat failed:', error)
     return `I'm having trouble connecting to the AI service. Your question: "${message}" - I'd recommend checking your recent transactions and budgets manually for now.`
   }
 }

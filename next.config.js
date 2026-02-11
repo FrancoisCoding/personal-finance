@@ -14,9 +14,6 @@ const nextConfig = {
     GITHUB_ID: process.env.GITHUB_ID,
     GITHUB_SECRET: process.env.GITHUB_SECRET,
 
-    // Hugging Face (public key)
-    NEXT_PUBLIC_HF_TOKEN: process.env.NEXT_PUBLIC_HF_TOKEN,
-
     // Teller
     NEXT_PUBLIC_TELLER_APPLICATION_ID:
       process.env.NEXT_PUBLIC_TELLER_APPLICATION_ID,

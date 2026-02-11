@@ -1,4 +1,4 @@
-// local-ai.ts - Local AI implementation using Ollama
+// local-ai.ts - Hosted AI implementation using OpenRouter
 
 interface AIMessage {
   role: 'system' | 'user'
@@ -24,34 +24,70 @@ export interface FinancialInsight {
   action?: string
 }
 
-// Default Ollama configuration
-const OLLAMA_BASE_URL =
-  process.env.NEXT_PUBLIC_OLLAMA_URL || 'http://localhost:11434'
-const DEFAULT_MODEL = process.env.NEXT_PUBLIC_OLLAMA_MODEL || 'llama2:7b'
+// OpenRouter configuration
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_BASE_URL =
+  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free'
+const OPENROUTER_SITE_URL = process.env.OPENROUTER_SITE_URL
+const OPENROUTER_SITE_NAME = process.env.OPENROUTER_SITE_NAME
+
+function buildOpenRouterHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (OPENROUTER_API_KEY) {
+    headers.Authorization = `Bearer ${OPENROUTER_API_KEY}`
+  }
+
+  if (OPENROUTER_SITE_URL) {
+    headers['HTTP-Referer'] = OPENROUTER_SITE_URL
+  }
+
+  if (OPENROUTER_SITE_NAME) {
+    headers['X-Title'] = OPENROUTER_SITE_NAME
+  }
+
+  return headers
+}
 
 /**
- * Check if Ollama is running and available
+ * Check if OpenRouter is configured and available
  */
-export async function checkOllamaStatus(): Promise<boolean> {
+export async function checkOpenRouterStatus(): Promise<boolean> {
+  if (!OPENROUTER_API_KEY) {
+    console.error('OpenRouter API key not configured')
+    return false
+  }
+
   try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`)
+    const response = await fetch(`${OPENROUTER_BASE_URL}/models`, {
+      headers: buildOpenRouterHeaders(),
+    })
     return response.ok
   } catch (error) {
-    console.error('Ollama not available:', error)
+    console.error('OpenRouter not available:', error)
     return false
   }
 }
 
 /**
- * Get available models from Ollama
+ * Get available models from OpenRouter
  */
 export async function getAvailableModels(): Promise<string[]> {
+  if (!OPENROUTER_API_KEY) {
+    return []
+  }
+
   try {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/tags`)
+    const response = await fetch(`${OPENROUTER_BASE_URL}/models`, {
+      headers: buildOpenRouterHeaders(),
+    })
     if (!response.ok) throw new Error('Failed to fetch models')
 
     const data = await response.json()
-    return data.models?.map((model: { name: string }) => model.name) || []
+    return data.data?.map((model: { id: string }) => model.id) || []
   } catch (error) {
     console.error('Failed to get models:', error)
     return []
@@ -59,118 +95,52 @@ export async function getAvailableModels(): Promise<string[]> {
 }
 
 /**
- * Pull a model if it's not available
+ * Generate response using OpenRouter
  */
-export async function pullModel(modelName: string): Promise<boolean> {
-  try {
-    console.log(`Pulling model: ${modelName}`)
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/pull`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: modelName }),
-    })
-
-    if (!response.ok) throw new Error('Failed to pull model')
-
-    // Wait for the pull to complete
-    const reader = response.body?.getReader()
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = new TextDecoder().decode(value)
-        const lines = chunk.split('\n').filter((line) => line.trim())
-
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line)
-            if (data.status === 'success') {
-              console.log('Model pulled successfully')
-              return true
-            }
-          } catch (e) {
-            // Ignore parsing errors for partial chunks
-          }
-        }
-      }
-    }
-
-    return true
-  } catch (error) {
-    console.error('Failed to pull model:', error)
-    return false
-  }
-}
-
-/**
- * Generate response using Ollama
- */
-async function callOllama(
+async function callOpenRouter(
   messages: AIMessage[],
-  model: string = DEFAULT_MODEL
+  model: string = OPENROUTER_MODEL
 ): Promise<string> {
   try {
-    // Check if Ollama is available
-    const isAvailable = await checkOllamaStatus()
-    if (!isAvailable) {
-      throw new Error('Ollama is not running. Please start Ollama first.')
+    if (!OPENROUTER_API_KEY) {
+      throw new Error('OpenRouter API key not configured.')
     }
 
-    // Check if model is available, pull if not
-    const availableModels = await getAvailableModels()
-    if (!availableModels.includes(model)) {
-      console.log(`Model ${model} not found, attempting to pull...`)
-      const pulled = await pullModel(model)
-      if (!pulled) {
-        throw new Error(`Failed to pull model: ${model}`)
-      }
-    }
+    console.log('Calling OpenRouter with model:', model)
 
-    // Build the prompt
-    const prompt =
-      messages
-        .map((m) =>
-          m.role === 'system' ? `System: ${m.content}` : `User: ${m.content}`
-        )
-        .join('\n\n') + '\n\nAssistant:'
-
-    console.log('🤖 Calling Ollama with model:', model)
-    console.log('📝 Prompt:', prompt.substring(0, 200) + '...')
-
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildOpenRouterHeaders(),
       body: JSON.stringify({
-        model: model,
-        prompt: prompt,
-        stream: false,
-        options: {
-          temperature: 0.7,
-          top_p: 0.9,
-          max_tokens: 200,
-        },
+        model,
+        messages,
+        temperature: 0.7,
+        top_p: 0.9,
+        max_tokens: 200,
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Ollama API error: ${response.status} - ${errorText}`)
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    const result = data.response?.trim() || 'No response generated'
+    const result = data.choices?.[0]?.message?.content?.trim()
+    if (!result) {
+      throw new Error('No response generated')
+    }
 
-    console.log('✅ Ollama response:', result)
+    console.log('OpenRouter response:', result)
     return result
   } catch (error) {
-    console.error('❌ Ollama request failed:', error)
+    console.error('OpenRouter request failed:', error)
     throw error
   }
 }
 
 /**
- * Categorize a transaction using local AI
+ * Categorize a transaction using hosted AI
  */
 export async function categorizeTransaction(
   description: string,
@@ -192,7 +162,7 @@ export async function categorizeTransaction(
       },
     ]
 
-    const response = await callOllama(messages)
+    const response = await callOpenRouter(messages)
 
     // Clean up the response to extract just the category
     const category = response
@@ -236,7 +206,7 @@ export async function categorizeTransaction(
       tags: [finalCategory.toLowerCase()],
     }
   } catch (error) {
-    console.error('❌ Local AI categorization failed, using fallback:', error)
+    console.error('AI categorization failed, using fallback:', error)
     return {
       category: getSimpleCategory(description.toLowerCase()),
       confidence: 0.3,
@@ -398,7 +368,7 @@ function getSimpleCategory(description: string): string {
 }
 
 /**
- * Generate financial insights using local AI
+ * Generate financial insights using hosted AI
  */
 export async function generateFinancialInsights(
   transactions: Array<{ id: string; description: string; amount: number; category?: string; date: string | Date; type: string }>,
@@ -424,7 +394,7 @@ export async function generateFinancialInsights(
       },
     ]
 
-    const response = await callOllama(messages)
+    const response = await callOpenRouter(messages)
 
     return [
       {
@@ -436,7 +406,7 @@ export async function generateFinancialInsights(
       },
     ]
   } catch (error) {
-    console.error('❌ Local AI insights failed:', error)
+    console.error('AI insights failed:', error)
     return [
       {
         type: 'spending_pattern',
@@ -450,14 +420,14 @@ export async function generateFinancialInsights(
 }
 
 /**
- * Chat with local AI assistant
+ * Chat with hosted AI assistant
  */
 export async function chatWithAI(
   message: string,
       context: { transactions: Array<{ description: string; amount: number; category?: string }>; budgets: Array<{ name: string; amount: number }>; goals: Array<{ name: string; targetAmount: number; currentAmount: number }> }
 ): Promise<string> {
   try {
-    console.log('💬 Local AI chat request:', message)
+    console.log('💬 AI chat request:', message)
 
     const messages: AIMessage[] = [
       {
@@ -471,13 +441,13 @@ export async function chatWithAI(
       },
     ]
 
-    const response = await callOllama(messages)
+    const response = await callOpenRouter(messages)
     return (
       response.trim() ||
       'I understand your question. Could you please be more specific about your financial situation?'
     )
   } catch (error) {
-    console.error('❌ Local AI chat failed:', error)
+    console.error('AI chat failed:', error)
     return `I'm having trouble with the AI service right now. Your question: "${message}" - I'd recommend checking your recent transactions and budgets manually for now.`
   }
 }

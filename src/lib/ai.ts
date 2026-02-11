@@ -1,14 +1,18 @@
 // hosted-ai.ts
 
+const sanitizeEnvValue = (value?: string) =>
+  value ? value.replace(/^['"]|['"]$/g, '').trim() : ''
+
 /**
  * OpenRouter API wrapper
  */
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+const OPENROUTER_API_KEY = sanitizeEnvValue(process.env.OPENROUTER_API_KEY)
 const OPENROUTER_BASE_URL =
-  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openrouter/free'
-const OPENROUTER_SITE_URL = process.env.OPENROUTER_SITE_URL
-const OPENROUTER_SITE_NAME = process.env.OPENROUTER_SITE_NAME
+  sanitizeEnvValue(process.env.OPENROUTER_BASE_URL) ||
+  'https://openrouter.ai/api/v1'
+const OPENROUTER_MODEL = sanitizeEnvValue(process.env.OPENROUTER_MODEL)
+const OPENROUTER_SITE_URL = sanitizeEnvValue(process.env.OPENROUTER_SITE_URL)
+const OPENROUTER_SITE_NAME = sanitizeEnvValue(process.env.OPENROUTER_SITE_NAME)
 
 function buildOpenRouterHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -90,17 +94,34 @@ async function callOpenRouter(messages: AIMessage[]): Promise<string> {
   console.log('Making request to:', endpoint)
   console.log('Prompt:', prompt.substring(0, 100) + '...')
 
+  const buildRequestBody = (modelOverride?: string) => {
+    const body: Record<string, unknown> = {
+      messages,
+      max_tokens: 100,
+      temperature: 0.7,
+    }
+
+    if (modelOverride) {
+      body.model = modelOverride
+    }
+
+    return body
+  }
+
   try {
-    const res = await fetch(endpoint, {
+    let res = await fetch(endpoint, {
       method: 'POST',
       headers: buildOpenRouterHeaders(),
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages,
-        max_tokens: 100,
-        temperature: 0.7,
-      }),
+      body: JSON.stringify(buildRequestBody(OPENROUTER_MODEL)),
     })
+
+    if (!res.ok && res.status === 404 && OPENROUTER_MODEL) {
+      res = await fetch(endpoint, {
+        method: 'POST',
+        headers: buildOpenRouterHeaders(),
+        body: JSON.stringify(buildRequestBody()),
+      })
+    }
 
     console.log('Response status:', res.status, res.statusText)
 
@@ -109,7 +130,10 @@ async function callOpenRouter(messages: AIMessage[]): Promise<string> {
       console.error('API Error:', errorText)
 
       if (res.status === 404) {
-        throw new Error(`Model not found: ${OPENROUTER_MODEL}. Try a different model.`)
+        const modelName = OPENROUTER_MODEL || 'default'
+        throw new Error(
+          `Model not found: ${modelName}. Try a different model.`
+        )
       }
       if (res.status === 401) {
         throw new Error('Invalid API key. Check your OPENROUTER_API_KEY.')

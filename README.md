@@ -5,6 +5,7 @@ A comprehensive personal finance management application built with Next.js, feat
 ## Features
 
 ### Core Features
+
 - **Bank Account Integration**: Connect multiple bank accounts via Teller
 - **Transaction Management**: Track income, expenses, and transfers
 - **Budget Planning**: Create and monitor spending budgets
@@ -13,6 +14,7 @@ A comprehensive personal finance management application built with Next.js, feat
 - **Category Management**: Organize transactions with custom categories
 
 ### AI-Powered Features (Hosted)
+
 - **Transaction Categorization**: Automatically categorize transactions using hosted AI
 - **Bulk Categorization**: Categorize multiple transactions at once
 - **Financial Insights**: Get AI-generated insights about spending patterns
@@ -33,7 +35,7 @@ A comprehensive personal finance management application built with Next.js, feat
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database
 - Teller developer account (for bank integration)
 - OpenRouter API key (for hosted AI features)
@@ -41,18 +43,20 @@ A comprehensive personal finance management application built with Next.js, feat
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone <repository-url>
 cd finance-app
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Set up environment variables**
-Create a `.env.local` file with the following variables:
+   Create a `.env.local` file with the following variables:
 
 ```env
 # Database
@@ -76,21 +80,35 @@ OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
 ```
 
 4. **Set up the database**
+
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
 5. **Configure OpenRouter** (for AI features)
-Set `OPENROUTER_API_KEY` in `.env.local` and restart the dev server.
+   Set `OPENROUTER_API_KEY` in `.env.local` and restart the dev server.
 
 6. **Run the development server**
+
 ```bash
 npm run dev
 ```
 
 7. **Open your browser**
-Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Quality Checks
+
+Run these commands before opening a pull request:
+
+```bash
+npm run lint
+npm run format:check
+npm run test
+```
+
+Husky runs `lint-staged` on pre-commit to enforce linting and formatting.
 
 ## AI Setup
 
@@ -132,30 +150,35 @@ src/
 ## Key Features
 
 ### Bank Integration
+
 - Connect multiple bank accounts securely via Teller
 - Automatic transaction syncing
 - Real-time balance updates
 - Credit limit tracking
 
 ### Transaction Management
+
 - Manual and automatic transaction entry
 - AI-powered categorization
 - Bulk operations
 - Search and filtering
 
 ### Budgeting
+
 - Create budgets by category or period
 - Recurring budget support
 - Progress tracking
 - Spending alerts
 
 ### Goals & Milestones
+
 - Set financial goals with target amounts
 - Track progress over time
 - Milestone achievements
 - Visual progress indicators
 
 ### AI-Powered Insights
+
 - Hosted AI processing via OpenRouter
 - Transaction categorization
 - Spending pattern analysis
@@ -176,6 +199,7 @@ This project is licensed under the MIT License.
 ## Support
 
 For support and questions:
+
 - Check the [OLLAMA_SETUP.md](./OLLAMA_SETUP.md) for OpenRouter setup issues
 - Review the documentation in the `/docs` folder
 - Open an issue on GitHub # personal-finance

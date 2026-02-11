@@ -24,7 +24,7 @@ export const highlightText = (text: string, query: string | number) => {
       return (
         <span
           key={`${part}-${index}`}
-          className='rounded-sm bg-amber-100 px-1 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100'
+          className="rounded-sm bg-amber-100 px-1 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100"
         >
           {part}
         </span>
@@ -41,7 +41,9 @@ export const getRowValue = <TData, TKey extends keyof TData>(
 ) => row.getValue(String(key)) as TData[TKey]
 
 export const fuzzyFilter: FilterFn<unknown> = (row, columnId, value) => {
-  const search = String(value ?? '').trim().toLowerCase()
+  const search = String(value ?? '')
+    .trim()
+    .toLowerCase()
 
   if (!search) {
     return true

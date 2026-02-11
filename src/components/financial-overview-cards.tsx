@@ -159,9 +159,7 @@ export function FinancialOverviewCards({
               : '0'}
             %
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Of income saved
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Of income saved</p>
         </CardContent>
       </Card>
     </div>

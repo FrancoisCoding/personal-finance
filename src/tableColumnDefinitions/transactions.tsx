@@ -39,13 +39,13 @@ export const createTransactionColumns = ({
       const dateLabel = row.original.dateLabel
 
       return (
-        <div className='space-y-1'>
-          <p className='text-sm font-semibold text-foreground'>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">
             {highlightText(description, globalFilter)}
           </p>
-          <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{highlightText(dateLabel, globalFilter)}</span>
-            <span className='h-1 w-1 rounded-full bg-muted-foreground/50' />
+            <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
             <span>{row.original.accountName}</span>
           </div>
         </div>
@@ -74,7 +74,7 @@ export const createTransactionColumns = ({
             borderColor: `${row.original.categoryColor}33`,
           }}
         >
-          <span className='text-base'>{row.original.categoryIcon}</span>
+          <span className="text-base">{row.original.categoryIcon}</span>
           {highlightText(categoryName, globalFilter)}
         </span>
       )
@@ -91,7 +91,7 @@ export const createTransactionColumns = ({
       )
 
       return (
-        <span className='text-xs text-muted-foreground'>
+        <span className="text-xs text-muted-foreground">
           {highlightText(accountName, globalFilter)}
         </span>
       )
@@ -125,22 +125,22 @@ export const createTransactionColumns = ({
     enableHiding: false,
     cell: ({ row }) => {
       if (!row.original.isUncategorized) {
-        return <div className='text-right text-xs text-muted-foreground'>-</div>
+        return <div className="text-right text-xs text-muted-foreground">-</div>
       }
 
       const busy = isLoading || isCategorizing(row.original.id)
 
       return (
-        <div className='flex justify-end'>
+        <div className="flex justify-end">
           <Button
-            size='sm'
-            variant='outline'
+            size="sm"
+            variant="outline"
             onClick={() => onCategorize(row.original.id)}
             disabled={busy}
           >
             {busy ? (
-              <span className='inline-flex items-center gap-2'>
-                <span className='h-3 w-3 animate-spin rounded-full border-b border-current' />
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 animate-spin rounded-full border-b border-current" />
                 Categorizing
               </span>
             ) : (

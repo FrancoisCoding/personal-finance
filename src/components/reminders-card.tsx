@@ -44,9 +44,7 @@ export function RemindersCard({
     reminders
       .filter((reminder) => !reminder.completed)
       .forEach((reminder) => {
-        const reminderDateTime = new Date(
-          `${reminder.date} ${reminder.time}`
-        )
+        const reminderDateTime = new Date(`${reminder.date} ${reminder.time}`)
         const reminderDate = Number.isNaN(reminderDateTime.getTime())
           ? new Date(reminder.date)
           : reminderDateTime

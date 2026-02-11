@@ -132,9 +132,7 @@ const NotificationTriggers = () => {
         addNotification({
           type: 'warning',
           title: 'Budget nearing limit',
-          message: `${budget.name} is ${Math.round(
-            percent * 100
-          )}% used.`,
+          message: `${budget.name} is ${Math.round(percent * 100)}% used.`,
           category: 'budget',
           showToast: false,
           dedupeKey: `budget-warning-${budget.id}-${monthKey}`,
@@ -321,8 +319,7 @@ const NotificationTriggers = () => {
       if (!goal.targetDate || goal.targetAmount <= 0) return
       const targetDate = new Date(goal.targetDate)
       const daysUntil = Math.ceil(
-        (targetDate.getTime() - currentDate.getTime()) /
-          (24 * 60 * 60 * 1000)
+        (targetDate.getTime() - currentDate.getTime()) / (24 * 60 * 60 * 1000)
       )
       const progress = goal.currentAmount / goal.targetAmount
 
@@ -437,9 +434,7 @@ const NotificationTriggers = () => {
         )} vs ${formatCurrency(previousIncome)} last month.`,
         category: 'system',
         showToast: false,
-        dedupeKey: `income-drop-${currentMonthStart
-          .toISOString()
-          .slice(0, 7)}`,
+        dedupeKey: `income-drop-${currentMonthStart.toISOString().slice(0, 7)}`,
         throttleMinutes: 1440,
       })
     }

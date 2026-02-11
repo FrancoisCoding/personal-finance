@@ -36,12 +36,7 @@ export function AutoCategorizeModal() {
     [transactions]
   )
 
-  const {
-    mutate,
-    isPending,
-    isSuccess,
-    isError,
-  } = useMutation<
+  const { mutate, isPending, isSuccess, isError } = useMutation<
     BulkCategorizeResponse,
     Error,
     BulkCategorizeRequest
@@ -184,8 +179,10 @@ export function AutoCategorizeModal() {
           <DialogTitle>Auto-categorizing transactions</DialogTitle>
           <DialogDescription>
             We found {uncategorizedTransactions.length} uncategorized{' '}
-            {uncategorizedTransactions.length === 1 ? 'transaction' : 'transactions'}.
-            This will run automatically in the background.
+            {uncategorizedTransactions.length === 1
+              ? 'transaction'
+              : 'transactions'}
+            . This will run automatically in the background.
           </DialogDescription>
         </DialogHeader>
 

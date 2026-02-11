@@ -138,9 +138,7 @@ export default function SubscriptionsPage() {
   const isUpdatingSubscription = updateSubscriptionMutation.isPending
   const isDeletingSubscription = deleteSubscriptionMutation.isPending
 
-  const [addingDetected, setAddingDetected] = useState<Set<string>>(
-    new Set()
-  )
+  const [addingDetected, setAddingDetected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -861,10 +859,7 @@ export default function SubscriptionsPage() {
                 (!subscription.isActive ? 'opacity-60' : '')
 
               return (
-                <div
-                  key={subscription.id}
-                  className={rowClassName}
-                >
+                <div key={subscription.id} className={rowClassName}>
                   <div className="flex items-start gap-4">
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-xl border"
@@ -949,7 +944,9 @@ export default function SubscriptionsPage() {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div className={`absolute right-0 top-0 h-full w-1 ${bgColor}`} />
+                  <div
+                    className={`absolute right-0 top-0 h-full w-1 ${bgColor}`}
+                  />
                 </div>
               )
             })

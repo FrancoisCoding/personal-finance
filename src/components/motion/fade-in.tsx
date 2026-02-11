@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import type { ComponentPropsWithoutRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -23,9 +23,7 @@ export function FadeIn({
     <motion.div
       className={cn('will-change-transform', className)}
       initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: yOffset }}
-      whileInView={
-        shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }
-      }
+      whileInView={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{
         duration,
         delay,

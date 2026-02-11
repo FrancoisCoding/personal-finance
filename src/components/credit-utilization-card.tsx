@@ -127,7 +127,9 @@ export function CreditUtilizationCard({
   const recommendations = getRecommendations()
 
   return (
-    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
+    <Card
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">

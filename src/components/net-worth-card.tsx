@@ -22,7 +22,9 @@ export function NetWorthCard({
   const liabilitiesPercent =
     totalBalance > 0 ? (liabilities / totalBalance) * 100 : 0
   return (
-    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
+    <Card
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">

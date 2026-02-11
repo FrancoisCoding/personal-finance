@@ -28,8 +28,7 @@ const faqItems = [
   },
   {
     question: 'How can I export my data?',
-    answer:
-      'Use the Export option in Settings to download your transactions.',
+    answer: 'Use the Export option in Settings to download your transactions.',
   },
 ]
 
@@ -55,8 +54,8 @@ export default function SupportPage() {
             How can we help?
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Find quick answers, reach the support team, or explore troubleshooting
-            steps for common workflows.
+            Find quick answers, reach the support team, or explore
+            troubleshooting steps for common workflows.
           </p>
         </div>
 

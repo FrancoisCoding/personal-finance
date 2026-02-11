@@ -1,11 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
 
 interface SpendingData {
@@ -41,7 +35,8 @@ export function SpendingChart({
           {
             category: 'Other',
             amount: remainingTotal,
-            percentage: totalAmount > 0 ? (remainingTotal / totalAmount) * 100 : 0,
+            percentage:
+              totalAmount > 0 ? (remainingTotal / totalAmount) * 100 : 0,
             color: '#94a3b8',
           },
         ]

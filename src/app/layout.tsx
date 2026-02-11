@@ -5,7 +5,10 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth-provider'
 import { QueryProvider } from '@/components/query-provider'
 import { Toaster } from '@/components/ui/toaster'
-import { NotificationProvider, ToastContainer } from '@/components/notification-system'
+import {
+  NotificationProvider,
+  ToastContainer,
+} from '@/components/notification-system'
 
 const bodyFont = DM_Sans({
   subsets: ['latin'],

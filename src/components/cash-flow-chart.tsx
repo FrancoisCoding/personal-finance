@@ -27,7 +27,18 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
   const totalExpenses = data.reduce((sum, item) => sum + item.expenses, 0)
   const netCashFlow = totalIncome - totalExpenses
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; payload: { date: string; income: number; expenses: number } }>; label?: string }) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean
+    payload?: Array<{
+      value: number
+      payload: { date: string; income: number; expenses: number }
+    }>
+    label?: string
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background p-3 border border-border/60 rounded-lg shadow-lg">
@@ -51,7 +62,9 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
   }
 
   return (
-    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
+    <Card
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -81,7 +94,9 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
               <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
                 {formatCurrency(totalExpenses)}
               </div>
-              <div className="text-xs text-muted-foreground">Total Expenses</div>
+              <div className="text-xs text-muted-foreground">
+                Total Expenses
+              </div>
             </div>
             <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
               <div

@@ -146,21 +146,38 @@ export default function FinancialAssistantPage() {
     setIsLoading(true)
 
     try {
+      const now = new Date()
+      const ninetyDaysAgo = new Date()
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+      const accountLookup = new Map(accounts.map((account) => [account.id, account]))
+      const recentTransactions = transactions.filter(
+        (transaction) => new Date(transaction.date) >= ninetyDaysAgo
+      )
+
       const context = {
-        transactions: transactions.slice(-12).map((transaction) => ({
-          description: transaction.description,
-          amount: transaction.amount,
-          category:
-            transaction.categoryRelation?.name ||
-            transaction.category ||
-            undefined,
-          type: transaction.type,
-          date: transaction.date,
-        })),
+        generatedAt: now.toISOString(),
+        transactions: recentTransactions.map((transaction) => {
+          const account = accountLookup.get(transaction.accountId)
+          return {
+            description: transaction.description,
+            amount: transaction.amount,
+            category:
+              transaction.categoryRelation?.name ||
+              transaction.category ||
+              undefined,
+            type: transaction.type,
+            date: transaction.date,
+            accountId: transaction.accountId,
+            accountName: account?.name ?? transaction.account?.name,
+            accountType: account?.type ?? transaction.account?.type,
+          }
+        }),
         accounts: accounts.map((account) => ({
+          id: account.id,
           name: account.name,
           type: account.type,
           balance: account.balance,
+          creditLimit: account.creditLimit,
         })),
         subscriptions: subscriptions.map((subscription) => ({
           name: subscription.name,

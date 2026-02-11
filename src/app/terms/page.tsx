@@ -36,8 +36,7 @@ export default function TermsPage() {
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>
                 You are responsible for keeping your login credentials secure
-                and ensuring activity on your account complies with these
-                terms.
+                and ensuring activity on your account complies with these terms.
               </p>
             </CardContent>
           </Card>
@@ -60,8 +59,8 @@ export default function TermsPage() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>
-                Paid plans renew automatically unless canceled. You may update or
-                cancel subscriptions from your account settings.
+                Paid plans renew automatically unless canceled. You may update
+                or cancel subscriptions from your account settings.
               </p>
             </CardContent>
           </Card>
@@ -95,9 +94,7 @@ export default function TermsPage() {
               <CardTitle>Contact</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                For questions about these terms, reach out to our team.
-              </p>
+              <p>For questions about these terms, reach out to our team.</p>
               <Link
                 href="/support"
                 className="text-sm font-medium text-primary hover:underline"

@@ -12,7 +12,7 @@ export interface SearchBarProps
 const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
   ({ containerClassName, inputClassName, type = 'search', ...props }, ref) => (
     <div className={cn('relative w-full', containerClassName)}>
-      <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         ref={ref}
         type={type}

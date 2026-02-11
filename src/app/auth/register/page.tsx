@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { Github, Mail } from 'lucide-react'
@@ -26,9 +32,9 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Passwords do not match',
+        variant: 'destructive',
       })
       setIsLoading(false)
       return
@@ -38,15 +44,15 @@ export default function RegisterPage() {
       // In a real app, you would make an API call to register the user
       // For now, we'll simulate registration and redirect to login
       toast({
-        title: "Success",
-        description: "Account created successfully! Please sign in.",
+        title: 'Success',
+        description: 'Account created successfully! Please sign in.',
       })
       router.push('/auth/login')
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create account. Please try again.',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -59,9 +65,9 @@ export default function RegisterPage() {
       await signIn(provider, { callbackUrl: '/dashboard' })
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to sign in with " + provider,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to sign in with ' + provider,
+        variant: 'destructive',
       })
       setIsLoading(false)
     }
@@ -70,7 +76,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main
         id="main-content"
         tabIndex={-1}
@@ -130,7 +136,10 @@ export default function RegisterPage() {
               {/* Email Form */}
               <form onSubmit={handleEmailSignUp} className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Full name
                   </label>
                   <Input
@@ -144,7 +153,10 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Email address
                   </label>
                   <Input
@@ -158,7 +170,10 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Password
                   </label>
                   <Input
@@ -172,7 +187,10 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-foreground"
+                  >
                     Confirm password
                   </label>
                   <Input
@@ -185,11 +203,7 @@ export default function RegisterPage() {
                     className="mt-1"
                   />
                 </div>
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Create account'}
                 </Button>
               </form>
@@ -197,7 +211,10 @@ export default function RegisterPage() {
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Already have an account?{' '}
-                  <Link href="/auth/login" className="text-primary hover:underline">
+                  <Link
+                    href="/auth/login"
+                    className="text-primary hover:underline"
+                  >
                     Sign in
                   </Link>
                 </p>
@@ -208,4 +225,4 @@ export default function RegisterPage() {
       </main>
     </div>
   )
-} 
+}

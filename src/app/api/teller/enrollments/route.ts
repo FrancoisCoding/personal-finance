@@ -60,9 +60,9 @@ export async function POST(request: NextRequest) {
   const environment = getTellerEnvironment()
   const hasCertificate =
     !!process.env.TELLER_CERT || !!process.env.TELLER_CERT_PATH
-  const hasPrivateKey = !!process.env.TELLER_KEY || !!process.env.TELLER_KEY_PATH
-  const canSync =
-    environment === 'sandbox' || (hasCertificate && hasPrivateKey)
+  const hasPrivateKey =
+    !!process.env.TELLER_KEY || !!process.env.TELLER_KEY_PATH
+  const canSync = environment === 'sandbox' || (hasCertificate && hasPrivateKey)
 
   await prisma.tellerEnrollment.upsert({
     where: { enrollmentId },

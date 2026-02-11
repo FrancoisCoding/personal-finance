@@ -192,7 +192,8 @@ const buildCashSnapshot = (accounts: ChatAccount[]) => {
 const buildSubscriptionSnapshot = (subscriptions: ChatSubscription[]) => {
   const monthlyTotal = subscriptions.reduce(
     (sum, subscription) =>
-      sum + getMonthlyEquivalent(subscription.amount ?? 0, subscription.billingCycle),
+      sum +
+      getMonthlyEquivalent(subscription.amount ?? 0, subscription.billingCycle),
     0
   )
 
@@ -217,10 +218,7 @@ const buildSubscriptionSnapshot = (subscriptions: ChatSubscription[]) => {
   }
 }
 
-const buildDeterministicAnswer = (
-  message: string,
-  context: ChatContext
-) => {
+const buildDeterministicAnswer = (message: string, context: ChatContext) => {
   const lower = message.toLowerCase()
   const transactions = context.transactions ?? []
   const accounts = context.accounts ?? []
@@ -277,8 +275,7 @@ const buildDeterministicAnswer = (
       summaryLines.push(
         `Top categories: ${spendingSnapshot.topCategories
           .map(
-            (category) =>
-              `${category.name} (${formatCurrency(category.total)})`
+            (category) => `${category.name} (${formatCurrency(category.total)})`
           )
           .join(', ')}.`
       )
@@ -453,10 +450,7 @@ async function callOpenRouter(
       return body
     }
 
-    console.log(
-      'Calling OpenRouter with model:',
-      model || 'default'
-    )
+    console.log('Calling OpenRouter with model:', model || 'default')
 
     let response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -723,9 +717,26 @@ function getSimpleCategory(description: string): string {
  * Generate financial insights using hosted AI
  */
 export async function generateFinancialInsights(
-  transactions: Array<{ id: string; description: string; amount: number; category?: string; date: string | Date; type: string }>,
-  budgets: Array<{ id: string; name: string; amount: number; category?: string }>,
-  goals: Array<{ id: string; name: string; targetAmount: number; currentAmount: number }>
+  transactions: Array<{
+    id: string
+    description: string
+    amount: number
+    category?: string
+    date: string | Date
+    type: string
+  }>,
+  budgets: Array<{
+    id: string
+    name: string
+    amount: number
+    category?: string
+  }>,
+  goals: Array<{
+    id: string
+    name: string
+    targetAmount: number
+    currentAmount: number
+  }>
 ): Promise<FinancialInsight[]> {
   try {
     const totalSpent = transactions.reduce(
@@ -818,7 +829,12 @@ export async function chatWithAI(
  * Bulk categorize transactions
  */
 export async function bulkCategorizeTransactions(
-  transactions: Array<{ id: string; description?: string; name?: string; amount: number }>
+  transactions: Array<{
+    id: string
+    description?: string
+    name?: string
+    amount: number
+  }>
 ): Promise<{ [transactionId: string]: CategorizationResult }> {
   const results: { [transactionId: string]: CategorizationResult } = {}
 

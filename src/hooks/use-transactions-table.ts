@@ -54,9 +54,7 @@ export default function useTransactionsTable<TData, TValue>({
   const [rowSelection, setRowSelection] = useAtom(
     transactionsTableRowSelectionAtom
   )
-  const [pagination, setPagination] = useAtom(
-    transactionsTablePaginationAtom
-  )
+  const [pagination, setPagination] = useAtom(transactionsTablePaginationAtom)
 
   useEffect(() => {
     if (columnsToPinLeft.length > 0 && columnPinning.left?.length === 0) {

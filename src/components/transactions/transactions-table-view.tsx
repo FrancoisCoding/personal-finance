@@ -52,7 +52,7 @@ const TransactionsTableView = <T,>({
                   >
                     {header.isPlaceholder ? null : canSort ? (
                       <button
-                        type='button'
+                        type="button"
                         onClick={header.column.getToggleSortingHandler()}
                         className={cn(
                           'inline-flex items-center gap-2',
@@ -64,9 +64,9 @@ const TransactionsTableView = <T,>({
                           header.getContext()
                         )}
                         {sortDirection === 'asc' ? (
-                          <ChevronUp className='h-3 w-3' />
+                          <ChevronUp className="h-3 w-3" />
                         ) : sortDirection === 'desc' ? (
-                          <ChevronDown className='h-3 w-3' />
+                          <ChevronDown className="h-3 w-3" />
                         ) : null}
                       </button>
                     ) : (

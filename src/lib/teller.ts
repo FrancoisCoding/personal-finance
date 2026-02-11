@@ -72,29 +72,31 @@ export async function tellerFetch<T>(
   const method = init?.method ? init.method.toUpperCase() : 'GET'
   const body = init?.body
 
-  const response = await new Promise<https.IncomingMessage>((resolve, reject) => {
-    const request = https.request(
-      url,
-      {
-        method,
-        headers: Object.fromEntries(headers.entries()),
-        agent: agent ?? undefined,
-      },
-      (res) => resolve(res)
-    )
+  const response = await new Promise<https.IncomingMessage>(
+    (resolve, reject) => {
+      const request = https.request(
+        url,
+        {
+          method,
+          headers: Object.fromEntries(headers.entries()),
+          agent: agent ?? undefined,
+        },
+        (res) => resolve(res)
+      )
 
-    request.on('error', reject)
+      request.on('error', reject)
 
-    if (body) {
-      if (typeof body === 'string' || body instanceof Uint8Array) {
-        request.write(body)
-      } else {
-        request.write(String(body))
+      if (body) {
+        if (typeof body === 'string' || body instanceof Uint8Array) {
+          request.write(body)
+        } else {
+          request.write(String(body))
+        }
       }
-    }
 
-    request.end()
-  })
+      request.end()
+    }
+  )
 
   const responseBody = await readResponseBody(response)
   const statusCode = response.statusCode ?? 500

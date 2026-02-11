@@ -24,7 +24,9 @@ const DataTablePaginationControls = <T,>({
   const { pageIndex, pageSize } = table.getState().pagination
   const start = totalRows === 0 ? 0 : pageIndex * pageSize + 1
   const end = Math.min((pageIndex + 1) * pageSize, totalRows)
-  const pageDisplay = totalRows ? `${start}-${end} of ${totalRows}` : '0 results'
+  const pageDisplay = totalRows
+    ? `${start}-${end} of ${totalRows}`
+    : '0 results'
 
   return (
     <div
@@ -33,13 +35,13 @@ const DataTablePaginationControls = <T,>({
         className
       )}
     >
-      <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>Rows per page</span>
         <Select
           value={String(pageSize)}
           onValueChange={(value) => table.setPageSize(Number(value))}
         >
-          <SelectTrigger className='h-8 w-[90px] text-xs'>
+          <SelectTrigger className="h-8 w-[90px] text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -52,19 +54,19 @@ const DataTablePaginationControls = <T,>({
         </Select>
       </div>
 
-      <div className='flex flex-wrap items-center gap-3'>
-        <div className='text-xs text-muted-foreground'>{pageDisplay}</div>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="text-xs text-muted-foreground">{pageDisplay}</div>
         <Button
-          variant='outline'
-          size='sm'
+          variant="outline"
+          size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           Previous
         </Button>
         <Button
-          variant='outline'
-          size='sm'
+          variant="outline"
+          size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >

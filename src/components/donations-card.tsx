@@ -49,10 +49,7 @@ const DonationsCard = ({
 
   return (
     <Card
-      className={cn(
-        'bg-card/80 border border-border/60 shadow-sm',
-        className
-      )}
+      className={cn('bg-card/80 border border-border/60 shadow-sm', className)}
     >
       <CardHeader className="pb-4">
         <div className="flex flex-wrap items-start justify-between gap-3">

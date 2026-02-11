@@ -210,7 +210,10 @@ export function AddTransactionDialog() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createTransactionMutation.isPending}>
+            <Button
+              type="submit"
+              disabled={createTransactionMutation.isPending}
+            >
               {createTransactionMutation.isPending
                 ? 'Adding...'
                 : 'Add Transaction'}

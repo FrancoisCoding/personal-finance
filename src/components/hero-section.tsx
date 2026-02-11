@@ -3,7 +3,15 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/logo'
-import { ArrowRight, Shield, TrendingUp, Zap, BarChart3, CreditCard, PiggyBank } from 'lucide-react'
+import {
+  ArrowRight,
+  Shield,
+  TrendingUp,
+  Zap,
+  BarChart3,
+  CreditCard,
+  PiggyBank,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface HeroSectionProps {
@@ -17,31 +25,31 @@ export function HeroSection({ className }: HeroSectionProps) {
     {
       icon: Shield,
       title: 'Secure & Private',
-      description: 'Bank-level security with end-to-end encryption'
+      description: 'Bank-level security with end-to-end encryption',
     },
     {
       icon: TrendingUp,
       title: 'Smart Analytics',
-      description: 'AI-powered insights to optimize your finances'
+      description: 'AI-powered insights to optimize your finances',
     },
     {
       icon: Zap,
       title: 'Real-time Sync',
-      description: 'Automatic transaction categorization and updates'
-    }
+      description: 'Automatic transaction categorization and updates',
+    },
   ]
 
   const stats = [
     { label: 'Active Users', value: '50K+' },
     { label: 'Connected Accounts', value: '200K+' },
-    { label: 'Transactions Analyzed', value: '10M+' }
+    { label: 'Transactions Analyzed', value: '10M+' },
   ]
 
   return (
     <div className={cn('relative overflow-hidden', className)}>
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20" />
-      
+
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
@@ -66,7 +74,9 @@ export function HeroSection({ className }: HeroSectionProps) {
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            The intelligent finance app that helps you track, analyze, and optimize your money with AI-powered insights and automated categorization.
+            The intelligent finance app that helps you track, analyze, and
+            optimize your money with AI-powered insights and automated
+            categorization.
           </p>
 
           {/* CTA Buttons */}
@@ -78,12 +88,14 @@ export function HeroSection({ className }: HeroSectionProps) {
               onMouseLeave={() => setIsHovered(false)}
             >
               Get Started Free
-              <ArrowRight className={cn(
-                'ml-2 h-5 w-5 transition-transform duration-300',
-                isHovered ? 'translate-x-1' : ''
-              )} />
+              <ArrowRight
+                className={cn(
+                  'ml-2 h-5 w-5 transition-transform duration-300',
+                  isHovered ? 'translate-x-1' : ''
+                )}
+              />
             </Button>
-            
+
             <Button
               variant="outline"
               size="lg"
@@ -137,45 +149,71 @@ export function HeroSection({ className }: HeroSectionProps) {
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
-                  <div className="text-sm text-gray-500">FinanceFlow Dashboard</div>
+                  <div className="text-sm text-gray-500">
+                    FinanceFlow Dashboard
+                  </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Dashboard cards */}
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <CreditCard className="w-5 h-5 text-blue-600" />
-                      <span className="text-xs text-blue-600 font-medium">Balance</span>
+                      <span className="text-xs text-blue-600 font-medium">
+                        Balance
+                      </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">$12,450</div>
-                    <div className="text-xs text-green-600">+2.5% from last month</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      $12,450
+                    </div>
+                    <div className="text-xs text-green-600">
+                      +2.5% from last month
+                    </div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <TrendingUp className="w-5 h-5 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">Income</span>
+                      <span className="text-xs text-green-600 font-medium">
+                        Income
+                      </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">$8,200</div>
-                    <div className="text-xs text-green-600">+12% from last month</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      $8,200
+                    </div>
+                    <div className="text-xs text-green-600">
+                      +12% from last month
+                    </div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <BarChart3 className="w-5 h-5 text-red-600" />
-                      <span className="text-xs text-red-600 font-medium">Expenses</span>
+                      <span className="text-xs text-red-600 font-medium">
+                        Expenses
+                      </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">$3,150</div>
-                    <div className="text-xs text-red-600">-8% from last month</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      $3,150
+                    </div>
+                    <div className="text-xs text-red-600">
+                      -8% from last month
+                    </div>
                   </div>
-                  
+
                   <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <PiggyBank className="w-5 h-5 text-purple-600" />
-                      <span className="text-xs text-purple-600 font-medium">Savings</span>
+                      <span className="text-xs text-purple-600 font-medium">
+                        Savings
+                      </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">$1,100</div>
-                    <div className="text-xs text-green-600">+15% from last month</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                      $1,100
+                    </div>
+                    <div className="text-xs text-green-600">
+                      +15% from last month
+                    </div>
                   </div>
                 </div>
               </div>

@@ -27,6 +27,7 @@ import { AddReminderModal } from '@/components/add-reminder-modal'
 import { AIFinancialInsights } from '@/components/ai-financial-insights'
 import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   useAccounts,
   useTransactions,
@@ -75,18 +76,29 @@ export default function DashboardPage() {
   }, [])
 
   // Fetch data using TanStack Query
-  const { data: accounts = [] } = useAccounts()
-  const { data: transactions = [] } = useTransactions()
-  const { data: budgets = [] } = useBudgets()
-  const { data: goals = [] } = useGoals()
-  const { data: categories = [] } = useCategories()
-  const { data: creditCards = [] } = useCreditCards()
+  const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
+  const { data: transactions = [], isLoading: isTransactionsLoading } =
+    useTransactions()
+  const { data: budgets = [], isLoading: isBudgetsLoading } = useBudgets()
+  const { data: goals = [], isLoading: isGoalsLoading } = useGoals()
+  const { data: categories = [], isLoading: isCategoriesLoading } =
+    useCategories()
+  const { data: creditCards = [], isLoading: isCreditCardsLoading } =
+    useCreditCards()
   const seedCategoriesMutation = useSeedCategories()
+  const isLoading =
+    isAccountsLoading ||
+    isTransactionsLoading ||
+    isBudgetsLoading ||
+    isGoalsLoading ||
+    isCategoriesLoading ||
+    isCreditCardsLoading
 
   // Auto-seed categories if user has none
   if (
     session?.user?.id &&
     categories.length === 0 &&
+    !isCategoriesLoading &&
     !seedCategoriesMutation.isPending
   ) {
     seedCategoriesMutation.mutate()
@@ -430,6 +442,147 @@ export default function DashboardPage() {
         high: normalizedHigh,
       }
     : undefined
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 pb-8">
+        <div className="space-y-4">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-10 w-72" />
+          <Skeleton className="h-4 w-80" />
+          <div className="flex flex-wrap gap-3">
+            <Skeleton className="h-10 w-36" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card
+              key={`dashboard-summary-${index}`}
+              className="border-border/60 bg-card/80 shadow-sm"
+            >
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-6 w-28" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card
+              key={`dashboard-primary-${index}`}
+              className="border-border/60 bg-card/80 shadow-sm"
+            >
+              <CardHeader className="border-b border-border/60">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {Array.from({ length: 3 }).map((_, rowIndex) => (
+                  <Skeleton
+                    key={`dashboard-primary-row-${index}-${rowIndex}`}
+                    className="h-12 w-full"
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Card
+              key={`dashboard-secondary-${index}`}
+              className="border-border/60 bg-card/80 shadow-sm"
+            >
+              <CardHeader className="border-b border-border/60">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-3 w-36" />
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {Array.from({ length: 4 }).map((_, rowIndex) => (
+                  <Skeleton
+                    key={`dashboard-secondary-row-${index}-${rowIndex}`}
+                    className="h-10 w-full"
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Card
+              key={`dashboard-tertiary-${index}`}
+              className="border-border/60 bg-card/80 shadow-sm"
+            >
+              <CardHeader className="border-b border-border/60">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {Array.from({ length: 3 }).map((_, rowIndex) => (
+                  <Skeleton
+                    key={`dashboard-tertiary-row-${index}-${rowIndex}`}
+                    className="h-11 w-full"
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+          <Card className="border-border/60 bg-card/80 shadow-sm">
+            <CardHeader className="border-b border-border/60">
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-3 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3 pt-4">
+              {Array.from({ length: 4 }).map((_, rowIndex) => (
+                <Skeleton
+                  key={`dashboard-transactions-${rowIndex}`}
+                  className="h-14 w-full"
+                />
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-6 auto-rows-fr">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Card
+                key={`dashboard-side-${index}`}
+                className="border-border/60 bg-card/80 shadow-sm"
+              >
+                <CardHeader className="border-b border-border/60">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  {Array.from({ length: 2 }).map((_, rowIndex) => (
+                    <Skeleton
+                      key={`dashboard-side-row-${index}-${rowIndex}`}
+                      className="h-10 w-full"
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 pb-8">

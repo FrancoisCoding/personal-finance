@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -107,9 +108,11 @@ export default function FinancialAssistantPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
-  const { data: transactions = [] } = useTransactions()
-  const { data: accounts = [] } = useAccounts()
-  const { data: subscriptions = [] } = useSubscriptions()
+  const { data: transactions = [], isLoading: isTransactionsLoading } =
+    useTransactions()
+  const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
+  const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
+    useSubscriptions()
 
   const [messages, setMessages] = useState<Message[]>([buildWelcomeMessage()])
   const [input, setInput] = useState('')
@@ -247,19 +250,103 @@ export default function FinancialAssistantPage() {
     (transaction) => new Date(transaction.date) >= thirtyDaysAgo
   ).length
 
-  if (status === 'loading') {
+  const isDataLoading =
+    isTransactionsLoading || isAccountsLoading || isSubscriptionsLoading
+
+  if (status === 'loading' || isDataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div
-            className={
-              'mx-auto h-32 w-32 animate-spin rounded-full border-b-2 ' +
-              'border-primary'
-            }
-          />
-          <p className="mt-4 text-muted-foreground">
-            Loading financial assistant...
-          </p>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-8 w-72" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <Skeleton className="h-9 w-28" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <Card className="border-border/60 bg-card/80 shadow-sm">
+            <CardHeader className="border-b border-border/60 bg-muted/10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-44" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </CardHeader>
+            <CardContent className="flex min-h-[360px] flex-col gap-4 pt-4">
+              <div className="flex-1 rounded-2xl border border-border/60 bg-muted/15 p-4">
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={`assistant-skeleton-${index}`} className="flex gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-12 w-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                <Skeleton className="h-16 w-full" />
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <Skeleton className="h-3 w-44" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card className="border-border/60 bg-card/80 shadow-sm">
+              <CardHeader>
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-56" />
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton
+                    key={`assistant-prompt-${index}`}
+                    className="h-10 w-full"
+                  />
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card/80 shadow-sm">
+              <CardHeader>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-44" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <Skeleton
+                      key={`assistant-stat-${index}`}
+                      className="h-16 w-full rounded-xl"
+                    />
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <Skeleton
+                        key={`assistant-tag-${index}`}
+                        className="h-6 w-24 rounded-full"
+                      />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     )
@@ -507,7 +594,11 @@ export default function FinancialAssistantPage() {
                     return (
                       <span
                         key={capability.title}
-                        className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-3 py-1 text-xs text-muted-foreground"
+                        className={
+                          'flex items-center gap-2 rounded-full border ' +
+                          'border-border/60 bg-muted/20 px-3 py-1 text-xs ' +
+                          'text-muted-foreground'
+                        }
                       >
                         <Icon className="h-3.5 w-3.5 text-emerald-500" />
                         {capability.title}

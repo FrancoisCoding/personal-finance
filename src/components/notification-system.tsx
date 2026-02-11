@@ -1,6 +1,12 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,6 +46,8 @@ export interface Notification {
   timestamp: Date
   read: boolean
   showToast?: boolean
+  dedupeKey?: string
+  throttleMinutes?: number
   action?: {
     label: string
     onClick: () => void
@@ -75,12 +83,44 @@ export function NotificationProvider({
 }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotificationCenter, setShowNotificationCenter] = useState(false)
+  const dedupeCacheRef = useRef<Map<string, number>>(new Map())
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
   const addNotification = (
     notification: Omit<Notification, 'id' | 'timestamp' | 'read'>
   ) => {
+    const now = Date.now()
+    const dedupeKey = notification.dedupeKey
+    const throttleMinutes = notification.throttleMinutes ?? 240
+    const throttleMs = throttleMinutes * 60 * 1000
+
+    if (dedupeKey) {
+      const cachedTimestamp = dedupeCacheRef.current.get(dedupeKey)
+      if (cachedTimestamp && now - cachedTimestamp < throttleMs) {
+        return
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          const storageKey = `financeflow.notification.${dedupeKey}`
+          const storedTimestamp = window.localStorage.getItem(storageKey)
+          if (
+            storedTimestamp &&
+            now - Number(storedTimestamp) < throttleMs
+          ) {
+            dedupeCacheRef.current.set(dedupeKey, Number(storedTimestamp))
+            return
+          }
+          window.localStorage.setItem(storageKey, String(now))
+        } catch (error) {
+          console.warn('Failed to access notification storage', error)
+        }
+      }
+
+      dedupeCacheRef.current.set(dedupeKey, now)
+    }
+
     const newNotification: Notification = {
       ...notification,
       id: Math.random().toString(36).substr(2, 9),

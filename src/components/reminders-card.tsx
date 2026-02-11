@@ -1,6 +1,10 @@
+'use client'
+
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useNotifications } from '@/components/notification-system'
 
 interface Reminder {
   id: string
@@ -24,8 +28,56 @@ export function RemindersCard({
   onToggleReminder,
   className = '',
 }: RemindersCardProps) {
-  const upcomingReminders = reminders.filter((r) => !r.completed).slice(0, 3)
-  const completedReminders = reminders.filter((r) => r.completed).slice(0, 2)
+  const { addNotification } = useNotifications()
+  const upcomingReminders = reminders
+    .filter((reminder) => !reminder.completed)
+    .slice(0, 3)
+  const completedReminders = reminders
+    .filter((reminder) => reminder.completed)
+    .slice(0, 2)
+
+  useEffect(() => {
+    if (reminders.length === 0) return
+
+    const currentDate = new Date()
+
+    reminders
+      .filter((reminder) => !reminder.completed)
+      .forEach((reminder) => {
+        const reminderDateTime = new Date(
+          `${reminder.date} ${reminder.time}`
+        )
+        const reminderDate = Number.isNaN(reminderDateTime.getTime())
+          ? new Date(reminder.date)
+          : reminderDateTime
+        const hoursUntil =
+          (reminderDate.getTime() - currentDate.getTime()) / 3600000
+
+        if (hoursUntil >= 0 && hoursUntil <= 24) {
+          addNotification({
+            type: 'info',
+            title: 'Reminder due soon',
+            message: `${reminder.title} is due within 24 hours.`,
+            category: 'reminder',
+            showToast: false,
+            dedupeKey: `reminder-upcoming-${reminder.id}-${reminder.date}`,
+            throttleMinutes: 360,
+          })
+        }
+
+        if (hoursUntil < 0 && Math.abs(hoursUntil) <= 24) {
+          addNotification({
+            type: 'warning',
+            title: 'Reminder overdue',
+            message: `${reminder.title} is overdue.`,
+            category: 'reminder',
+            showToast: true,
+            dedupeKey: `reminder-overdue-${reminder.id}-${reminder.date}`,
+            throttleMinutes: 720,
+          })
+        }
+      })
+  }, [reminders, addNotification])
 
   return (
     <Card

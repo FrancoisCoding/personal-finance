@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { AutoCategorizeModal } from '@/components/auto-categorize-modal'
+import NotificationTriggers from '@/components/notification-triggers'
 
 export default function AuthenticatedLayout({
   children,
@@ -43,6 +44,7 @@ export default function AuthenticatedLayout({
   return (
     <DashboardShell session={session}>
       <AutoCategorizeModal />
+      <NotificationTriggers />
       {children}
     </DashboardShell>
   )

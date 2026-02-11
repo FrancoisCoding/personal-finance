@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useAtom } from 'jotai'
 import {
   ColumnDef,
+  FilterFn,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -68,10 +69,7 @@ export default function useTransactionsTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
-    filterFns: {
-      fuzzy: fuzzyFilter,
-    },
-    globalFilterFn: 'fuzzy',
+    globalFilterFn: fuzzyFilter as FilterFn<TData>,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

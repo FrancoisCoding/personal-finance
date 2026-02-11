@@ -83,6 +83,7 @@ export interface Category {
   name: string
   color: string
   icon?: string
+  isIncome?: boolean
 }
 
 export interface Subscription {
@@ -700,6 +701,7 @@ export function useUpdateTransaction() {
 
 export function useSeedCategories() {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: async () => {

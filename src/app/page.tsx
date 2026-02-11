@@ -228,8 +228,8 @@ export default function LandingPage() {
                 A modern finance workspace that feels effortless.
               </h2>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                Every view is crafted to surface what matters now and what matters
-                next. No clutter, just clarity.
+                Every view is crafted to surface what matters now and what
+                matters next. No clutter, just clarity.
               </p>
             </FadeIn>
 
@@ -314,7 +314,7 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-6">
-                    "{testimonial.quote}"
+                    &ldquo;{testimonial.quote}&rdquo;
                   </p>
                   <div className="flex items-center">
                     <div

@@ -87,10 +87,7 @@ export async function POST(request: NextRequest) {
           error
         )
         // Use fallback categorization
-        const fallbackCategory = getFallbackCategory(
-          transaction.description,
-          transaction.amount
-        )
+        const fallbackCategory = getFallbackCategory(transaction.description)
         categorizationResults.push({
           transactionId: transaction.id,
           suggestedCategory: fallbackCategory,
@@ -132,7 +129,7 @@ export async function POST(request: NextRequest) {
 /**
  * Fallback categorization when AI fails
  */
-function getFallbackCategory(description: string, amount: number): string {
+function getFallbackCategory(description: string): string {
   const lowerDesc = description.toLowerCase()
 
   if (

@@ -7,15 +7,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { FormModal } from '@/components/ui/form-modal'
 
 import { useToast } from '@/hooks/use-toast'
-// Simplified Category type that matches what the hooks return
-interface SimpleCategory {
-  id: string
-  userId: string
-  name: string
-  color: string
-  icon?: string
-}
-
 interface CreateGoalModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -28,7 +19,6 @@ interface CreateGoalModalProps {
     icon?: string
   }) => void
   isLoading?: boolean
-  categories: SimpleCategory[]
 }
 
 export function CreateGoalModal({
@@ -36,7 +26,6 @@ export function CreateGoalModal({
   onOpenChange,
   onSubmit,
   isLoading = false,
-  categories = [],
 }: CreateGoalModalProps) {
   const { toast } = useToast()
 

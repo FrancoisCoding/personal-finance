@@ -128,21 +128,25 @@ export function BulkCategorizeModal({
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'Food & Dining': 'bg-green-50/60 text-green-700 border border-green-200/60',
+      'Food & Dining':
+        'bg-green-50/60 text-green-700 border border-green-200/60',
       Transportation: 'bg-blue-50/60 text-blue-700 border border-blue-200/60',
       Shopping: 'bg-purple-50/60 text-purple-700 border border-purple-200/60',
-      Entertainment: 'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
+      Entertainment:
+        'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
       Healthcare: 'bg-red-50/60 text-red-700 border border-red-200/60',
       Utilities: 'bg-cyan-50/60 text-cyan-700 border border-cyan-200/60',
       Housing: 'bg-lime-50/60 text-lime-700 border border-lime-200/60',
       Education: 'bg-pink-50/60 text-pink-700 border border-pink-200/60',
       Travel: 'bg-orange-50/60 text-orange-700 border border-orange-200/60',
       Insurance: 'bg-indigo-50/60 text-indigo-700 border border-indigo-200/60',
-      Investment: 'bg-emerald-50/60 text-emerald-700 border border-emerald-200/60',
+      Investment:
+        'bg-emerald-50/60 text-emerald-700 border border-emerald-200/60',
       Salary: 'bg-green-50/60 text-green-700 border border-green-200/60',
       Freelance: 'bg-blue-50/60 text-blue-700 border border-blue-200/60',
       Gifts: 'bg-purple-50/60 text-purple-700 border border-purple-200/60',
-      Subscriptions: 'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
+      Subscriptions:
+        'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
       Services: 'bg-teal-50/60 text-teal-700 border border-teal-200/60',
       Technology: 'bg-indigo-50/60 text-indigo-700 border border-indigo-200/60',
       Business: 'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
@@ -153,7 +157,10 @@ export function BulkCategorizeModal({
       Legal: 'bg-purple-50/60 text-purple-700 border border-purple-200/60',
       Taxes: 'bg-yellow-50/60 text-yellow-700 border border-yellow-200/60',
     }
-    return colors[category] || 'bg-muted/30 text-muted-foreground border border-border/60'
+    return (
+      colors[category] ||
+      'bg-muted/30 text-muted-foreground border border-border/60'
+    )
   }
 
   return (
@@ -230,7 +237,8 @@ export function BulkCategorizeModal({
                 Ready to categorize
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Click "Start Categorization" to begin the AI-powered process.
+                Click &quot;Start Categorization&quot; to begin the AI-powered
+                process.
               </p>
             </div>
           )}
@@ -249,11 +257,7 @@ export function BulkCategorizeModal({
             onClick={handleBulkCategorize}
             disabled={loading || uncategorizedCount === 0}
           >
-            {loading ? (
-              'Categorizing...'
-            ) : (
-              'Start Categorization'
-            )}
+            {loading ? 'Categorizing...' : 'Start Categorization'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -8,7 +8,11 @@ interface LogoProps {
   variant?: 'default' | 'white' | 'gradient'
 }
 
-export function Logo({ className, size = 'md', variant = 'default' }: LogoProps) {
+export function Logo({
+  className,
+  size = 'md',
+  variant = 'default',
+}: LogoProps) {
   const sizeClasses = {
     sm: 'text-lg',
     md: 'text-2xl',
@@ -25,13 +29,15 @@ export function Logo({ className, size = 'md', variant = 'default' }: LogoProps)
   return (
     <div className={cn('flex items-center gap-2 font-bold', className)}>
       {/* Modern icon */}
-      <div className={cn(
-        'relative flex items-center justify-center rounded-xl',
-        size === 'sm' ? 'w-8 h-8' : size === 'md' ? 'w-10 h-10' : 'w-12 h-12'
-      )}>
+      <div
+        className={cn(
+          'relative flex items-center justify-center rounded-xl',
+          size === 'sm' ? 'w-8 h-8' : size === 'md' ? 'w-10 h-10' : 'w-12 h-12'
+        )}
+      >
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-500 rounded-xl" />
-        
+
         {/* Icon content */}
         <div className="relative z-10 flex items-center justify-center">
           <svg
@@ -45,17 +51,19 @@ export function Logo({ className, size = 'md', variant = 'default' }: LogoProps)
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
           </svg>
         </div>
-        
+
         {/* Subtle glow effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-400/30 to-sky-400/30 rounded-xl blur-sm" />
       </div>
 
       {/* Text */}
-      <span className={cn(
-        'font-extrabold tracking-tight font-display',
-        sizeClasses[size],
-        variantClasses[variant]
-      )}>
+      <span
+        className={cn(
+          'font-extrabold tracking-tight font-display',
+          sizeClasses[size],
+          variantClasses[variant]
+        )}
+      >
         FinanceFlow
       </span>
     </div>
@@ -63,25 +71,24 @@ export function Logo({ className, size = 'md', variant = 'default' }: LogoProps)
 }
 
 // Compact version for smaller spaces
-export function LogoCompact({ className, size = 'md', variant = 'default' }: LogoProps) {
+export function LogoCompact({ className, size = 'md' }: LogoProps) {
   const sizeClasses = {
     sm: 'w-6 h-6',
     md: 'w-8 h-8',
     lg: 'w-10 h-10',
   }
 
-  const variantClasses = {
-    default: 'text-foreground',
-    white: 'text-white',
-    gradient:
-      'bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent',
-  }
-
   return (
-    <div className={cn('relative flex items-center justify-center rounded-xl', sizeClasses[size], className)}>
+    <div
+      className={cn(
+        'relative flex items-center justify-center rounded-xl',
+        sizeClasses[size],
+        className
+      )}
+    >
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-500 rounded-xl" />
-      
+
       {/* Icon content */}
       <div className="relative z-10 flex items-center justify-center">
         <svg
@@ -95,7 +102,7 @@ export function LogoCompact({ className, size = 'md', variant = 'default' }: Log
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
         </svg>
       </div>
-      
+
       {/* Subtle glow effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-teal-400/30 to-sky-400/30 rounded-xl blur-sm" />
     </div>

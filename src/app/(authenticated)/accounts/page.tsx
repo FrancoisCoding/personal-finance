@@ -41,6 +41,14 @@ import {
   useDeleteAllAccounts,
 } from '@/hooks/use-finance-data'
 
+type TAccountType =
+  | 'CHECKING'
+  | 'SAVINGS'
+  | 'CREDIT_CARD'
+  | 'INVESTMENT'
+  | 'LOAN'
+  | 'OTHER'
+
 export default function AccountsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -57,13 +65,7 @@ export default function AccountsPage() {
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false)
   const [newAccount, setNewAccount] = useState({
     name: '',
-    type: 'CHECKING' as
-      | 'CHECKING'
-      | 'SAVINGS'
-      | 'CREDIT_CARD'
-      | 'INVESTMENT'
-      | 'LOAN'
-      | 'OTHER',
+    type: 'CHECKING' as TAccountType,
     balance: '',
     accountNumber: '',
     institution: '',
@@ -418,7 +420,7 @@ export default function AccountsPage() {
                   onChange={(e) =>
                     setNewAccount({
                       ...newAccount,
-                      type: e.target.value as any,
+                      type: e.target.value as TAccountType,
                     })
                   }
                   className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground"
@@ -755,10 +757,7 @@ export default function AccountsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={showDeleteAllDialog}
-        onOpenChange={setShowDeleteAllDialog}
-      >
+      <Dialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete All Accounts</DialogTitle>

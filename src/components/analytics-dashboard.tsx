@@ -131,28 +131,6 @@ export function AnalyticsDashboard({
     }
   })
 
-  // Calculate goal progress
-  const goalProgress = goals.map((goal) => {
-    const saved =
-      transactions
-        .filter((t) => t.type === 'INCOME')
-        .reduce((sum, t) => sum + t.amount, 0) -
-      transactions
-        .filter((t) => t.type === 'EXPENSE')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-    const percentage = Math.min((saved / goal.targetAmount) * 100, 100)
-    const status =
-      percentage >= 100 ? 'completed' : percentage > 50 ? 'on_track' : 'behind'
-
-    return {
-      ...goal,
-      saved,
-      percentage,
-      status,
-    }
-  })
-
   const COLORS = [
     '#8884d8',
     '#82ca9d',
@@ -174,7 +152,8 @@ export function AnalyticsDashboard({
     ) {
       toast({
         title: 'No data to export',
-        description: 'Add transactions, budgets, or goals to generate a report.',
+        description:
+          'Add transactions, budgets, or goals to generate a report.',
       })
       return
     }
@@ -329,7 +308,9 @@ export function AnalyticsDashboard({
   }
 
   return (
-    <Card className={`bg-card/80 border border-border/60 shadow-sm ${className}`}>
+    <Card
+      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">

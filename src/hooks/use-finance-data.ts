@@ -434,7 +434,7 @@ export function useDeleteAccount() {
       if (!res.ok) throw new Error('Failed to delete account')
       return res.json()
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       toast({

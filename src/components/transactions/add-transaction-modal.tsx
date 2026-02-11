@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { FormModal } from '@/components/ui/form-modal'
-import { useCreateTransaction } from '@/hooks/use-finance-data'
 import { useToast } from '@/hooks/use-toast'
 // Simplified types that match what the hooks return
 interface SimpleAccount {
@@ -177,7 +176,10 @@ export function AddTransactionModal({
               id="type"
               value={formData.type}
               onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value as any })
+                setFormData({
+                  ...formData,
+                  type: e.target.value as 'INCOME' | 'EXPENSE' | 'TRANSFER',
+                })
               }
               className="w-full p-2 border rounded-md bg-background text-foreground"
             >

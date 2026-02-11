@@ -41,15 +41,10 @@ import {
   useCreditCards,
   queryKeys,
 } from '@/hooks/use-finance-data'
-import {
-  generateEnhancedInsights,
-  analyzeSpendingPatterns,
-} from '@/lib/enhanced-ai'
+import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
 
 export default function DashboardPage() {
   const { data: session } = useSession()
-  const [insights, setInsights] = useState<any[]>([])
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [reminders, setReminders] = useState([
     {
       id: '1',
@@ -110,14 +105,17 @@ export default function DashboardPage() {
   const { utilization: creditCardUtilization } = useCreditCardUtilization()
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
-      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
-      queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
-      queryClient.invalidateQueries({ queryKey: queryKeys.goals })
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories })
-      queryClient.invalidateQueries({ queryKey: ['credit-cards'] })
-    }, 5 * 60 * 1000)
+    const interval = setInterval(
+      () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+        queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+        queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
+        queryClient.invalidateQueries({ queryKey: queryKeys.goals })
+        queryClient.invalidateQueries({ queryKey: queryKeys.categories })
+        queryClient.invalidateQueries({ queryKey: ['credit-cards'] })
+      },
+      5 * 60 * 1000
+    )
 
     return () => clearInterval(interval)
   }, [queryClient])
@@ -287,7 +285,12 @@ export default function DashboardPage() {
     const entries = Array.from(recipientMap.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 4)
-      .map(({ lastTimestamp, ...entry }) => entry)
+      .map((entry) => ({
+        name: entry.name,
+        total: entry.total,
+        count: entry.count,
+        lastDate: entry.lastDate,
+      }))
 
     const total = donationTransactions.reduce(
       (sum, transaction) => sum + Math.abs(transaction.amount),
@@ -300,27 +303,6 @@ export default function DashboardPage() {
       hasData: donationTransactions.length > 0,
     }
   }, [normalizeDonationRecipient, transformedTransactions])
-
-  // Generate insights when data changes
-  useEffect(() => {
-    if (transactions.length > 0 && budgets.length > 0 && goals.length > 0) {
-      setIsAnalyzing(true)
-      generateEnhancedInsights(
-        transformedTransactions,
-        transformedBudgets,
-        transformedGoals
-      )
-        .then(setInsights)
-        .finally(() => setIsAnalyzing(false))
-    }
-  }, [
-    transactions,
-    budgets,
-    goals,
-    transformedTransactions,
-    transformedBudgets,
-    transformedGoals,
-  ])
 
   // Get recent transactions
   const recentTransactions = transactions
@@ -371,8 +353,7 @@ export default function DashboardPage() {
   const netWorth = assets - liabilities
   const cashReserve = accounts
     .filter(
-      (account) =>
-        account.type === 'CHECKING' || account.type === 'SAVINGS'
+      (account) => account.type === 'CHECKING' || account.type === 'SAVINGS'
     )
     .reduce((total, account) => total + account.balance, 0)
   const investmentTotal = accounts
@@ -588,9 +569,7 @@ export default function DashboardPage() {
     <div className="space-y-8 pb-8">
       {/* Header */}
       <FadeIn>
-        <div
-          className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between"
-        >
+        <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Dashboard
@@ -599,7 +578,7 @@ export default function DashboardPage() {
               Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}!
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
-              Here's your financial overview for this month
+              Here&apos;s your financial overview for this month
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -816,9 +795,9 @@ export default function DashboardPage() {
           <div className="grid gap-6 auto-rows-fr">
             {/* Budget Progress */}
             <Card className="border-border/60 bg-card/80 shadow-sm h-full">
-            <CardHeader className="border-b border-border/60">
+              <CardHeader className="border-b border-border/60">
                 <CardTitle>Budget Progress</CardTitle>
-                <CardDescription>This month's spending</CardDescription>
+                <CardDescription>This month&apos;s spending</CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
                 {budgets.length > 0 ? (

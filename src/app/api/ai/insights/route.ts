@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { generateEnhancedInsights } from '@/lib/enhanced-ai'
 import type { Transaction, Budget, Goal } from '@prisma/client'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -132,15 +132,27 @@ export async function POST(request: NextRequest) {
 // Helper functions (you can move these to enhanced-ai.ts)
 async function analyzeSpendingPatterns(transactions: Transaction[]) {
   // Implementation for spending pattern analysis
+  if (transactions.length === 0) {
+    return []
+  }
   return []
 }
 
-async function analyzeBudgetProgress(budgets: Budget[], transactions: Transaction[]) {
+async function analyzeBudgetProgress(
+  budgets: Budget[],
+  transactions: Transaction[]
+) {
   // Implementation for budget progress analysis
+  if (budgets.length === 0 || transactions.length === 0) {
+    return []
+  }
   return []
 }
 
 async function analyzeGoalProgress(goals: Goal[], transactions: Transaction[]) {
   // Implementation for goal progress analysis
+  if (goals.length === 0 || transactions.length === 0) {
+    return []
+  }
   return []
 }

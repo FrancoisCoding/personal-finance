@@ -109,66 +109,64 @@ export function SpendingChart({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pie Chart */}
-          <div className="h-52 sm:h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={displayData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="amount"
-                >
-                  {displayData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      <CardContent className="space-y-6">
+        {/* Pie Chart */}
+        <div className="h-52 sm:h-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={displayData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="amount"
+              >
+                {displayData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-          {/* Category List */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">
-              Categories
-            </h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {displayData.map((item, index) => (
-                <div
-                  key={`${item.category}-${index}`}
-                  className={
-                    'flex flex-col gap-2 rounded-lg border border-border/60 ' +
-                    'bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between'
-                  }
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {item.category}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.percentage.toFixed(1)}% of total
-                      </p>
-                    </div>
-                  </div>
-                  <div className="shrink-0 text-left sm:min-w-[96px] sm:text-right">
-                    <p className="text-sm font-semibold text-foreground tabular-nums">
-                      {formatCurrency(item.amount)}
+        {/* Category List */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-muted-foreground">
+            Categories
+          </h4>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {displayData.map((item, index) => (
+              <div
+                key={`${item.category}-${index}`}
+                className={
+                  'flex flex-col gap-2 rounded-lg border border-border/60 ' +
+                  'bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between'
+                }
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {item.category}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.percentage.toFixed(1)}% of total
                     </p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="shrink-0 text-left sm:min-w-[96px] sm:text-right">
+                  <p className="text-sm font-semibold text-foreground tabular-nums">
+                    {formatCurrency(item.amount)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>

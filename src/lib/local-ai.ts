@@ -5,6 +5,39 @@ interface AIMessage {
   content: string
 }
 
+export interface ChatTransaction {
+  description?: string
+  amount?: number
+  category?: string
+  type?: string
+  date?: string | Date
+  accountId?: string
+  accountName?: string
+  accountType?: string
+}
+
+export interface ChatAccount {
+  id?: string
+  name?: string
+  type?: string
+  balance?: number
+  creditLimit?: number
+}
+
+export interface ChatSubscription {
+  name?: string
+  amount?: number
+  billingCycle?: string
+  nextBillingDate?: string
+}
+
+export interface ChatContext {
+  transactions?: ChatTransaction[]
+  accounts?: ChatAccount[]
+  subscriptions?: ChatSubscription[]
+  generatedAt?: string
+}
+
 export interface CategorizationResult {
   category: string
   confidence: number
@@ -35,6 +68,301 @@ const OPENROUTER_BASE_URL =
 const OPENROUTER_MODEL = sanitizeEnvValue(process.env.OPENROUTER_MODEL)
 const OPENROUTER_SITE_URL = sanitizeEnvValue(process.env.OPENROUTER_SITE_URL)
 const OPENROUTER_SITE_NAME = sanitizeEnvValue(process.env.OPENROUTER_SITE_NAME)
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  }).format(value)
+
+const formatShortDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
+
+const parseDate = (value?: string | Date) => {
+  if (!value) return null
+  const parsed = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+  return parsed
+}
+
+const getMonthlyEquivalent = (amount: number, billingCycle?: string) => {
+  switch (billingCycle) {
+    case 'WEEKLY':
+      return amount * 4.33
+    case 'QUARTERLY':
+      return amount / 3
+    case 'YEARLY':
+      return amount / 12
+    default:
+      return amount
+  }
+}
+
+const buildSpendingSnapshot = (
+  transactions: ChatTransaction[],
+  accounts: ChatAccount[],
+  windowDays: number
+) => {
+  const now = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - windowDays)
+  const accountTypes = new Map(
+    accounts
+      .filter((account) => account.id)
+      .map((account) => [String(account.id), account.type])
+  )
+
+  const recentExpenses = transactions.filter((transaction) => {
+    const date = parseDate(transaction.date)
+    if (!date) return false
+    if (date < startDate || date > now) return false
+    return transaction.type === 'EXPENSE'
+  })
+
+  const categoryTotals = new Map<string, number>()
+  let totalSpending = 0
+  let creditCardSpending = 0
+  let otherSpending = 0
+  let creditCardCount = 0
+  let otherCount = 0
+
+  recentExpenses.forEach((transaction) => {
+    const amount = Math.abs(transaction.amount ?? 0)
+    totalSpending += amount
+
+    const categoryName = transaction.category || 'Uncategorized'
+    categoryTotals.set(
+      categoryName,
+      (categoryTotals.get(categoryName) ?? 0) + amount
+    )
+
+    const accountType =
+      transaction.accountType ||
+      (transaction.accountId
+        ? accountTypes.get(String(transaction.accountId))
+        : undefined)
+
+    if (accountType === 'CREDIT_CARD') {
+      creditCardSpending += amount
+      creditCardCount += 1
+    } else {
+      otherSpending += amount
+      otherCount += 1
+    }
+  })
+
+  const topCategories = Array.from(categoryTotals.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name, total]) => ({ name, total }))
+
+  return {
+    windowDays,
+    startDate,
+    endDate: now,
+    totalSpending,
+    transactionCount: recentExpenses.length,
+    creditCardSpending,
+    creditCardCount,
+    otherSpending,
+    otherCount,
+    topCategories,
+  }
+}
+
+const buildCashSnapshot = (accounts: ChatAccount[]) => {
+  const checkingSavings = accounts.filter(
+    (account) => account.type === 'CHECKING' || account.type === 'SAVINGS'
+  )
+  const totalCash = checkingSavings.reduce(
+    (sum, account) => sum + (account.balance ?? 0),
+    0
+  )
+
+  return {
+    totalCash,
+    accountCount: checkingSavings.length,
+  }
+}
+
+const buildSubscriptionSnapshot = (subscriptions: ChatSubscription[]) => {
+  const monthlyTotal = subscriptions.reduce(
+    (sum, subscription) =>
+      sum + getMonthlyEquivalent(subscription.amount ?? 0, subscription.billingCycle),
+    0
+  )
+
+  const upcoming = subscriptions
+    .map((subscription) => ({
+      name: subscription.name ?? 'Subscription',
+      amount: subscription.amount ?? 0,
+      billingCycle: subscription.billingCycle ?? 'MONTHLY',
+      nextBillingDate: parseDate(subscription.nextBillingDate),
+    }))
+    .filter((subscription) => subscription.nextBillingDate)
+    .sort(
+      (a, b) =>
+        (a.nextBillingDate?.getTime() ?? 0) -
+        (b.nextBillingDate?.getTime() ?? 0)
+    )
+    .slice(0, 3)
+
+  return {
+    monthlyTotal,
+    upcoming,
+  }
+}
+
+const buildDeterministicAnswer = (
+  message: string,
+  context: ChatContext
+) => {
+  const lower = message.toLowerCase()
+  const transactions = context.transactions ?? []
+  const accounts = context.accounts ?? []
+  const subscriptions = context.subscriptions ?? []
+
+  const spendingSnapshot = buildSpendingSnapshot(transactions, accounts, 30)
+  const cashSnapshot = buildCashSnapshot(accounts)
+  const subscriptionSnapshot = buildSubscriptionSnapshot(subscriptions)
+
+  const asksSpending = /spend|spending|spent|outflow|expense/.test(lower)
+  const asksMonthly =
+    /per month|monthly|this month|last 30 days|past 30 days/.test(lower)
+  const mentionsCreditCard = /credit card|creditcard|card/.test(lower)
+  const asksTopCategories = /top (three|3)? .*categories|top categories/.test(
+    lower
+  )
+  const asksCash = /cash|checking|savings/.test(lower)
+  const asksSubscriptions = /subscription|recurring/.test(lower)
+
+  if ((asksSpending && asksMonthly) || (asksSpending && mentionsCreditCard)) {
+    if (spendingSnapshot.transactionCount === 0) {
+      return (
+        'I do not see any expense transactions in the last 30 days, so I ' +
+        'cannot calculate monthly spending yet.'
+      )
+    }
+
+    const range = `${formatShortDate(
+      spendingSnapshot.startDate
+    )} - ${formatShortDate(spendingSnapshot.endDate)}`
+    const summaryLines = [
+      `Last 30 days (${range}) total spending: ${formatCurrency(
+        spendingSnapshot.totalSpending
+      )}.`,
+    ]
+
+    if (spendingSnapshot.creditCardCount > 0) {
+      summaryLines.push(
+        `Credit cards: ${formatCurrency(
+          spendingSnapshot.creditCardSpending
+        )} across ${spendingSnapshot.creditCardCount} transactions.`
+      )
+    } else {
+      summaryLines.push('Credit cards: $0.00 (no credit card expenses found).')
+    }
+
+    summaryLines.push(
+      `Other accounts: ${formatCurrency(
+        spendingSnapshot.otherSpending
+      )} across ${spendingSnapshot.otherCount} transactions.`
+    )
+
+    if (spendingSnapshot.topCategories.length > 0) {
+      summaryLines.push(
+        `Top categories: ${spendingSnapshot.topCategories
+          .map(
+            (category) =>
+              `${category.name} (${formatCurrency(category.total)})`
+          )
+          .join(', ')}.`
+      )
+    }
+
+    return summaryLines.join('\n')
+  }
+
+  if (asksTopCategories) {
+    if (spendingSnapshot.topCategories.length === 0) {
+      return 'I do not see any recent expense data to rank categories yet.'
+    }
+    return `Top categories (last 30 days): ${spendingSnapshot.topCategories
+      .map((category) => `${category.name} (${formatCurrency(category.total)})`)
+      .join(', ')}.`
+  }
+
+  if (asksCash) {
+    if (cashSnapshot.accountCount === 0) {
+      return 'No checking or savings accounts are connected yet.'
+    }
+    return `Checking + savings cash on hand: ${formatCurrency(
+      cashSnapshot.totalCash
+    )} across ${cashSnapshot.accountCount} accounts.`
+  }
+
+  if (asksSubscriptions) {
+    if (subscriptions.length === 0) {
+      return 'No subscriptions are connected yet.'
+    }
+
+    const upcoming = subscriptionSnapshot.upcoming
+      .map((subscription) => {
+        const date = subscription.nextBillingDate
+          ? subscription.nextBillingDate.toLocaleDateString('en-US')
+          : 'TBD'
+        return `${subscription.name} (${formatCurrency(
+          subscription.amount
+        )} ${subscription.billingCycle.toLowerCase()}, next ${date})`
+      })
+      .join(', ')
+
+    return [
+      `Estimated monthly subscriptions total: ${formatCurrency(
+        subscriptionSnapshot.monthlyTotal
+      )}.`,
+      upcoming ? `Upcoming: ${upcoming}.` : null,
+    ]
+      .filter(Boolean)
+      .join('\n')
+  }
+
+  return null
+}
+
+const buildSnapshotSummary = (context: ChatContext) => {
+  const transactions = context.transactions ?? []
+  const accounts = context.accounts ?? []
+  const subscriptions = context.subscriptions ?? []
+  const spendingSnapshot = buildSpendingSnapshot(transactions, accounts, 30)
+  const cashSnapshot = buildCashSnapshot(accounts)
+  const subscriptionSnapshot = buildSubscriptionSnapshot(subscriptions)
+
+  return {
+    windowDays: spendingSnapshot.windowDays,
+    totalSpending: Number(spendingSnapshot.totalSpending.toFixed(2)),
+    creditCardSpending: Number(spendingSnapshot.creditCardSpending.toFixed(2)),
+    otherSpending: Number(spendingSnapshot.otherSpending.toFixed(2)),
+    topCategories: spendingSnapshot.topCategories.map((category) => ({
+      name: category.name,
+      total: Number(category.total.toFixed(2)),
+    })),
+    cashOnHand: Number(cashSnapshot.totalCash.toFixed(2)),
+    subscriptionMonthlyTotal: Number(
+      subscriptionSnapshot.monthlyTotal.toFixed(2)
+    ),
+    subscriptionUpcoming: subscriptionSnapshot.upcoming.map((subscription) => ({
+      name: subscription.name,
+      amount: Number(subscription.amount.toFixed(2)),
+      billingCycle: subscription.billingCycle,
+      nextBillingDate: subscription.nextBillingDate?.toISOString(),
+    })),
+  }
+}
 
 function buildOpenRouterHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -448,16 +776,26 @@ export async function generateFinancialInsights(
  */
 export async function chatWithAI(
   message: string,
-      context: { transactions: Array<{ description: string; amount: number; category?: string }>; budgets: Array<{ name: string; amount: number }>; goals: Array<{ name: string; targetAmount: number; currentAmount: number }> }
+  context: ChatContext = {}
 ): Promise<string> {
   try {
     console.log('💬 AI chat request:', message)
+
+    const deterministicAnswer = buildDeterministicAnswer(message, context)
+    if (deterministicAnswer) {
+      return deterministicAnswer
+    }
+
+    const snapshotSummary = buildSnapshotSummary(context)
 
     const messages: AIMessage[] = [
       {
         role: 'system',
         content:
-          'You are a helpful financial assistant. Provide brief, practical financial advice. Keep responses under 150 words and focus on actionable tips.',
+          'You are a financial assistant inside a personal finance app. ' +
+          'Use ONLY the provided data snapshot to answer. If data is missing, ' +
+          'say what is missing. Keep responses under 150 words and avoid generic advice.' +
+          `\nData snapshot: ${JSON.stringify(snapshotSummary)}`,
       },
       {
         role: 'user',

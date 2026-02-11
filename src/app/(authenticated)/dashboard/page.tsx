@@ -25,7 +25,6 @@ import { CreditUtilizationCard } from '@/components/credit-utilization-card'
 import { AnalyticsDashboard } from '@/components/analytics-dashboard'
 import { AddReminderModal } from '@/components/add-reminder-modal'
 import { AIFinancialInsights } from '@/components/ai-financial-insights'
-import { useNotifications } from '@/components/notification-system'
 import { FadeIn } from '@/components/motion/fade-in'
 import {
   useAccounts,
@@ -67,7 +66,6 @@ export default function DashboardPage() {
       type: 'bill' as const,
     },
   ])
-  const { addNotification } = useNotifications()
   const queryClient = useQueryClient()
 
   // Memoized callbacks
@@ -325,25 +323,6 @@ export default function DashboardPage() {
           <div className="flex flex-wrap gap-3">
             <AddTransactionDialog />
             <TellerLink onSuccess={handleTellerSuccess} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                addNotification({
-                  type: 'success',
-                  title: 'Demo Notification',
-                  message:
-                    'This is a test notification to demonstrate the notification system!',
-                  category: 'system',
-                  action: {
-                    label: 'View Details',
-                    onClick: () => console.log('Notification action clicked'),
-                  },
-                })
-              }}
-            >
-              Test Notifications
-            </Button>
           </div>
         </div>
       </FadeIn>

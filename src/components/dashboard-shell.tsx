@@ -63,9 +63,11 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [activeOptionIndex, setActiveOptionIndex] = useState(-1)
   const blurTimeoutRef = useRef<number | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchPanelId = useId()
+  const searchListboxId = `${searchPanelId}-listbox`
 
   const navigation = [
     { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
@@ -128,6 +130,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }, [searchValue, suggestionPool])
 
   const normalizedSearch = searchValue.trim().toLowerCase()
+  const askOptionMeta = searchValue.trim()
+    ? optionLookup.get(`ask:${searchValue.trim()}`)
+    : undefined
 
   const storeSearchHistory = (value: string) => {
     const trimmedValue = value.trim()
@@ -155,6 +160,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const handleNavigate = (href: string) => {
     searchInputRef.current?.blur()
     setIsSearchOpen(false)
+    setActiveOptionIndex(-1)
     router.push(href)
   }
 
@@ -164,6 +170,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     searchInputRef.current?.blur()
     storeSearchHistory(trimmed)
     setIsSearchOpen(false)
+    setActiveOptionIndex(-1)
     router.push(`/assistant?question=${encodeURIComponent(trimmed)}`)
   }
 
@@ -203,9 +210,50 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       return
     }
 
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      if (!isSearchOpen) {
+        setIsSearchOpen(true)
+      }
+      setActiveOptionIndex((prev) => {
+        if (optionList.length === 0) return -1
+        return prev < 0 ? 0 : (prev + 1) % optionList.length
+      })
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      if (!isSearchOpen) {
+        setIsSearchOpen(true)
+      }
+      setActiveOptionIndex((prev) => {
+        if (optionList.length === 0) return -1
+        if (prev < 0) return optionList.length - 1
+        return prev === 0 ? optionList.length - 1 : prev - 1
+      })
+      return
+    }
+
     if (event.key === 'Enter') {
       event.preventDefault()
+      if (isSearchOpen && activeOptionIndex >= 0) {
+        const option = optionList[activeOptionIndex]
+        if (option) {
+          handleOptionSelect(option)
+        }
+        return
+      }
       handleSearchSubmit()
+      return
+    }
+
+    if (event.key === 'Escape') {
+      if (isSearchOpen) {
+        event.preventDefault()
+        setIsSearchOpen(false)
+        setActiveOptionIndex(-1)
+      }
     }
   }
 
@@ -220,6 +268,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const handleSearchBlur = () => {
     blurTimeoutRef.current = window.setTimeout(() => {
       setIsSearchOpen(false)
+      setActiveOptionIndex(-1)
     }, 150)
   }
 
@@ -229,6 +278,119 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     }
     setIsSearchOpen(false)
   }
+
+  const filteredNavigation = useMemo(() => {
+    return navigation
+      .filter((item) => {
+        if (!searchValue.trim()) return true
+        return item.name
+          .toLowerCase()
+          .includes(searchValue.toLowerCase())
+      })
+      .slice(0, 5)
+  }, [navigation, searchValue])
+
+  const filteredHistory = useMemo(() => {
+    return searchHistory
+      .filter((item) => {
+        if (!searchValue.trim()) return true
+        return item
+          .toLowerCase()
+          .includes(searchValue.toLowerCase())
+      })
+      .slice(0, 4)
+  }, [searchHistory, searchValue])
+
+  const optionList = useMemo(() => {
+    const options: Array<{
+      id: string
+      type: 'ask' | 'navigate' | 'recent' | 'question'
+      label: string
+      href?: string
+    }> = []
+
+    const trimmedValue = searchValue.trim()
+    if (trimmedValue) {
+      options.push({
+        id: `${searchPanelId}-option-ask`,
+        type: 'ask',
+        label: trimmedValue,
+      })
+    }
+
+    filteredNavigation.forEach((item, index) => {
+      options.push({
+        id: `${searchPanelId}-option-nav-${index}`,
+        type: 'navigate',
+        label: item.name,
+        href: item.href,
+      })
+    })
+
+    filteredHistory.forEach((item, index) => {
+      options.push({
+        id: `${searchPanelId}-option-recent-${index}`,
+        type: 'recent',
+        label: item,
+      })
+    })
+
+    quickQuestions.forEach((question, index) => {
+      options.push({
+        id: `${searchPanelId}-option-question-${index}`,
+        type: 'question',
+        label: question,
+      })
+    })
+
+    return options
+  }, [
+    filteredHistory,
+    filteredNavigation,
+    quickQuestions,
+    searchPanelId,
+    searchValue,
+  ])
+
+  const optionLookup = useMemo(() => {
+    const map = new Map<string, { id: string; index: number }>()
+    optionList.forEach((option, index) => {
+      const key = `${option.type}:${option.href ?? option.label}`
+      map.set(key, { id: option.id, index })
+    })
+    return map
+  }, [optionList])
+
+  const activeOptionId =
+    activeOptionIndex >= 0 ? optionList[activeOptionIndex]?.id : undefined
+
+  const handleOptionSelect = (option: {
+    type: 'ask' | 'navigate' | 'recent' | 'question'
+    label: string
+    href?: string
+  }) => {
+    if (option.type === 'navigate' && option.href) {
+      handleNavigate(option.href)
+      return
+    }
+    handleAskAssistant(option.label)
+  }
+
+  useEffect(() => {
+    if (!isSearchOpen) {
+      setActiveOptionIndex(-1)
+      return
+    }
+
+    if (optionList.length === 0) {
+      setActiveOptionIndex(-1)
+      return
+    }
+
+    if (activeOptionIndex >= optionList.length) {
+      setActiveOptionIndex(0)
+    }
+  }, [activeOptionIndex, isSearchOpen, optionList.length])
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -364,7 +526,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       onBlur={handleSearchBlur}
                       aria-label="Search the app"
                       aria-expanded={isSearchOpen}
-                      aria-controls={searchPanelId}
+                      aria-controls={searchListboxId}
+                      aria-activedescendant={activeOptionId}
                       ref={searchInputRef}
                     />
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
@@ -382,15 +545,32 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                         onFocusCapture={handleSearchFocus}
                         onBlurCapture={handleSearchContainerBlur}
                       >
-                        <div className="space-y-2">
+                        <div
+                          id={searchListboxId}
+                          role="listbox"
+                          aria-label="Search suggestions"
+                          className="space-y-2"
+                        >
                           {searchValue.trim() && (
                             <button
                               type="button"
+                              role="option"
+                              aria-selected={
+                                askOptionMeta?.index === activeOptionIndex
+                              }
+                              id={askOptionMeta?.id}
                               onClick={() => handleAskAssistant(searchValue)}
+                              onMouseEnter={() => {
+                                if (askOptionMeta) {
+                                  setActiveOptionIndex(askOptionMeta.index)
+                                }
+                              }}
                               className={
                                 'flex w-full items-center justify-between rounded-xl ' +
                                 'px-3 py-2 text-left text-sm transition-colors ' +
-                                'hover:bg-muted/40'
+                                (askOptionMeta?.index === activeOptionIndex
+                                  ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                  : 'hover:bg-muted/40')
                               }
                             >
                               <span className="font-medium text-foreground">
@@ -402,32 +582,45 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                             </button>
                           )}
 
-                          <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          <div
+                            className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
+                            role="presentation"
+                          >
                             Navigate
                           </div>
                           <div className="space-y-1">
-                            {navigation
-                              .filter((item) => {
-                                if (!searchValue.trim()) return true
-                                return item.name
+                            {filteredNavigation.map((item) => {
+                              const optionMeta = optionLookup.get(
+                                `navigate:${item.href}`
+                              )
+                              const isActive =
+                                optionMeta?.index === activeOptionIndex
+                              const isHighlighted =
+                                normalizedSearch &&
+                                item.name
                                   .toLowerCase()
-                                  .includes(searchValue.toLowerCase())
-                              })
-                              .slice(0, 5)
-                              .map((item) => (
+                                  .includes(normalizedSearch)
+                              return (
                                 <button
                                   key={item.href}
                                   type="button"
+                                  role="option"
+                                  aria-selected={isActive}
+                                  id={optionMeta?.id}
                                   onClick={() => handleNavigate(item.href)}
+                                  onMouseEnter={() => {
+                                    if (optionMeta) {
+                                      setActiveOptionIndex(optionMeta.index)
+                                    }
+                                  }}
                                   className={
                                     'flex w-full items-center justify-between rounded-xl ' +
                                     'px-3 py-2 text-left text-sm transition-colors ' +
-                                    (normalizedSearch &&
-                                    item.name
-                                      .toLowerCase()
-                                      .includes(normalizedSearch)
-                                      ? 'bg-muted/40'
-                                      : 'hover:bg-muted/40')
+                                    (isActive
+                                      ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                      : isHighlighted
+                                        ? 'bg-muted/40'
+                                        : 'hover:bg-muted/40')
                                   }
                                 >
                                   <span className="text-foreground">
@@ -437,37 +630,51 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                                     Go to page
                                   </span>
                                 </button>
-                              ))}
+                              )
+                            })}
                           </div>
 
                           {searchHistory.length > 0 && (
                             <>
-                              <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                              <div
+                                className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
+                                role="presentation"
+                              >
                                 Recent
                               </div>
                               <div className="space-y-1">
-                                {searchHistory
-                                  .filter((item) => {
-                                    if (!searchValue.trim()) return true
-                                    return item
+                                {filteredHistory.map((item) => {
+                                  const optionMeta = optionLookup.get(
+                                    `recent:${item}`
+                                  )
+                                  const isActive =
+                                    optionMeta?.index === activeOptionIndex
+                                  const isHighlighted =
+                                    normalizedSearch &&
+                                    item
                                       .toLowerCase()
-                                      .includes(searchValue.toLowerCase())
-                                  })
-                                  .slice(0, 4)
-                                  .map((item) => (
+                                      .includes(normalizedSearch)
+                                  return (
                                     <button
                                       key={item}
                                       type="button"
+                                      role="option"
+                                      aria-selected={isActive}
+                                      id={optionMeta?.id}
                                       onClick={() => handleAskAssistant(item)}
+                                      onMouseEnter={() => {
+                                        if (optionMeta) {
+                                          setActiveOptionIndex(optionMeta.index)
+                                        }
+                                      }}
                                       className={
                                         'flex w-full items-center justify-between rounded-xl ' +
                                         'px-3 py-2 text-left text-sm transition-colors ' +
-                                        (normalizedSearch &&
-                                        item
-                                          .toLowerCase()
-                                          .includes(normalizedSearch)
-                                          ? 'bg-muted/40'
-                                          : 'hover:bg-muted/40')
+                                        (isActive
+                                          ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                          : isHighlighted
+                                            ? 'bg-muted/40'
+                                            : 'hover:bg-muted/40')
                                       }
                                     >
                                       <span className="text-foreground">
@@ -477,39 +684,62 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                                         Ask again
                                       </span>
                                     </button>
-                                  ))}
+                                  )
+                                })}
                               </div>
                             </>
                           )}
 
-                          <div className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          <div
+                            className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
+                            role="presentation"
+                          >
                             Suggested questions
                           </div>
                           <div className="space-y-1">
-                            {quickQuestions.map((question) => (
-                              <button
-                                key={question}
-                                type="button"
-                                onClick={() => handleAskAssistant(question)}
-                                className={
-                                  'flex w-full items-start justify-between rounded-xl ' +
-                                  'px-3 py-2 text-left text-sm transition-colors ' +
-                                  (normalizedSearch &&
-                                  question
-                                    .toLowerCase()
-                                    .includes(normalizedSearch)
-                                    ? 'bg-muted/40'
-                                    : 'hover:bg-muted/40')
-                                }
-                              >
-                                <span className="text-foreground">
-                                  {highlightText(question, searchValue)}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  Ask
-                                </span>
-                              </button>
-                            ))}
+                            {quickQuestions.map((question) => {
+                              const optionMeta = optionLookup.get(
+                                `question:${question}`
+                              )
+                              const isActive =
+                                optionMeta?.index === activeOptionIndex
+                              const isHighlighted =
+                                normalizedSearch &&
+                                question
+                                  .toLowerCase()
+                                  .includes(normalizedSearch)
+                              return (
+                                <button
+                                  key={question}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isActive}
+                                  id={optionMeta?.id}
+                                  onClick={() => handleAskAssistant(question)}
+                                  onMouseEnter={() => {
+                                    if (optionMeta) {
+                                      setActiveOptionIndex(optionMeta.index)
+                                    }
+                                  }}
+                                  className={
+                                    'flex w-full items-start justify-between rounded-xl ' +
+                                    'px-3 py-2 text-left text-sm transition-colors ' +
+                                    (isActive
+                                      ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                      : isHighlighted
+                                        ? 'bg-muted/40'
+                                        : 'hover:bg-muted/40')
+                                  }
+                                >
+                                  <span className="text-foreground">
+                                    {highlightText(question, searchValue)}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Ask
+                                  </span>
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
                       </div>

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
@@ -16,7 +17,7 @@ interface SpendingChartProps {
   className?: string
 }
 
-export function SpendingChart({
+const SpendingChart = memo(function SpendingChart({
   data,
   totalSpending,
   previousMonthTotal,
@@ -167,4 +168,6 @@ export function SpendingChart({
       </CardContent>
     </Card>
   )
-}
+})
+
+export { SpendingChart }

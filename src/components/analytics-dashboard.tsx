@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -51,7 +52,7 @@ interface AnalyticsDashboardProps {
   className?: string
 }
 
-export function AnalyticsDashboard({
+const AnalyticsDashboard = memo(function AnalyticsDashboard({
   transactions,
   budgets,
   goals,
@@ -564,4 +565,6 @@ export function AnalyticsDashboard({
       </CardContent>
     </Card>
   )
-}
+})
+
+export { AnalyticsDashboard }

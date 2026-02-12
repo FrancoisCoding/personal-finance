@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   XAxis,
@@ -22,7 +23,10 @@ interface CashFlowChartProps {
   className?: string
 }
 
-export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
+const CashFlowChart = memo(function CashFlowChart({
+  data,
+  className = '',
+}: CashFlowChartProps) {
   const totalIncome = data.reduce((sum, item) => sum + item.income, 0)
   const totalExpenses = data.reduce((sum, item) => sum + item.expenses, 0)
   const netCashFlow = totalIncome - totalExpenses
@@ -169,4 +173,6 @@ export function CashFlowChart({ data, className = '' }: CashFlowChartProps) {
       </CardContent>
     </Card>
   )
-}
+})
+
+export { CashFlowChart }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
 
 export async function DELETE(
   request: NextRequest,
@@ -45,6 +46,11 @@ export async function DELETE(
         id: accountId,
       },
     })
+
+    invalidateCacheKeys([
+      getUserCacheKey('accounts', session.user.id),
+      getUserCacheKey('transactions', session.user.id),
+    ])
 
     return NextResponse.json({
       message: 'Account deleted successfully',

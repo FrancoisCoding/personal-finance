@@ -3,6 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import {
+  getCachedValue,
+  getUserCacheKey,
+  invalidateCacheKey,
+  invalidateCacheKeys,
+  setCachedValue,
+} from '@/lib/server-cache'
+
+const ACCOUNTS_CACHE_TTL_MS = 30_000
 
 export async function GET() {
   try {
@@ -10,6 +19,15 @@ export async function GET() {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const cacheKey = getUserCacheKey('accounts', session.user.id)
+    const cachedAccounts =
+      getCachedValue<
+        Awaited<ReturnType<typeof prisma.financialAccount.findMany>>
+      >(cacheKey)
+    if (cachedAccounts) {
+      return NextResponse.json(cachedAccounts)
     }
 
     const accounts = await prisma.financialAccount.findMany({
@@ -21,6 +39,8 @@ export async function GET() {
         createdAt: 'desc',
       },
     })
+
+    setCachedValue(cacheKey, accounts, ACCOUNTS_CACHE_TTL_MS)
 
     return NextResponse.json(accounts)
   } catch (error) {
@@ -61,6 +81,8 @@ export async function POST(request: NextRequest) {
         accountNumber,
       },
     })
+
+    invalidateCacheKey(getUserCacheKey('accounts', session.user.id))
 
     return NextResponse.json(account, { status: 201 })
   } catch (error) {
@@ -104,6 +126,11 @@ export async function DELETE() {
         throw error
       }
     }
+
+    invalidateCacheKeys([
+      getUserCacheKey('accounts', session.user.id),
+      getUserCacheKey('transactions', session.user.id),
+    ])
 
     return NextResponse.json({
       message: 'All accounts deleted successfully',

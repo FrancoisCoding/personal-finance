@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
 
 export async function PATCH(
   request: NextRequest,
@@ -42,6 +43,8 @@ export async function PATCH(
         account: true,
       },
     })
+
+    invalidateCacheKey(getUserCacheKey('transactions', session.user.id))
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {

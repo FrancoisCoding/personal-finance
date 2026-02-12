@@ -798,6 +798,7 @@ describe('use-finance-data hooks', () => {
       useCreateSubscription,
       useUpdateSubscription,
       useDeleteSubscription,
+      queryKeys,
     } = await loadHooks()
     const fetchMock = vi
       .fn()
@@ -806,7 +807,41 @@ describe('use-finance-data hooks', () => {
       )
     vi.stubGlobal('fetch', fetchMock)
 
-    const { wrapper } = createQueryWrapper()
+    const { wrapper, queryClient } = createQueryWrapper()
+    queryClient.setQueryData(queryKeys.goals, [
+      {
+        id: 'goal-1',
+        userId: 'user-1',
+        name: 'Goal',
+        targetAmount: 100,
+        currentAmount: 0,
+        targetDate: new Date(),
+        color: '#000',
+        isCompleted: false,
+      },
+    ])
+    queryClient.setQueryData(queryKeys.subscriptions, [
+      {
+        id: 'sub1',
+        userId: 'user-1',
+        name: 'Service',
+        amount: 15,
+        currency: 'USD',
+        billingCycle: 'MONTHLY',
+        nextBillingDate: new Date().toISOString(),
+        isActive: true,
+      },
+      {
+        id: 'sub-2',
+        userId: 'user-1',
+        name: 'Backup',
+        amount: 7,
+        currency: 'USD',
+        billingCycle: 'MONTHLY',
+        nextBillingDate: new Date().toISOString(),
+        isActive: true,
+      },
+    ])
 
     const { result: createGoal } = renderHook(() => useCreateGoal(), {
       wrapper,
@@ -853,12 +888,77 @@ describe('use-finance-data hooks', () => {
     ).rejects.toThrow()
   })
 
+  it('uses optimistic user IDs when sessions are missing', async () => {
+    const { useCreateBudget, useCreateGoal, useCreateSubscription, queryKeys } =
+      await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createFetchResponse({ ok: true, json: {} }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper(null)
+
+    const { result: createGoal } = renderHook(() => useCreateGoal(), {
+      wrapper,
+    })
+    await act(async () => {
+      await createGoal.current.mutateAsync({
+        name: 'Goal',
+        targetAmount: 100,
+        targetDate: new Date(),
+        color: '#000',
+      })
+    })
+
+    const goals = queryClient.getQueryData(queryKeys.goals) as
+      | Array<{ userId: string }>
+      | undefined
+    expect(goals?.[0]?.userId).toBe('optimistic')
+
+    const { result: createBudget } = renderHook(() => useCreateBudget(), {
+      wrapper,
+    })
+    await act(async () => {
+      await createBudget.current.mutateAsync({
+        name: 'Budget',
+        amount: 100,
+        period: 'MONTHLY',
+        startDate: new Date(),
+        isRecurring: true,
+      })
+    })
+
+    const budgets = queryClient.getQueryData(queryKeys.budgets) as
+      | Array<{ userId: string }>
+      | undefined
+    expect(budgets?.[0]?.userId).toBe('optimistic')
+
+    const { result: createSubscription } = renderHook(
+      () => useCreateSubscription(),
+      { wrapper }
+    )
+    await act(async () => {
+      await createSubscription.current.mutateAsync({
+        name: 'Service',
+        amount: 15,
+        billingCycle: 'MONTHLY',
+        nextBillingDate: new Date(),
+      })
+    })
+
+    const subscriptions = queryClient.getQueryData(queryKeys.subscriptions) as
+      | Array<{ userId: string }>
+      | undefined
+    expect(subscriptions?.[0]?.userId).toBe('optimistic')
+  })
+
   it('handles additional mutation errors for budgets and accounts', async () => {
     const {
       useCreateBudget,
       useDeleteAccount,
       useDeleteAllAccounts,
       useUpdateTransaction,
+      queryKeys,
     } = await loadHooks()
     const fetchMock = vi
       .fn()
@@ -867,7 +967,43 @@ describe('use-finance-data hooks', () => {
       )
     vi.stubGlobal('fetch', fetchMock)
 
-    const { wrapper } = createQueryWrapper()
+    const { wrapper, queryClient } = createQueryWrapper()
+    queryClient.setQueryData(queryKeys.budgets, [
+      {
+        id: 'budget-1',
+        userId: 'user-1',
+        name: 'Budget',
+        amount: 100,
+        period: 'MONTHLY',
+        startDate: new Date(),
+        isActive: true,
+        isRecurring: true,
+      },
+    ])
+    queryClient.setQueryData(queryKeys.transactions, [
+      {
+        id: 'txn',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 10,
+        description: 'Old',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
+      {
+        id: 'txn-2',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 20,
+        description: 'Other',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
+    ])
 
     const { result: createBudget } = renderHook(() => useCreateBudget(), {
       wrapper,
@@ -925,6 +1061,17 @@ describe('use-finance-data hooks', () => {
         isRecurring: false,
         tags: [],
       },
+      {
+        id: 'txn-2',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 20,
+        description: 'Other',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
     ])
 
     const { result: updateTransaction } = renderHook(
@@ -942,6 +1089,186 @@ describe('use-finance-data hooks', () => {
       queryKeys.transactions
     ) as Array<{ description: string }> | undefined
     expect(updatedTransactions?.[0]?.description).toBe('Updated')
+  })
+
+  it('handles optimistic updates without cached data', async () => {
+    const { useDeleteSubscription, useUpdateTransaction } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: false, status: 500, text: 'fail' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper } = createQueryWrapper()
+
+    const { result: deleteSubscription } = renderHook(
+      () => useDeleteSubscription(),
+      { wrapper }
+    )
+    await expect(
+      deleteSubscription.current.mutateAsync('sub-empty')
+    ).rejects.toThrow()
+
+    const { result: updateTransaction } = renderHook(
+      () => useUpdateTransaction(),
+      { wrapper }
+    )
+    await expect(
+      updateTransaction.current.mutateAsync({
+        id: 'txn-empty',
+        updates: { description: 'Updated' },
+      })
+    ).rejects.toThrow()
+  })
+
+  it('optimistically updates subscription cache entries', async () => {
+    const { useUpdateSubscription, queryKeys } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createFetchResponse({ ok: true, json: {} }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper()
+    queryClient.setQueryData(queryKeys.subscriptions, [
+      {
+        id: 'sub1',
+        userId: 'user-1',
+        name: 'Service',
+        amount: 15,
+        currency: 'USD',
+        billingCycle: 'MONTHLY',
+        nextBillingDate: new Date().toISOString(),
+        isActive: true,
+      },
+      {
+        id: 'sub2',
+        userId: 'user-1',
+        name: 'Backup',
+        amount: 7,
+        currency: 'USD',
+        billingCycle: 'MONTHLY',
+        nextBillingDate: new Date().toISOString(),
+        isActive: true,
+      },
+    ])
+
+    const { result: updateSubscription } = renderHook(
+      () => useUpdateSubscription(),
+      { wrapper }
+    )
+    await act(async () => {
+      await updateSubscription.current.mutateAsync({
+        id: 'sub1',
+        updates: { notes: 'Updated' },
+      })
+    })
+
+    const updatedSubscriptions = queryClient.getQueryData(
+      queryKeys.subscriptions
+    ) as Array<{ id: string; notes?: string }> | undefined
+    const updated = updatedSubscriptions?.find(
+      (subscription) => subscription.id === 'sub1'
+    )
+    const untouched = updatedSubscriptions?.find(
+      (subscription) => subscription.id === 'sub2'
+    )
+    expect(updated?.notes).toBe('Updated')
+    expect(untouched?.notes).toBeUndefined()
+  })
+
+  it('handles subscription updates without cached data', async () => {
+    const { useUpdateSubscription } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: false, status: 500, text: 'fail' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper } = createQueryWrapper()
+    const { result: updateSubscription } = renderHook(
+      () => useUpdateSubscription(),
+      { wrapper }
+    )
+    await expect(
+      updateSubscription.current.mutateAsync({
+        id: 'sub-empty',
+        updates: { notes: 'Updated' },
+      })
+    ).rejects.toThrow()
+  })
+
+  it('rolls back account deletion when only accounts are cached', async () => {
+    const { useDeleteAllAccounts, queryKeys } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: false, status: 500, text: 'fail' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper()
+    queryClient.setQueryData(queryKeys.accounts, [
+      {
+        id: 'acc1',
+        userId: 'user-1',
+        name: 'Checking',
+        type: 'CHECKING',
+        balance: 100,
+        currency: 'USD',
+        isActive: true,
+      },
+    ])
+
+    const { result: deleteAllAccounts } = renderHook(
+      () => useDeleteAllAccounts(),
+      { wrapper }
+    )
+    await expect(deleteAllAccounts.current.mutateAsync()).rejects.toThrow()
+
+    const accounts = queryClient.getQueryData(queryKeys.accounts) as
+      | Array<{ id: string }>
+      | undefined
+    expect(accounts?.[0]?.id).toBe('acc1')
+  })
+
+  it('handles account deletion when only transactions are cached', async () => {
+    const { useDeleteAllAccounts, queryKeys } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: false, status: 500, text: 'fail' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper()
+    const transactions = [
+      {
+        id: 'txn-1',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 25,
+        description: 'Fuel',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
+    ]
+    queryClient.setQueryData(queryKeys.transactions, transactions)
+
+    const { result: deleteAllAccounts } = renderHook(
+      () => useDeleteAllAccounts(),
+      { wrapper }
+    )
+    await expect(deleteAllAccounts.current.mutateAsync()).rejects.toThrow()
+
+    const restoredTransactions = queryClient.getQueryData(
+      queryKeys.transactions
+    ) as Array<{ id: string }> | undefined
+    expect(restoredTransactions?.[0]?.id).toBe('txn-1')
+    expect(queryClient.getQueryData(queryKeys.accounts)).toEqual([])
   })
 
   it('seeds categories and fetches credit cards', async () => {

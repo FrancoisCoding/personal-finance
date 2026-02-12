@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { seedCategories } from '@/lib/seed-categories'
+import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
 
 export async function POST() {
   try {
@@ -12,6 +13,8 @@ export async function POST() {
     }
 
     const categories = await seedCategories(session.user.id)
+
+    invalidateCacheKey(getUserCacheKey('categories', session.user.id))
 
     return NextResponse.json({
       message: 'Categories seeded successfully',

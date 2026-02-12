@@ -1,12 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import {
+  getCachedValue,
+  getUserCacheKey,
+  invalidateCacheKey,
+  setCachedValue,
+} from '@/lib/server-cache'
+
+const CREDIT_CARDS_CACHE_TTL_MS = 30_000
+
+type CreditCardSummary = {
+  id: string
+  name: string
+  balance: number
+  limit: number
+  apr: number
+  dueDate: string
+  lastStatement: string
+}
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const cacheKey = getUserCacheKey('credit-cards', session.user.id)
+    const cachedCards = getCachedValue<CreditCardSummary[]>(cacheKey)
+    if (cachedCards) {
+      return NextResponse.json(cachedCards)
     }
 
     // For now, return mock data. In a real app, you'd fetch from your database
@@ -40,6 +64,8 @@ export async function GET() {
         lastStatement: '2024-01-03',
       },
     ]
+
+    setCachedValue(cacheKey, mockCreditCards, CREDIT_CARDS_CACHE_TTL_MS)
 
     return NextResponse.json(mockCreditCards)
   } catch (error) {
@@ -80,6 +106,8 @@ export async function POST(request: NextRequest) {
       dueDate,
       lastStatement: new Date().toISOString().split('T')[0],
     }
+
+    invalidateCacheKey(getUserCacheKey('credit-cards', session.user.id))
 
     return NextResponse.json(newCard, { status: 201 })
   } catch (error) {

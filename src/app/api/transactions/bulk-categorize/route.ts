@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { seedCategories } from '@/lib/seed-categories'
 import { categorizeTransaction } from '@/lib/ai'
+import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
 
 export async function POST(request: NextRequest) {
   try {
@@ -112,6 +113,11 @@ export async function POST(request: NextRequest) {
     })
 
     await Promise.all(updatePromises)
+
+    invalidateCacheKeys([
+      getUserCacheKey('transactions', session.user.id),
+      getUserCacheKey('categories', session.user.id),
+    ])
 
     return NextResponse.json({
       message: `Successfully categorized ${categorizationResults.length} transactions`,

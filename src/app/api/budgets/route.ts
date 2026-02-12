@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import {
+  getCachedValue,
+  getUserCacheKey,
+  invalidateCacheKey,
+  setCachedValue,
+} from '@/lib/server-cache'
+
+const BUDGETS_CACHE_TTL_MS = 30_000
 
 export async function GET() {
   try {
@@ -9,6 +17,15 @@ export async function GET() {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const cacheKey = getUserCacheKey('budgets', session.user.id)
+    const cachedBudgets =
+      getCachedValue<Awaited<ReturnType<typeof prisma.budget.findMany>>>(
+        cacheKey
+      )
+    if (cachedBudgets) {
+      return NextResponse.json(cachedBudgets)
     }
 
     const budgets = await prisma.budget.findMany({
@@ -23,6 +40,8 @@ export async function GET() {
         createdAt: 'desc',
       },
     })
+
+    setCachedValue(cacheKey, budgets, BUDGETS_CACHE_TTL_MS)
 
     return NextResponse.json(budgets)
   } catch (error) {
@@ -76,6 +95,8 @@ export async function POST(request: NextRequest) {
         category: true,
       },
     })
+
+    invalidateCacheKey(getUserCacheKey('budgets', session.user.id))
 
     return NextResponse.json(budget, { status: 201 })
   } catch (error) {

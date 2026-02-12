@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import {
+  getCachedValue,
+  getUserCacheKey,
+  invalidateCacheKey,
+  setCachedValue,
+} from '@/lib/server-cache'
+
+const CATEGORIES_CACHE_TTL_MS = 30_000
 
 export async function GET() {
   try {
@@ -9,6 +17,15 @@ export async function GET() {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const cacheKey = getUserCacheKey('categories', session.user.id)
+    const cachedCategories =
+      getCachedValue<Awaited<ReturnType<typeof prisma.category.findMany>>>(
+        cacheKey
+      )
+    if (cachedCategories) {
+      return NextResponse.json(cachedCategories)
     }
 
     const categories = await prisma.category.findMany({
@@ -19,6 +36,8 @@ export async function GET() {
         name: 'asc',
       },
     })
+
+    setCachedValue(cacheKey, categories, CATEGORIES_CACHE_TTL_MS)
 
     return NextResponse.json(categories)
   } catch (error) {
@@ -53,6 +72,8 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
       },
     })
+
+    invalidateCacheKey(getUserCacheKey('categories', session.user.id))
 
     return NextResponse.json(category)
   } catch (error) {

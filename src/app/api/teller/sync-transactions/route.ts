@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { syncTellerEnrollment } from '@/lib/teller-sync'
+import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
 
 export async function POST() {
   const session = await getServerSession(authOptions)
@@ -41,6 +42,11 @@ export async function POST() {
       )
     }
   }
+
+  invalidateCacheKeys([
+    getUserCacheKey('accounts', session.user.id),
+    getUserCacheKey('transactions', session.user.id),
+  ])
 
   return NextResponse.json({
     message: 'Teller sync complete',

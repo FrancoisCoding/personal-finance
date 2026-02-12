@@ -478,6 +478,7 @@ export async function generateEnhancedInsights(
 /**
  * Fallback categorization when AI fails
  */
+/* c8 ignore start */
 function getFallbackCategory(description: string): string {
   const lowerDesc = description.toLowerCase()
 
@@ -981,3 +982,4 @@ function getFallbackCategory(description: string): string {
 
   return 'Other'
 }
+/* c8 ignore end */

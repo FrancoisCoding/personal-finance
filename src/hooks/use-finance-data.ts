@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
+import { useMemo } from 'react'
 
 // Types
 export interface Account {
@@ -219,117 +220,123 @@ export function useSubscriptions() {
 // Computed Data Hooks
 export function useMonthlyStats() {
   const { data: transactions = [] } = useTransactions()
+  const currentMonthKey = new Date().toDateString()
 
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  return useMemo(() => {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-  const monthlyIncome = transactions
-    .filter(
-      (t) =>
-        t.type === 'INCOME' &&
-        new Date(t.date) >= startOfMonth &&
-        new Date(t.date) <= endOfMonth
-    )
-    .reduce((total, t) => total + t.amount, 0)
+    const monthlyIncome = transactions
+      .filter(
+        (t) =>
+          t.type === 'INCOME' &&
+          new Date(t.date) >= startOfMonth &&
+          new Date(t.date) <= endOfMonth
+      )
+      .reduce((total, t) => total + t.amount, 0)
 
-  const monthlyExpenses = transactions
-    .filter(
-      (t) =>
-        t.type === 'EXPENSE' &&
-        new Date(t.date) >= startOfMonth &&
-        new Date(t.date) <= endOfMonth
-    )
-    .reduce((total, t) => total + t.amount, 0)
+    const monthlyExpenses = transactions
+      .filter(
+        (t) =>
+          t.type === 'EXPENSE' &&
+          new Date(t.date) >= startOfMonth &&
+          new Date(t.date) <= endOfMonth
+      )
+      .reduce((total, t) => total + t.amount, 0)
 
-  const netIncome = monthlyIncome - monthlyExpenses
+    const netIncome = monthlyIncome - monthlyExpenses
 
-  return {
-    monthlyIncome,
-    monthlyExpenses,
-    netIncome,
-    transactionCount: transactions.length,
-  }
+    return {
+      monthlyIncome,
+      monthlyExpenses,
+      netIncome,
+      transactionCount: transactions.length,
+    }
+  }, [currentMonthKey, transactions])
 }
 
 export function useTotalBalance() {
   const { data: accounts = [] } = useAccounts()
-
-  const totalBalance = accounts.reduce(
-    (total, account) => total + account.balance,
-    0
+  return useMemo(
+    () => accounts.reduce((total, account) => total + account.balance, 0),
+    [accounts]
   )
-
-  return totalBalance
 }
 
 export function useCreditCardUtilization() {
   const { data: accounts = [] } = useAccounts()
+  return useMemo(() => {
+    const creditCards = accounts.filter(
+      (account) => account.type === 'CREDIT_CARD'
+    )
 
-  const creditCards = accounts.filter(
-    (account) => account.type === 'CREDIT_CARD'
-  )
+    if (creditCards.length === 0) {
+      return { utilization: 0, totalLimit: 0, totalBalance: 0 }
+    }
 
-  if (creditCards.length === 0) {
-    return { utilization: 0, totalLimit: 0, totalBalance: 0 }
-  }
+    const totalLimit = creditCards.reduce(
+      (total, card) => total + (card.creditLimit || 0),
+      0
+    )
+    const totalBalance = creditCards.reduce(
+      (total, card) => total + Math.abs(card.balance),
+      0
+    )
 
-  const totalLimit = creditCards.reduce(
-    (total, card) => total + (card.creditLimit || 0),
-    0
-  )
-  const totalBalance = creditCards.reduce(
-    (total, card) => total + Math.abs(card.balance),
-    0
-  )
+    const utilization = totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0
 
-  const utilization = totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0
-
-  return {
-    utilization: Math.round(utilization * 100) / 100, // Round to 2 decimal places
-    totalLimit,
-    totalBalance,
-  }
+    return {
+      utilization: Math.round(utilization * 100) / 100,
+      totalLimit,
+      totalBalance,
+    }
+  }, [accounts])
 }
 
 export function useBudgetProgress(budgetId: string) {
   const { data: budgets = [] } = useBudgets()
   const { data: transactions = [] } = useTransactions()
+  const currentDayKey = new Date().toDateString()
 
-  const budget = budgets.find((b) => b.id === budgetId)
-  if (!budget) return 0
+  return useMemo(() => {
+    const budget = budgets.find((b) => b.id === budgetId)
+    if (!budget) return 0
 
-  const now = new Date()
-  const startDate = new Date(budget.startDate)
-  const endDate = budget.endDate
-    ? new Date(budget.endDate)
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const now = new Date()
+    const startDate = new Date(budget.startDate)
+    const endDate = budget.endDate
+      ? new Date(budget.endDate)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-  const spent = transactions
-    .filter(
-      (t) =>
-        t.categoryId === budget.categoryId &&
-        t.type === 'EXPENSE' &&
-        new Date(t.date) >= startDate &&
-        new Date(t.date) <= endDate
-    )
-    .reduce((total, t) => total + t.amount, 0)
+    const spent = transactions
+      .filter(
+        (t) =>
+          t.categoryId === budget.categoryId &&
+          t.type === 'EXPENSE' &&
+          new Date(t.date) >= startDate &&
+          new Date(t.date) <= endDate
+      )
+      .reduce((total, t) => total + t.amount, 0)
 
-  return Math.min((spent / budget.amount) * 100, 100)
+    return Math.min((spent / budget.amount) * 100, 100)
+  }, [budgetId, budgets, currentDayKey, transactions])
 }
 
 export function useGoalProgress(goalId: string) {
   const { data: goals = [] } = useGoals()
+  return useMemo(() => {
+    const goal = goals.find((g) => g.id === goalId)
+    if (!goal) return 0
 
-  const goal = goals.find((g) => g.id === goalId)
-  if (!goal) return 0
-
-  return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+    return Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+  }, [goalId, goals])
 }
 
 // Mutation Hooks
 export function useCreateTransaction() {
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const { toast } = useToast()
 
   return useMutation({
@@ -342,6 +349,32 @@ export function useCreateTransaction() {
       if (!res.ok) throw new Error('Failed to create transaction')
       return res.json()
     },
+    onMutate: async (transaction) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.transactions })
+      const previousTransactions = queryClient.getQueryData<Transaction[]>(
+        queryKeys.transactions
+      )
+      const optimisticTransaction: Transaction = {
+        id: `optimistic-${Date.now()}`,
+        userId: session?.user?.id ?? 'optimistic',
+        accountId: transaction.accountId,
+        categoryId: transaction.categoryId,
+        category: transaction.category,
+        amount: transaction.amount,
+        description: transaction.description,
+        date: transaction.date,
+        type: transaction.type,
+        isRecurring: transaction.isRecurring,
+        tags: transaction.tags,
+        notes: transaction.notes,
+        categoryRelation: transaction.categoryRelation,
+      }
+      queryClient.setQueryData<Transaction[]>(
+        queryKeys.transactions,
+        (current = []) => [optimisticTransaction, ...current]
+      )
+      return { previousTransactions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
@@ -350,18 +383,29 @@ export function useCreateTransaction() {
         description: 'Your transaction has been added successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          queryKeys.transactions,
+          context.previousTransactions
+        )
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to create transaction',
         variant: 'destructive',
       })
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+    },
   })
 }
 
 export function useCreateAccount() {
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const { toast } = useToast()
 
   return useMutation({
@@ -374,6 +418,30 @@ export function useCreateAccount() {
       if (!res.ok) throw new Error('Failed to create account')
       return res.json()
     },
+    onMutate: async (account) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.accounts })
+      const previousAccounts = queryClient.getQueryData<Account[]>(
+        queryKeys.accounts
+      )
+      const optimisticAccount: Account = {
+        id: `optimistic-${Date.now()}`,
+        userId: session?.user?.id ?? 'optimistic',
+        name: account.name,
+        type: account.type,
+        balance: account.balance,
+        currency: account.currency,
+        institution: account.institution,
+        accountNumber: account.accountNumber,
+        description: account.description,
+        isActive: account.isActive,
+        creditLimit: account.creditLimit,
+      }
+      queryClient.setQueryData<Account[]>(
+        queryKeys.accounts,
+        (current = []) => [optimisticAccount, ...current]
+      )
+      return { previousAccounts }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
       toast({
@@ -381,12 +449,18 @@ export function useCreateAccount() {
         description: 'Your account has been added successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousAccounts) {
+        queryClient.setQueryData(queryKeys.accounts, context.previousAccounts)
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to create account',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
     },
   })
 }
@@ -435,6 +509,16 @@ export function useDeleteAccount() {
       if (!res.ok) throw new Error('Failed to delete account')
       return res.json()
     },
+    onMutate: async (accountId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.accounts })
+      const previousAccounts = queryClient.getQueryData<Account[]>(
+        queryKeys.accounts
+      )
+      queryClient.setQueryData<Account[]>(queryKeys.accounts, (current = []) =>
+        current.filter((account) => account.id !== accountId)
+      )
+      return { previousAccounts }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
@@ -443,12 +527,19 @@ export function useDeleteAccount() {
         description: 'Your account has been deleted successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousAccounts) {
+        queryClient.setQueryData(queryKeys.accounts, context.previousAccounts)
+      }
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete account',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
     },
   })
 }
@@ -686,15 +777,38 @@ export function useUpdateTransaction() {
       if (!res.ok) throw new Error('Failed to update transaction')
       return res.json()
     },
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.transactions })
+      const previousTransactions = queryClient.getQueryData<Transaction[]>(
+        queryKeys.transactions
+      )
+      queryClient.setQueryData<Transaction[]>(
+        queryKeys.transactions,
+        (current = []) =>
+          current.map((transaction) =>
+            transaction.id === id ? { ...transaction, ...updates } : transaction
+          )
+      )
+      return { previousTransactions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          queryKeys.transactions,
+          context.previousTransactions
+        )
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to update transaction',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
     },
   })
 }
@@ -727,6 +841,7 @@ export function useSeedCategories() {
 
 // Add this new hook for credit cards
 export function useCreditCards() {
+  const { data: session } = useSession()
   return useQuery({
     queryKey: ['credit-cards'],
     queryFn: async () => {
@@ -736,5 +851,7 @@ export function useCreditCards() {
       }
       return response.json()
     },
+    enabled: !!session?.user?.id,
+    staleTime: 5 * 60 * 1000,
   })
 }

@@ -400,6 +400,57 @@ describe('use-finance-data hooks', () => {
     expect(invalidateSpy).toHaveBeenCalled()
   })
 
+  it('uses optimistic user ids when sessions are missing', async () => {
+    const { useCreateTransaction, useCreateAccount, queryKeys } =
+      await loadHooks()
+    const fetchMock = vi.fn().mockResolvedValue(
+      createFetchResponse({
+        ok: true,
+        json: {},
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper(null)
+
+    const { result: createTransaction } = renderHook(
+      () => useCreateTransaction(),
+      { wrapper }
+    )
+    await act(async () => {
+      await createTransaction.current.mutateAsync({
+        accountId: 'acc1',
+        amount: 10,
+        description: 'Coffee',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      })
+    })
+    const optimisticTransactions = queryClient.getQueryData(
+      queryKeys.transactions
+    ) as Array<{ userId: string }> | undefined
+    expect(optimisticTransactions?.[0]?.userId).toBe('optimistic')
+
+    const { result: createAccount } = renderHook(() => useCreateAccount(), {
+      wrapper,
+    })
+    await act(async () => {
+      await createAccount.current.mutateAsync({
+        name: 'New Account',
+        type: 'CHECKING',
+        balance: 0,
+        currency: 'USD',
+        isActive: true,
+      })
+    })
+    const optimisticAccounts = queryClient.getQueryData(queryKeys.accounts) as
+      | Array<{ userId: string }>
+      | undefined
+    expect(optimisticAccounts?.[0]?.userId).toBe('optimistic')
+  })
+
   it('surfaces mutation errors via toasts', async () => {
     const { useCreateTransaction, useCreateAccount, useSyncTransactions } =
       await loadHooks()
@@ -449,6 +500,82 @@ describe('use-finance-data hooks', () => {
 
     expect(toastSpy).toHaveBeenCalledWith(
       expect.objectContaining({ variant: 'destructive' })
+    )
+  })
+
+  it('rolls back optimistic create mutations on error', async () => {
+    const { useCreateTransaction, useCreateAccount, queryKeys } =
+      await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: false, status: 500, text: 'fail' })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper()
+    const initialTransactions = [
+      {
+        id: 'txn-1',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 10,
+        description: 'Initial',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
+    ]
+    const initialAccounts = [
+      {
+        id: 'acc-1',
+        userId: 'user-1',
+        name: 'Checking',
+        type: 'CHECKING',
+        balance: 50,
+        currency: 'USD',
+        isActive: true,
+      },
+    ]
+    queryClient.setQueryData(queryKeys.transactions, initialTransactions)
+    queryClient.setQueryData(queryKeys.accounts, initialAccounts)
+
+    const { result: createTransaction } = renderHook(
+      () => useCreateTransaction(),
+      { wrapper }
+    )
+    await expect(
+      createTransaction.current.mutateAsync({
+        accountId: 'acc1',
+        amount: 10,
+        description: 'Coffee',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      })
+    ).rejects.toThrow()
+
+    expect(queryClient.getQueryData(queryKeys.transactions)).toEqual(
+      initialTransactions
+    )
+
+    const { result: createAccount } = renderHook(() => useCreateAccount(), {
+      wrapper,
+    })
+    await expect(
+      createAccount.current.mutateAsync({
+        name: 'New Account',
+        type: 'CHECKING',
+        balance: 0,
+        currency: 'USD',
+        isActive: true,
+      })
+    ).rejects.toThrow()
+
+    expect(queryClient.getQueryData(queryKeys.accounts)).toEqual(
+      initialAccounts
     )
   })
 
@@ -776,6 +903,45 @@ describe('use-finance-data hooks', () => {
         updates: { description: 'Updated' },
       })
     ).rejects.toThrow()
+  })
+
+  it('optimistically updates cached transactions', async () => {
+    const { useUpdateTransaction, queryKeys } = await loadHooks()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(createFetchResponse({ ok: true, json: {} }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { wrapper, queryClient } = createQueryWrapper()
+    queryClient.setQueryData(queryKeys.transactions, [
+      {
+        id: 'txn-1',
+        userId: 'user-1',
+        accountId: 'acc1',
+        amount: 10,
+        description: 'Old',
+        date: new Date(),
+        type: 'EXPENSE',
+        isRecurring: false,
+        tags: [],
+      },
+    ])
+
+    const { result: updateTransaction } = renderHook(
+      () => useUpdateTransaction(),
+      { wrapper }
+    )
+    await act(async () => {
+      await updateTransaction.current.mutateAsync({
+        id: 'txn-1',
+        updates: { description: 'Updated' },
+      })
+    })
+
+    const updatedTransactions = queryClient.getQueryData(
+      queryKeys.transactions
+    ) as Array<{ description: string }> | undefined
+    expect(updatedTransactions?.[0]?.description).toBe('Updated')
   })
 
   it('seeds categories and fetches credit cards', async () => {

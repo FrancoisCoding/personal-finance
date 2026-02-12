@@ -98,15 +98,21 @@ export default function DashboardPage() {
     isCategoriesLoading ||
     isCreditCardsLoading
 
-  // Auto-seed categories if user has none
-  if (
-    session?.user?.id &&
-    categories.length === 0 &&
-    !isCategoriesLoading &&
-    !seedCategoriesMutation.isPending
-  ) {
-    seedCategoriesMutation.mutate()
-  }
+  useEffect(() => {
+    if (
+      session?.user?.id &&
+      categories.length === 0 &&
+      !isCategoriesLoading &&
+      !seedCategoriesMutation.isPending
+    ) {
+      seedCategoriesMutation.mutate()
+    }
+  }, [
+    categories.length,
+    isCategoriesLoading,
+    seedCategoriesMutation,
+    session?.user?.id,
+  ])
 
   // Computed values
   const totalBalance = useTotalBalance()
@@ -313,125 +319,150 @@ export default function DashboardPage() {
     }
   }, [normalizeDonationRecipient, transformedTransactions])
 
-  // Get recent transactions
-  const recentTransactions = transactions
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
-
-  // Prepare spending chart data
-  const spendingData = analyzeSpendingPatterns(transformedTransactions).map(
-    (pattern) => ({
-      category: pattern.category,
-      amount: pattern.totalSpent,
-      percentage: pattern.percentageOfTotal,
-      color: getCategoryColor(pattern.category),
-    })
+  const recentTransactions = useMemo(
+    () =>
+      [...transactions]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5),
+    [transactions]
   )
 
-  // Prepare cash flow data (last 6 months)
-  const cashFlowData = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - i)
-    const monthTransactions = transactions.filter((t) => {
-      const tDate = new Date(t.date)
-      return (
-        tDate.getMonth() === date.getMonth() &&
-        tDate.getFullYear() === date.getFullYear()
+  const spendingData = useMemo(
+    () =>
+      analyzeSpendingPatterns(transformedTransactions).map((pattern) => ({
+        category: pattern.category,
+        amount: pattern.totalSpent,
+        percentage: pattern.percentageOfTotal,
+        color: getCategoryColor(pattern.category),
+      })),
+    [transformedTransactions]
+  )
+
+  const cashFlowData = useMemo(
+    () =>
+      Array.from({ length: 6 }, (_, i) => {
+        const date = new Date()
+        date.setMonth(date.getMonth() - i)
+        const monthTransactions = transactions.filter((t) => {
+          const tDate = new Date(t.date)
+          return (
+            tDate.getMonth() === date.getMonth() &&
+            tDate.getFullYear() === date.getFullYear()
+          )
+        })
+
+        const income = monthTransactions
+          .filter((t) => t.type === 'INCOME')
+          .reduce((sum, t) => sum + t.amount, 0)
+
+        const expenses = monthTransactions
+          .filter((t) => t.type === 'EXPENSE')
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+        return {
+          date: date.toLocaleDateString('en-US', { month: 'short' }),
+          income,
+          expenses,
+          net: income - expenses,
+        }
+      }).reverse(),
+    [transactions]
+  )
+
+  const { netWorth, netWorthSummaryItems, hasNetWorthData } = useMemo(() => {
+    const assets = totalBalance
+    const liabilities = 0
+    const cashReserveValue = accounts
+      .filter(
+        (account) => account.type === 'CHECKING' || account.type === 'SAVINGS'
       )
-    })
-
-    const income = monthTransactions
-      .filter((t) => t.type === 'INCOME')
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    const expenses = monthTransactions
-      .filter((t) => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      .reduce((total, account) => total + account.balance, 0)
+    const investmentTotalValue = accounts
+      .filter((account) => account.type === 'INVESTMENT')
+      .reduce((total, account) => total + account.balance, 0)
 
     return {
-      date: date.toLocaleDateString('en-US', { month: 'short' }),
-      income,
-      expenses,
-      net: income - expenses,
+      netWorth: assets - liabilities,
+      netWorthSummaryItems: [
+        { label: 'Monthly income', value: monthlyIncome },
+        { label: 'Monthly expenses', value: monthlyExpenses },
+        { label: 'Investments', value: investmentTotalValue },
+        { label: 'Cash reserve', value: cashReserveValue },
+      ],
+      hasNetWorthData: accounts.length > 0 || transactions.length > 0,
     }
-  }).reverse()
+  }, [
+    accounts,
+    monthlyExpenses,
+    monthlyIncome,
+    totalBalance,
+    transactions.length,
+  ])
 
-  // Calculate net worth (simplified - you can enhance this)
-  const assets = totalBalance
-  const liabilities = 0 // You can add credit card balances, loans, etc.
-  const netWorth = assets - liabilities
-  const cashReserve = accounts
-    .filter(
-      (account) => account.type === 'CHECKING' || account.type === 'SAVINGS'
-    )
-    .reduce((total, account) => total + account.balance, 0)
-  const investmentTotal = accounts
-    .filter((account) => account.type === 'INVESTMENT')
-    .reduce((total, account) => total + account.balance, 0)
-  const netWorthSummaryItems = [
-    { label: 'Monthly income', value: monthlyIncome },
-    { label: 'Monthly expenses', value: monthlyExpenses },
-    { label: 'Investments', value: investmentTotal },
-    { label: 'Cash reserve', value: cashReserve },
-  ]
-  const hasNetWorthData = accounts.length > 0 || transactions.length > 0
-  const dailyExpenses = Array.from({ length: 30 }, (_, index) => {
-    const day = new Date()
-    day.setDate(day.getDate() - (29 - index))
-    const dayStart = new Date(day)
-    dayStart.setHours(0, 0, 0, 0)
-    const dayEnd = new Date(day)
-    dayEnd.setHours(23, 59, 59, 999)
+  const { forecastAverage, forecastProjected, forecastRange } = useMemo(() => {
+    const dailyExpenses = Array.from({ length: 30 }, (_, index) => {
+      const day = new Date()
+      day.setDate(day.getDate() - (29 - index))
+      const dayStart = new Date(day)
+      dayStart.setHours(0, 0, 0, 0)
+      const dayEnd = new Date(day)
+      dayEnd.setHours(23, 59, 59, 999)
 
-    return transactions
-      .filter((transaction) => {
-        const transactionDate = new Date(transaction.date)
-        return (
-          transaction.type === 'EXPENSE' &&
-          transactionDate >= dayStart &&
-          transactionDate <= dayEnd
-        )
-      })
-      .reduce((total, transaction) => total + Math.abs(transaction.amount), 0)
-  })
-  const recentWindow = 7
-  const recentExpenses = dailyExpenses.slice(-recentWindow)
-  const recentAverage =
-    recentExpenses.length > 0
-      ? recentExpenses.reduce((sum, value) => sum + value, 0) /
-        recentExpenses.length
-      : 0
-  const rangeSource = dailyExpenses.filter((value) => value > 0)
-  const rangeValues = rangeSource.length >= 5 ? rangeSource : dailyExpenses
-  const sortedRangeValues = [...rangeValues].sort((a, b) => a - b)
-  const getRangePercentile = (percentile: number) => {
-    if (sortedRangeValues.length === 0) {
-      return 0
-    }
-    const index = Math.round((sortedRangeValues.length - 1) * percentile)
-    return sortedRangeValues[Math.min(sortedRangeValues.length - 1, index)]
-  }
-  const hasForecast = sortedRangeValues.some((value) => value > 0)
-  const forecastAverage =
-    hasForecast && recentAverage > 0 ? recentAverage : undefined
-  const forecastProjected =
-    forecastAverage !== undefined ? forecastAverage * 30 : undefined
-  const rawRangeLow = getRangePercentile(0.25)
-  const rawRangeTypical = getRangePercentile(0.5)
-  const rawRangeHigh = getRangePercentile(0.85)
-  const normalizedLow = Math.min(rawRangeLow, rawRangeTypical, rawRangeHigh)
-  const normalizedHigh = Math.max(rawRangeLow, rawRangeTypical, rawRangeHigh)
-  const normalizedTypical = Math.min(
-    Math.max(rawRangeTypical, normalizedLow),
-    normalizedHigh
-  )
-  const forecastRange = hasForecast
-    ? {
-        low: normalizedLow,
-        typical: normalizedTypical,
-        high: normalizedHigh,
+      return transactions
+        .filter((transaction) => {
+          const transactionDate = new Date(transaction.date)
+          return (
+            transaction.type === 'EXPENSE' &&
+            transactionDate >= dayStart &&
+            transactionDate <= dayEnd
+          )
+        })
+        .reduce((total, transaction) => total + Math.abs(transaction.amount), 0)
+    })
+    const recentWindow = 7
+    const recentExpenses = dailyExpenses.slice(-recentWindow)
+    const recentAverage =
+      recentExpenses.length > 0
+        ? recentExpenses.reduce((sum, value) => sum + value, 0) /
+          recentExpenses.length
+        : 0
+    const rangeSource = dailyExpenses.filter((value) => value > 0)
+    const rangeValues = rangeSource.length >= 5 ? rangeSource : dailyExpenses
+    const sortedRangeValues = [...rangeValues].sort((a, b) => a - b)
+    const getRangePercentile = (percentile: number) => {
+      if (sortedRangeValues.length === 0) {
+        return 0
       }
-    : undefined
+      const index = Math.round((sortedRangeValues.length - 1) * percentile)
+      return sortedRangeValues[Math.min(sortedRangeValues.length - 1, index)]
+    }
+    const hasForecast = sortedRangeValues.some((value) => value > 0)
+    const forecastAverageValue =
+      hasForecast && recentAverage > 0 ? recentAverage : undefined
+    const forecastProjectedValue =
+      forecastAverageValue !== undefined ? forecastAverageValue * 30 : undefined
+    const rawRangeLow = getRangePercentile(0.25)
+    const rawRangeTypical = getRangePercentile(0.5)
+    const rawRangeHigh = getRangePercentile(0.85)
+    const normalizedLow = Math.min(rawRangeLow, rawRangeTypical, rawRangeHigh)
+    const normalizedHigh = Math.max(rawRangeLow, rawRangeTypical, rawRangeHigh)
+    const normalizedTypical = Math.min(
+      Math.max(rawRangeTypical, normalizedLow),
+      normalizedHigh
+    )
+
+    return {
+      forecastAverage: forecastAverageValue,
+      forecastProjected: forecastProjectedValue,
+      forecastRange: hasForecast
+        ? {
+            low: normalizedLow,
+            typical: normalizedTypical,
+            high: normalizedHigh,
+          }
+        : undefined,
+    }
+  }, [transactions])
 
   if (isLoading) {
     return (

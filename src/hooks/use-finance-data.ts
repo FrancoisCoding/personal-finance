@@ -557,6 +557,19 @@ export function useDeleteAllAccounts() {
       if (!res.ok) throw new Error('Failed to delete all accounts')
       return res.json()
     },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.accounts })
+      await queryClient.cancelQueries({ queryKey: queryKeys.transactions })
+      const previousAccounts = queryClient.getQueryData<Account[]>(
+        queryKeys.accounts
+      )
+      const previousTransactions = queryClient.getQueryData<Transaction[]>(
+        queryKeys.transactions
+      )
+      queryClient.setQueryData<Account[]>(queryKeys.accounts, [])
+      queryClient.setQueryData<Transaction[]>(queryKeys.transactions, [])
+      return { previousAccounts, previousTransactions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
       queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
@@ -565,18 +578,32 @@ export function useDeleteAllAccounts() {
         description: 'All accounts have been removed successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousAccounts) {
+        queryClient.setQueryData(queryKeys.accounts, context.previousAccounts)
+      }
+      if (context?.previousTransactions) {
+        queryClient.setQueryData(
+          queryKeys.transactions,
+          context.previousTransactions
+        )
+      }
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete all accounts',
         variant: 'destructive',
       })
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+      queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
+    },
   })
 }
 
 export function useCreateGoal() {
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const { toast } = useToast()
 
   return useMutation({
@@ -596,6 +623,27 @@ export function useCreateGoal() {
       if (!res.ok) throw new Error('Failed to create goal')
       return res.json()
     },
+    onMutate: async (goal) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.goals })
+      const previousGoals = queryClient.getQueryData<Goal[]>(queryKeys.goals)
+      const optimisticGoal: Goal = {
+        id: `optimistic-${Date.now()}`,
+        userId: session?.user?.id ?? 'optimistic',
+        name: goal.name,
+        description: goal.description,
+        targetAmount: goal.targetAmount,
+        currentAmount: 0,
+        targetDate: goal.targetDate,
+        color: goal.color,
+        icon: goal.icon,
+        isCompleted: false,
+      }
+      queryClient.setQueryData<Goal[]>(queryKeys.goals, (current = []) => [
+        optimisticGoal,
+        ...current,
+      ])
+      return { previousGoals }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.goals })
       toast({
@@ -603,18 +651,25 @@ export function useCreateGoal() {
         description: 'Your goal has been created successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousGoals) {
+        queryClient.setQueryData(queryKeys.goals, context.previousGoals)
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to create goal',
         variant: 'destructive',
       })
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.goals })
+    },
   })
 }
 
 export function useCreateBudget() {
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const { toast } = useToast()
 
   return useMutation({
@@ -635,6 +690,29 @@ export function useCreateBudget() {
       if (!res.ok) throw new Error('Failed to create budget')
       return res.json()
     },
+    onMutate: async (budget) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.budgets })
+      const previousBudgets = queryClient.getQueryData<Budget[]>(
+        queryKeys.budgets
+      )
+      const optimisticBudget: Budget = {
+        id: `optimistic-${Date.now()}`,
+        userId: session?.user?.id ?? 'optimistic',
+        categoryId: budget.categoryId,
+        name: budget.name,
+        amount: budget.amount,
+        period: budget.period,
+        startDate: budget.startDate,
+        endDate: budget.endDate,
+        isActive: true,
+        isRecurring: budget.isRecurring,
+      }
+      queryClient.setQueryData<Budget[]>(queryKeys.budgets, (current = []) => [
+        optimisticBudget,
+        ...current,
+      ])
+      return { previousBudgets }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
       toast({
@@ -642,18 +720,25 @@ export function useCreateBudget() {
         description: 'Your budget has been created successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousBudgets) {
+        queryClient.setQueryData(queryKeys.budgets, context.previousBudgets)
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to create budget',
         variant: 'destructive',
       })
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
+    },
   })
 }
 
 export function useCreateSubscription() {
   const queryClient = useQueryClient()
+  const { data: session } = useSession()
   const { toast } = useToast()
 
   return useMutation({
@@ -673,6 +758,29 @@ export function useCreateSubscription() {
       if (!res.ok) throw new Error('Failed to create subscription')
       return res.json()
     },
+    onMutate: async (subscription) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.subscriptions })
+      const previousSubscriptions = queryClient.getQueryData<Subscription[]>(
+        queryKeys.subscriptions
+      )
+      const optimisticSubscription: Subscription = {
+        id: `optimistic-${Date.now()}`,
+        userId: session?.user?.id ?? 'optimistic',
+        name: subscription.name,
+        amount: subscription.amount,
+        currency: 'USD',
+        billingCycle: subscription.billingCycle,
+        nextBillingDate: subscription.nextBillingDate.toISOString(),
+        categoryId: subscription.categoryId,
+        isActive: true,
+        notes: subscription.notes,
+      }
+      queryClient.setQueryData<Subscription[]>(
+        queryKeys.subscriptions,
+        (current = []) => [optimisticSubscription, ...current]
+      )
+      return { previousSubscriptions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
       toast({
@@ -680,12 +788,21 @@ export function useCreateSubscription() {
         description: 'Your subscription has been created successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousSubscriptions) {
+        queryClient.setQueryData(
+          queryKeys.subscriptions,
+          context.previousSubscriptions
+        )
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to create subscription',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
     },
   })
 }
@@ -710,6 +827,22 @@ export function useUpdateSubscription() {
       if (!res.ok) throw new Error('Failed to update subscription')
       return res.json()
     },
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.subscriptions })
+      const previousSubscriptions = queryClient.getQueryData<Subscription[]>(
+        queryKeys.subscriptions
+      )
+      queryClient.setQueryData<Subscription[]>(
+        queryKeys.subscriptions,
+        (current = []) =>
+          current.map((subscription) =>
+            subscription.id === id
+              ? { ...subscription, ...updates }
+              : subscription
+          )
+      )
+      return { previousSubscriptions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
       toast({
@@ -717,12 +850,21 @@ export function useUpdateSubscription() {
         description: 'Your subscription has been updated successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousSubscriptions) {
+        queryClient.setQueryData(
+          queryKeys.subscriptions,
+          context.previousSubscriptions
+        )
+      }
       toast({
         title: 'Update failed',
         description: error.message || 'Failed to update subscription',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
     },
   })
 }
@@ -740,6 +882,18 @@ export function useDeleteSubscription() {
       if (!res.ok) throw new Error('Failed to delete subscription')
       return res.json()
     },
+    onMutate: async (subscriptionId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.subscriptions })
+      const previousSubscriptions = queryClient.getQueryData<Subscription[]>(
+        queryKeys.subscriptions
+      )
+      queryClient.setQueryData<Subscription[]>(
+        queryKeys.subscriptions,
+        (current = []) =>
+          current.filter((subscription) => subscription.id !== subscriptionId)
+      )
+      return { previousSubscriptions }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
       toast({
@@ -747,12 +901,21 @@ export function useDeleteSubscription() {
         description: 'The subscription has been deleted successfully.',
       })
     },
-    onError: (error) => {
+    onError: (error, _variables, context) => {
+      if (context?.previousSubscriptions) {
+        queryClient.setQueryData(
+          queryKeys.subscriptions,
+          context.previousSubscriptions
+        )
+      }
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete subscription',
         variant: 'destructive',
       })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
     },
   })
 }

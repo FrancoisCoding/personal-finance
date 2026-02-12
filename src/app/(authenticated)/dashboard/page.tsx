@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -18,13 +19,9 @@ import { BudgetProgressItem } from '@/components/budget-progress-item'
 import { GoalProgressItem } from '@/components/goal-progress-item'
 import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
 import { RemindersCard } from '@/components/reminders-card'
-import { SpendingChart } from '@/components/spending-chart'
-import { CashFlowChart } from '@/components/cash-flow-chart'
 import { FinancialOverviewCards } from '@/components/financial-overview-cards'
 import { CreditUtilizationCard } from '@/components/credit-utilization-card'
-import { AnalyticsDashboard } from '@/components/analytics-dashboard'
 import { AddReminderModal } from '@/components/add-reminder-modal'
-import { AIFinancialInsights } from '@/components/ai-financial-insights'
 import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -42,6 +39,115 @@ import {
   queryKeys,
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
+
+const SpendingChart = dynamic(
+  () => import('@/components/spending-chart').then((mod) => mod.SpendingChart),
+  {
+    ssr: false,
+    loading: () => (
+      <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-52 w-full" />
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={`spending-chart-skeleton-${index}`}
+                className="h-10 w-full"
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    ),
+  }
+)
+
+const CashFlowChart = dynamic(
+  () => import('@/components/cash-flow-chart').then((mod) => mod.CashFlowChart),
+  {
+    ssr: false,
+    loading: () => (
+      <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
+      </Card>
+    ),
+  }
+)
+
+const AIFinancialInsights = dynamic(
+  () =>
+    import('@/components/ai-financial-insights').then(
+      (mod) => mod.AIFinancialInsights
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton
+              key={`ai-insights-skeleton-${index}`}
+              className="h-16 w-full"
+            />
+          ))}
+        </CardContent>
+      </Card>
+    ),
+  }
+)
+
+const AnalyticsDashboard = dynamic(
+  () =>
+    import('@/components/analytics-dashboard').then(
+      (mod) => mod.AnalyticsDashboard
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-6 w-20" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Skeleton
+                key={`analytics-metric-skeleton-${index}`}
+                className="h-20 w-full"
+              />
+            ))}
+          </div>
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-36 w-full" />
+        </CardContent>
+      </Card>
+    ),
+  }
+)
 
 export default function DashboardPage() {
   const { data: session } = useSession()

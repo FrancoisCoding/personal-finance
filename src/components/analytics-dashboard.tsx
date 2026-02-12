@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,6 +52,19 @@ interface AnalyticsDashboardProps {
   className?: string
 }
 
+const CHART_COLORS = [
+  '#8884d8',
+  '#82ca9d',
+  '#ffc658',
+  '#ff7300',
+  '#ff0000',
+  '#00ff00',
+  '#0000ff',
+  '#ffff00',
+  '#ff00ff',
+  '#00ffff',
+]
+
 const AnalyticsDashboard = memo(function AnalyticsDashboard({
   transactions,
   budgets,
@@ -62,88 +75,102 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
   const { toast } = useToast()
 
   // Calculate spending by category for pie chart
-  const categorySpending = transactions
-    .filter((t) => t.type === 'EXPENSE')
-    .reduce((acc: Record<string, number>, t) => {
-      const category = t.category || 'Other'
-      acc[category] = (acc[category] || 0) + Math.abs(t.amount)
-      return acc
-    }, {})
+  const { pieData, pieTotal } = useMemo(() => {
+    const categorySpending = transactions
+      .filter((t) => t.type === 'EXPENSE')
+      .reduce((acc: Record<string, number>, t) => {
+        const category = t.category || 'Other'
+        acc[category] = (acc[category] || 0) + Math.abs(t.amount)
+        return acc
+      }, {})
 
-  const sortedCategories = Object.entries(categorySpending).sort(
-    ([, amountA], [, amountB]) => amountB - amountA
-  )
-  const topCategories = sortedCategories.slice(0, 5)
-  const otherTotal = sortedCategories
-    .slice(5)
-    .reduce((sum, [, amount]) => sum + amount, 0)
-  const pieData = [
-    ...topCategories.map(([category, amount]) => ({
-      name: category,
-      value: amount,
-    })),
-    ...(otherTotal > 0 ? [{ name: 'Other', value: otherTotal }] : []),
-  ]
-  const pieTotal = pieData.reduce((sum, item) => sum + item.value, 0)
+    const sortedCategories = Object.entries(categorySpending).sort(
+      ([, amountA], [, amountB]) => amountB - amountA
+    )
+    const topCategories = sortedCategories.slice(0, 5)
+    const otherTotal = sortedCategories
+      .slice(5)
+      .reduce((sum, [, amount]) => sum + amount, 0)
+    const data = [
+      ...topCategories.map(([category, amount]) => ({
+        name: category,
+        value: amount,
+      })),
+      ...(otherTotal > 0 ? [{ name: 'Other', value: otherTotal }] : []),
+    ]
+
+    return {
+      pieData: data,
+      pieTotal: data.reduce((sum, item) => sum + item.value, 0),
+    }
+  }, [transactions])
 
   // Calculate monthly spending trend
-  const monthlyData = Array.from({ length: 6 }, (_, i) => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - i)
-    const monthTransactions = transactions.filter((t) => {
-      const tDate = new Date(t.date)
-      return (
-        tDate.getMonth() === date.getMonth() &&
-        tDate.getFullYear() === date.getFullYear()
-      )
-    })
+  const monthlyData = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - i)
+      const monthTransactions = transactions.filter((t) => {
+        const tDate = new Date(t.date)
+        return (
+          tDate.getMonth() === date.getMonth() &&
+          tDate.getFullYear() === date.getFullYear()
+        )
+      })
 
-    const expenses = monthTransactions
-      .filter((t) => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      const expenses = monthTransactions
+        .filter((t) => t.type === 'EXPENSE')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
-    const income = monthTransactions
-      .filter((t) => t.type === 'INCOME')
-      .reduce((sum, t) => sum + t.amount, 0)
+      const income = monthTransactions
+        .filter((t) => t.type === 'INCOME')
+        .reduce((sum, t) => sum + t.amount, 0)
 
-    return {
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
-      expenses,
-      income,
-      net: income - expenses,
-    }
-  }).reverse()
+      return {
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        expenses,
+        income,
+        net: income - expenses,
+      }
+    }).reverse()
+  }, [transactions])
 
   // Calculate budget performance
-  const budgetPerformance = budgets.map((budget) => {
-    const spent = transactions
-      .filter((t) => t.type === 'EXPENSE' && t.category === budget.category)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+  const budgetPerformance = useMemo(() => {
+    return budgets.map((budget) => {
+      const spent = transactions
+        .filter((t) => t.type === 'EXPENSE' && t.category === budget.category)
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
-    const percentage = (spent / budget.amount) * 100
-    const status =
-      percentage > 100 ? 'over' : percentage > 80 ? 'warning' : 'good'
+      const percentage = (spent / budget.amount) * 100
+      const status =
+        percentage > 100 ? 'over' : percentage > 80 ? 'warning' : 'good'
 
-    return {
-      ...budget,
-      spent,
-      percentage,
-      status,
-    }
-  })
+      return {
+        ...budget,
+        spent,
+        percentage,
+        status,
+      }
+    })
+  }, [budgets, transactions])
 
-  const COLORS = [
-    '#8884d8',
-    '#82ca9d',
-    '#ffc658',
-    '#ff7300',
-    '#ff0000',
-    '#00ff00',
-    '#0000ff',
-    '#ffff00',
-    '#ff00ff',
-    '#00ffff',
-  ]
+  const { avgDailySpend, savingsRate, totalExpenses, totalIncome } =
+    useMemo(() => {
+      const expenses = transactions
+        .filter((t) => t.type === 'EXPENSE')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      const income = transactions
+        .filter((t) => t.type === 'INCOME')
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      return {
+        avgDailySpend: expenses / 30,
+        savingsRate: income > 0 ? ((income - expenses) / income) * 100 : 0,
+        totalExpenses: expenses,
+        totalIncome: income,
+      }
+    }, [transactions])
 
   const handleExportReport = () => {
     if (
@@ -169,16 +196,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       }
       return text
     }
-
-    const totalExpenses = transactions
-      .filter((t) => t.type === 'EXPENSE')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-    const totalIncome = transactions
-      .filter((t) => t.type === 'INCOME')
-      .reduce((sum, t) => sum + t.amount, 0)
-    const avgDailySpend = totalExpenses / 30
-    const savingsRate =
-      totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0
 
     const rows: Record<string, string>[] = []
     const reportDate = new Date().toLocaleDateString('en-US')
@@ -335,11 +352,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
               </span>
             </div>
             <div className="text-lg font-bold text-foreground">
-              {formatCurrency(
-                transactions
-                  .filter((t) => t.type === 'EXPENSE')
-                  .reduce((sum, t) => sum + Math.abs(t.amount), 0) / 30
-              )}
+              {formatCurrency(avgDailySpend)}
             </div>
             <div className="text-xs text-muted-foreground">Last 30 days</div>
           </div>
@@ -350,17 +363,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
               </span>
             </div>
             <div className="text-lg font-bold text-foreground">
-              {(() => {
-                const income = transactions
-                  .filter((t) => t.type === 'INCOME')
-                  .reduce((sum, t) => sum + t.amount, 0)
-                const expenses = transactions
-                  .filter((t) => t.type === 'EXPENSE')
-                  .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-                return income > 0
-                  ? `${(((income - expenses) / income) * 100).toFixed(1)}%`
-                  : '0%'
-              })()}
+              {totalIncome > 0 ? `${savingsRate.toFixed(1)}%` : '0%'}
             </div>
             <div className="text-xs text-muted-foreground">This month</div>
           </div>
@@ -389,7 +392,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                       {pieData.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
                         />
                       ))}
                     </Pie>
@@ -415,7 +418,8 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                         <span
                           className="h-2.5 w-2.5 rounded-full"
                           style={{
-                            backgroundColor: COLORS[index % COLORS.length],
+                            backgroundColor:
+                              CHART_COLORS[index % CHART_COLORS.length],
                           }}
                         />
                         <div>

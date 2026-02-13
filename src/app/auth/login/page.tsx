@@ -106,28 +106,27 @@ export default function LoginPage() {
               <Button
                 variant="outline"
                 className={
-                  'w-full items-center justify-between gap-3 border-emerald-500/40 ' +
-                  'bg-emerald-500/10 px-4 py-3 text-emerald-700 shadow-sm ' +
-                  'transition hover:border-emerald-500/60 hover:bg-emerald-500/20 ' +
-                  'disabled:opacity-60 dark:text-emerald-200'
+                  'w-full justify-between gap-3 border-emerald-500/30 bg-emerald-500/5 ' +
+                  'px-3 py-2 text-emerald-700 transition hover:border-emerald-500/50 ' +
+                  'hover:bg-emerald-500/10 disabled:opacity-60 dark:text-emerald-200'
                 }
                 onClick={handleDemoSignIn}
                 disabled={isLoading}
               >
                 <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                     <Sparkles className="h-4 w-4" />
                   </span>
                   <span className="text-left">
                     <span className="block text-sm font-semibold">
                       Try the live demo
                     </span>
-                    <span className="block text-xs text-emerald-700/80 dark:text-emerald-200/80">
-                      Explore the full dashboard with sample data
+                    <span className="block text-xs text-emerald-700/70 dark:text-emerald-200/70">
+                      Explore with sample data
                     </span>
                   </span>
                 </span>
-                <span className="text-xs font-medium text-emerald-700/80 dark:text-emerald-200/80">
+                <span className="text-xs text-emerald-700/70 dark:text-emerald-200/70">
                   No signup
                 </span>
               </Button>

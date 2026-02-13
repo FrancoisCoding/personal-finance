@@ -16,7 +16,7 @@ import {
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
-import { Github, Mail } from 'lucide-react'
+import { Github, Mail, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -104,12 +104,32 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
-                variant="secondary"
-                className="w-full"
+                variant="outline"
+                className={
+                  'w-full items-center justify-between gap-3 border-emerald-500/40 ' +
+                  'bg-emerald-500/10 px-4 py-3 text-emerald-700 shadow-sm ' +
+                  'transition hover:border-emerald-500/60 hover:bg-emerald-500/20 ' +
+                  'disabled:opacity-60 dark:text-emerald-200'
+                }
                 onClick={handleDemoSignIn}
                 disabled={isLoading}
               >
-                Try the live demo
+                <span className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-500">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <span className="text-left">
+                    <span className="block text-sm font-semibold">
+                      Try the live demo
+                    </span>
+                    <span className="block text-xs text-emerald-700/80 dark:text-emerald-200/80">
+                      Explore the full dashboard with sample data
+                    </span>
+                  </span>
+                </span>
+                <span className="text-xs font-medium text-emerald-700/80 dark:text-emerald-200/80">
+                  No signup
+                </span>
               </Button>
 
               {/* OAuth Buttons */}

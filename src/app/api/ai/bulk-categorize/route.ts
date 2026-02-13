@@ -4,9 +4,46 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { seedCategories } from '@/lib/seed-categories'
 import { autoCategorizeTransactions } from '@/lib/enhanced-ai'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const { transactionIds } = await request.json()
+
+      if (!transactionIds || !Array.isArray(transactionIds)) {
+        return NextResponse.json(
+          { error: 'Invalid transaction IDs' },
+          { status: 400 }
+        )
+      }
+
+      const demoTransactions = buildDemoData().transactions.filter(
+        (transaction) => transactionIds.includes(transaction.id)
+      )
+
+      if (demoTransactions.length === 0) {
+        return NextResponse.json({
+          message: 'No uncategorized transactions found',
+        })
+      }
+
+      const categorizationResults = await autoCategorizeTransactions(
+        demoTransactions.map((transaction) => ({
+          id: transaction.id,
+          description: transaction.description,
+          amount: transaction.amount,
+          category: transaction.category ?? null,
+        }))
+      )
+
+      return NextResponse.json({
+        message: `Successfully categorized ${categorizationResults.length} transactions`,
+        results: categorizationResults,
+      })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

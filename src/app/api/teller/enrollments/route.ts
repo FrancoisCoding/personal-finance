@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getTellerEnvironment } from '@/lib/teller'
 import { syncTellerEnrollment } from '@/lib/teller-sync'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 interface TellerEnrollmentPayload {
   accessToken?: string
@@ -31,6 +33,16 @@ const getInstitutionName = (payload: TellerEnrollmentPayload) =>
   payload.enrollment?.institution?.name || payload.institution?.name || null
 
 export async function POST(request: NextRequest) {
+  if (isDemoModeRequest(request)) {
+    const demoData = buildDemoData()
+    return NextResponse.json({
+      message: 'Demo enrollment saved',
+      accountsSynced: demoData.accounts.length,
+      transactionsSynced: demoData.transactions.length,
+      syncSkipped: true,
+    })
+  }
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

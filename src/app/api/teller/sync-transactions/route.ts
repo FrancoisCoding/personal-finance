@@ -1,12 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { syncTellerEnrollment } from '@/lib/teller-sync'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (isDemoModeRequest(request)) {
+    const demoData = buildDemoData()
+    return NextResponse.json({
+      message: 'Demo sync complete',
+      accountsSynced: demoData.accounts.length,
+      transactionsSynced: demoData.transactions.length,
+    })
+  }
+
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

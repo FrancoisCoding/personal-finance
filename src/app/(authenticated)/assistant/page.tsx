@@ -14,6 +14,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import {
   useAccounts,
   useSubscriptions,
@@ -109,6 +110,7 @@ export default function FinancialAssistantPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { isDemoMode } = useDemoMode()
   const { data: transactions = [], isLoading: isTransactionsLoading } =
     useTransactions()
   const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
@@ -129,11 +131,11 @@ export default function FinancialAssistantPage() {
   useEffect(() => {
     if (status === 'loading') return
 
-    if (!session) {
+    if (!session && !isDemoMode) {
       router.push('/auth/login')
       return
     }
-  }, [session, status, router])
+  }, [session, status, router, isDemoMode])
 
   const handleSendMessage = useCallback(
     async (overrideMessage?: string) => {

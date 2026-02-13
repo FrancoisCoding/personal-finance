@@ -8,11 +8,17 @@ import {
   invalidateCacheKeys,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const TRANSACTIONS_CACHE_TTL_MS = 30_000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().transactions)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -55,6 +61,25 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const transaction = {
+        id: `demo-transaction-${Date.now()}`,
+        userId: 'demo-user',
+        accountId: body?.accountId ?? 'demo-checking',
+        categoryId: body?.categoryId,
+        category: body?.category,
+        amount: parseFloat(body?.amount ?? 0),
+        description: body?.description ?? 'Demo transaction',
+        date: body?.date ?? new Date().toISOString(),
+        type: body?.type ?? 'EXPENSE',
+        isRecurring: body?.isRecurring ?? false,
+        tags: body?.tags ?? [],
+        notes: body?.notes ?? null,
+      }
+      return NextResponse.json(transaction, { status: 201 })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

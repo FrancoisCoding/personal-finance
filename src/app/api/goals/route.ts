@@ -8,11 +8,17 @@ import {
   invalidateCacheKey,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const GOALS_CACHE_TTL_MS = 30_000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().goals)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -49,6 +55,23 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const goal = {
+        id: `demo-goal-${Date.now()}`,
+        userId: 'demo-user',
+        name: body?.name ?? 'Demo goal',
+        description: body?.description ?? null,
+        targetAmount: parseFloat(body?.targetAmount ?? 0),
+        currentAmount: 0,
+        targetDate: body?.targetDate ?? null,
+        color: body?.color ?? '#3B82F6',
+        icon: body?.icon ?? 'Target',
+        isCompleted: false,
+      }
+      return NextResponse.json(goal, { status: 201 })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

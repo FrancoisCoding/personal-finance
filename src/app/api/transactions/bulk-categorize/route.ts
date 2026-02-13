@@ -5,9 +5,26 @@ import { prisma } from '@/lib/prisma'
 import { seedCategories } from '@/lib/seed-categories'
 import { categorizeTransaction } from '@/lib/ai'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const transactionIds = Array.isArray(body?.transactionIds)
+        ? body.transactionIds
+        : []
+      return NextResponse.json({
+        message: `Demo categorized ${transactionIds.length} transactions`,
+        results: transactionIds.map((id: string) => ({
+          transactionId: id,
+          suggestedCategory: 'Food & Dining',
+          confidence: 0.72,
+          reason: 'Demo categorization',
+        })),
+      })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

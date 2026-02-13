@@ -23,6 +23,7 @@ import {
 import { SearchBar } from '@/components/ui/search-bar'
 import useTransactionsTable from '@/hooks/use-transactions-table'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import { DollarSign, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 import {
   DropdownMenu,
@@ -50,6 +51,7 @@ export default function TransactionsPage() {
   const { status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
+  const { isDemoMode } = useDemoMode()
   const { data: transactions = [], isLoading } = useTransactions()
   const { data: categories = [] } = useCategories()
   const { data: accounts = [] } = useAccounts()
@@ -64,10 +66,10 @@ export default function TransactionsPage() {
   >(new Set())
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'unauthenticated' && !isDemoMode) {
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [status, router, isDemoMode])
 
   // Filter transactions based on category and type
   const filteredTransactions = useMemo(

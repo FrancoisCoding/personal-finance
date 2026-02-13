@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useMemo } from 'react'
 
 // Types
@@ -153,66 +154,72 @@ const fetchSubscriptions = async (): Promise<Subscription[]> => {
 // Custom Hooks
 export function useAccounts() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.accounts,
     queryFn: fetchAccounts,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
 export function useTransactions() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.transactions,
     queryFn: fetchTransactions,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 2 * 60 * 1000, // 2 minutes
   })
 }
 
 export function useBudgets() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.budgets,
     queryFn: fetchBudgets,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
 export function useGoals() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.goals,
     queryFn: fetchGoals,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
 export function useCategories() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.categories,
     queryFn: fetchCategories,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
 export function useSubscriptions() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
 
   return useQuery({
     queryKey: queryKeys.subscriptions,
     queryFn: fetchSubscriptions,
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
@@ -1005,6 +1012,7 @@ export function useSeedCategories() {
 // Add this new hook for credit cards
 export function useCreditCards() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
   return useQuery({
     queryKey: ['credit-cards'],
     queryFn: async () => {
@@ -1014,7 +1022,7 @@ export function useCreditCards() {
       }
       return response.json()
     },
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id || isDemoMode,
     staleTime: 5 * 60 * 1000,
   })
 }

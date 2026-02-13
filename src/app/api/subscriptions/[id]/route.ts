@@ -3,12 +3,21 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    if (isDemoModeRequest(request)) {
+      const updates = await request.json().catch(() => ({}))
+      return NextResponse.json({
+        id: params.id,
+        ...updates,
+      })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -88,6 +97,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json({
+        message: 'Demo subscription deleted successfully',
+        subscriptionId: params.id,
+      })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

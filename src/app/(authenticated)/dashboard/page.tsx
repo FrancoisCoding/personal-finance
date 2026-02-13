@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +25,14 @@ import { AddReminderModal } from '@/components/add-reminder-modal'
 import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Progress } from '@/components/ui/progress'
 import DemoWalkthrough from '@/components/demo-walkthrough'
 import {
   useAccounts,
@@ -184,6 +192,9 @@ export default function DashboardPage() {
   const queryClient = useQueryClient()
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false)
   const [hasWalkthrough, setHasWalkthrough] = useState(false)
+  const [isDemoLoading, setIsDemoLoading] = useState(false)
+  const [demoProgress, setDemoProgress] = useState(0)
+  const demoProgressIntervalRef = useRef<number | null>(null)
 
   // Memoized callbacks
   const handleTellerSuccess = useCallback(() => {
@@ -204,6 +215,15 @@ export default function DashboardPage() {
     }
   }, [isDemoMode])
 
+  useEffect(() => {
+    return () => {
+      if (demoProgressIntervalRef.current !== null) {
+        window.clearInterval(demoProgressIntervalRef.current)
+        demoProgressIntervalRef.current = null
+      }
+    }
+  }, [])
+
   // Fetch data using TanStack Query
   const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
   const { data: transactions = [], isLoading: isTransactionsLoading } =
@@ -222,6 +242,75 @@ export default function DashboardPage() {
     isGoalsLoading ||
     isCategoriesLoading ||
     isCreditCardsLoading
+
+  useEffect(() => {
+    if (!isDemoMode) return
+
+    let shouldShow = false
+    try {
+      shouldShow = localStorage.getItem('finance-demo-loading') === '1'
+    } catch (error) {
+      void error
+    }
+
+    if (!shouldShow) return
+
+    setIsDemoLoading(true)
+    setDemoProgress(18)
+    if (demoProgressIntervalRef.current !== null) {
+      window.clearInterval(demoProgressIntervalRef.current)
+    }
+    demoProgressIntervalRef.current = window.setInterval(() => {
+      setDemoProgress((current) => {
+        if (current >= 90) return current
+        const next =
+          current < 45 ? current + 7 : current < 75 ? current + 4 : current + 2
+        return Math.min(90, next)
+      })
+    }, 240)
+  }, [isDemoMode])
+
+  useEffect(() => {
+    if (!isDemoLoading) return
+    if (isLoading) return
+
+    setDemoProgress(100)
+    if (demoProgressIntervalRef.current !== null) {
+      window.clearInterval(demoProgressIntervalRef.current)
+      demoProgressIntervalRef.current = null
+    }
+    try {
+      localStorage.removeItem('finance-demo-loading')
+    } catch (error) {
+      void error
+    }
+
+    const timeout = window.setTimeout(() => {
+      setIsDemoLoading(false)
+    }, 500)
+
+    return () => window.clearTimeout(timeout)
+  }, [isDemoLoading, isLoading])
+
+  const demoLoadingModal = (
+    <Dialog open={isDemoLoading}>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>Loading demo experience</DialogTitle>
+          <DialogDescription>
+            Pulling sample accounts, transactions, and insights.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Syncing data</span>
+            <span>{demoProgress}%</span>
+          </div>
+          <Progress value={demoProgress} className="h-2" />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 
   useEffect(() => {
     if (
@@ -591,133 +680,75 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 pb-8">
-        <div className="space-y-4">
-          <Skeleton className="h-3 w-24" />
-          <Skeleton className="h-10 w-72" />
-          <Skeleton className="h-4 w-80" />
-          <div className="flex flex-wrap gap-3">
-            <Skeleton className="h-10 w-36" />
-            <Skeleton className="h-10 w-36" />
+      <>
+        {demoLoadingModal}
+        <div className="space-y-8 pb-8">
+          <div className="space-y-4">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-10 w-72" />
+            <Skeleton className="h-4 w-80" />
+            <div className="flex flex-wrap gap-3">
+              <Skeleton className="h-10 w-36" />
+              <Skeleton className="h-10 w-36" />
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Card
-              key={`dashboard-summary-${index}`}
-              className="border-border/60 bg-card/80 shadow-sm"
-            >
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-6 w-28" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card
+                key={`dashboard-summary-${index}`}
+                className="border-border/60 bg-card/80 shadow-sm"
+              >
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-6 w-28" />
+                    </div>
+                    <Skeleton className="h-10 w-10 rounded-full" />
                   </div>
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-32" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <Skeleton className="h-3 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Card
-              key={`dashboard-primary-${index}`}
-              className="border-border/60 bg-card/80 shadow-sm"
-            >
-              <CardHeader className="border-b border-border/60">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-32" />
-              </CardHeader>
-              <CardContent className="space-y-3 pt-4">
-                {Array.from({ length: 3 }).map((_, rowIndex) => (
-                  <Skeleton
-                    key={`dashboard-primary-row-${index}-${rowIndex}`}
-                    className="h-12 w-full"
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <Card
-              key={`dashboard-secondary-${index}`}
-              className="border-border/60 bg-card/80 shadow-sm"
-            >
-              <CardHeader className="border-b border-border/60">
-                <Skeleton className="h-4 w-44" />
-                <Skeleton className="h-3 w-36" />
-              </CardHeader>
-              <CardContent className="space-y-3 pt-4">
-                {Array.from({ length: 4 }).map((_, rowIndex) => (
-                  <Skeleton
-                    key={`dashboard-secondary-row-${index}-${rowIndex}`}
-                    className="h-10 w-full"
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <Card
-              key={`dashboard-tertiary-${index}`}
-              className="border-border/60 bg-card/80 shadow-sm"
-            >
-              <CardHeader className="border-b border-border/60">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-32" />
-              </CardHeader>
-              <CardContent className="space-y-3 pt-4">
-                {Array.from({ length: 3 }).map((_, rowIndex) => (
-                  <Skeleton
-                    key={`dashboard-tertiary-row-${index}-${rowIndex}`}
-                    className="h-11 w-full"
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-          <Card className="border-border/60 bg-card/80 shadow-sm">
-            <CardHeader className="border-b border-border/60">
-              <Skeleton className="h-4 w-44" />
-              <Skeleton className="h-3 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4">
-              {Array.from({ length: 4 }).map((_, rowIndex) => (
-                <Skeleton
-                  key={`dashboard-transactions-${rowIndex}`}
-                  className="h-14 w-full"
-                />
-              ))}
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 auto-rows-fr">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
               <Card
-                key={`dashboard-side-${index}`}
+                key={`dashboard-primary-${index}`}
                 className="border-border/60 bg-card/80 shadow-sm"
               >
                 <CardHeader className="border-b border-border/60">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-32" />
                 </CardHeader>
                 <CardContent className="space-y-3 pt-4">
-                  {Array.from({ length: 2 }).map((_, rowIndex) => (
+                  {Array.from({ length: 3 }).map((_, rowIndex) => (
                     <Skeleton
-                      key={`dashboard-side-row-${index}-${rowIndex}`}
+                      key={`dashboard-primary-row-${index}-${rowIndex}`}
+                      className="h-12 w-full"
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Card
+                key={`dashboard-secondary-${index}`}
+                className="border-border/60 bg-card/80 shadow-sm"
+              >
+                <CardHeader className="border-b border-border/60">
+                  <Skeleton className="h-4 w-44" />
+                  <Skeleton className="h-3 w-36" />
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  {Array.from({ length: 4 }).map((_, rowIndex) => (
+                    <Skeleton
+                      key={`dashboard-secondary-row-${index}-${rowIndex}`}
                       className="h-10 w-full"
                     />
                   ))}
@@ -725,386 +756,454 @@ export default function DashboardPage() {
               </Card>
             ))}
           </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Card
+                key={`dashboard-tertiary-${index}`}
+                className="border-border/60 bg-card/80 shadow-sm"
+              >
+                <CardHeader className="border-b border-border/60">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-32" />
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  {Array.from({ length: 3 }).map((_, rowIndex) => (
+                    <Skeleton
+                      key={`dashboard-tertiary-row-${index}-${rowIndex}`}
+                      className="h-11 w-full"
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+            <Card className="border-border/60 bg-card/80 shadow-sm">
+              <CardHeader className="border-b border-border/60">
+                <Skeleton className="h-4 w-44" />
+                <Skeleton className="h-3 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {Array.from({ length: 4 }).map((_, rowIndex) => (
+                  <Skeleton
+                    key={`dashboard-transactions-${rowIndex}`}
+                    className="h-14 w-full"
+                  />
+                ))}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 auto-rows-fr">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card
+                  key={`dashboard-side-${index}`}
+                  className="border-border/60 bg-card/80 shadow-sm"
+                >
+                  <CardHeader className="border-b border-border/60">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-4">
+                    {Array.from({ length: 2 }).map((_, rowIndex) => (
+                      <Skeleton
+                        key={`dashboard-side-row-${index}-${rowIndex}`}
+                        className="h-10 w-full"
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
-    <div className="space-y-8 pb-8">
-      {isDemoMode ? (
+    <>
+      {demoLoadingModal}
+      <div className="space-y-8 pb-8">
+        {isDemoMode ? (
+          <FadeIn>
+            <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-sm">
+              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+                    Demo mode
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    Explore real workflows with curated data.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Try the guided walkthrough to see the key features in
+                    action.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsWalkthroughOpen(true)}
+                  >
+                    Start walkthrough
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      localStorage.removeItem('finance-demo-walkthrough')
+                      setHasWalkthrough(false)
+                      setIsWalkthroughOpen(true)
+                    }}
+                  >
+                    Reset tour
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </FadeIn>
+        ) : null}
+
+        {/* Header */}
         <FadeIn>
-          <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-sm">
-            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
-                  Demo mode
-                </p>
-                <p className="mt-2 text-lg font-semibold text-foreground">
-                  Explore real workflows with curated data.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Try the guided walkthrough to see the key features in action.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsWalkthroughOpen(true)}
-                >
-                  Start walkthrough
+          <div
+            className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between"
+            data-demo-step="demo-welcome"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Dashboard
+              </p>
+              <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground">
+                Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}!
+              </h1>
+              <p className="text-muted-foreground mt-2 text-lg">
+                Here&apos;s your financial overview for this month
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3" data-demo-step="demo-actions">
+              <AddTransactionDialog />
+              {isDemoMode ? (
+                <Button variant="outline" disabled>
+                  Connect Bank Account
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    localStorage.removeItem('finance-demo-walkthrough')
-                    setHasWalkthrough(false)
-                    setIsWalkthroughOpen(true)
-                  }}
-                >
-                  Reset tour
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <TellerLink onSuccess={handleTellerSuccess} />
+              )}
+            </div>
+          </div>
         </FadeIn>
-      ) : null}
 
-      {/* Header */}
-      <FadeIn>
-        <div
-          className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between"
-          data-demo-step="demo-welcome"
-        >
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Dashboard
-            </p>
-            <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground">
-              Welcome back, {session?.user?.name?.split(' ')[0] || 'User'}!
-            </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              Here&apos;s your financial overview for this month
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3" data-demo-step="demo-actions">
-            <AddTransactionDialog />
-            {isDemoMode ? (
-              <Button variant="outline" disabled>
-                Connect Bank Account
-              </Button>
-            ) : (
-              <TellerLink onSuccess={handleTellerSuccess} />
-            )}
-          </div>
-        </div>
-      </FadeIn>
-
-      {/* Financial Overview Cards */}
-      <FadeIn delay={0.1}>
-        <FinancialOverviewCards
-          totalBalance={totalBalance}
-          monthlyIncome={monthlyIncome}
-          monthlyExpenses={monthlyExpenses}
-          netIncome={netIncome}
-          creditCardUtilization={creditCardUtilization}
-        />
-      </FadeIn>
-
-      {/* Main Content Grid */}
-      <FadeIn delay={0.15}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          {/* Net Worth Card */}
-          <NetWorthSummaryCard
-            netWorth={netWorth}
-            summaryItems={netWorthSummaryItems}
-            forecastRange={forecastRange}
-            forecastAverage={forecastAverage}
-            forecastProjected={forecastProjected}
-            hasData={hasNetWorthData}
-            className="h-full"
+        {/* Financial Overview Cards */}
+        <FadeIn delay={0.1}>
+          <FinancialOverviewCards
+            totalBalance={totalBalance}
+            monthlyIncome={monthlyIncome}
+            monthlyExpenses={monthlyExpenses}
+            netIncome={netIncome}
+            creditCardUtilization={creditCardUtilization}
           />
+        </FadeIn>
 
-          {/* Spending Chart */}
-          <div data-demo-step="demo-spending">
-            <SpendingChart
-              data={spendingData}
-              totalSpending={monthlyExpenses}
-              previousMonthTotal={monthlyExpenses * 0.95} // Mock data
+        {/* Main Content Grid */}
+        <FadeIn delay={0.15}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            {/* Net Worth Card */}
+            <NetWorthSummaryCard
+              netWorth={netWorth}
+              summaryItems={netWorthSummaryItems}
+              forecastRange={forecastRange}
+              forecastAverage={forecastAverage}
+              forecastProjected={forecastProjected}
+              hasData={hasNetWorthData}
               className="h-full"
             />
-          </div>
 
-          {/* Reminders */}
-          <div className="h-full">
-            <RemindersCard
-              reminders={reminders}
-              action={
-                <AddReminderModal
-                  onReminderAdded={(reminder) => {
-                    const reminderDate = new Date(reminder.date)
-                    setReminders((prev) => [
-                      {
-                        id: reminder.id,
-                        title: reminder.title,
-                        date: reminderDate.toLocaleDateString('en-US'),
-                        time: reminderDate.toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        }),
-                        completed: false,
-                        type: 'custom',
-                      },
-                      ...prev,
-                    ])
-                  }}
-                  buttonLabel="Add"
-                  buttonVariant="ghost"
-                  className={
-                    'h-8 px-3 text-xs font-medium text-blue-700 ' +
-                    'hover:bg-blue-50/50 dark:text-blue-300 ' +
-                    'dark:hover:bg-blue-500/10'
-                  }
-                />
-              }
-              onToggleReminder={(id) => {
-                setReminders((prev) =>
-                  prev.filter((reminder) => reminder.id !== id)
-                )
-              }}
-              className="h-full"
-            />
-          </div>
-        </div>
-      </FadeIn>
+            {/* Spending Chart */}
+            <div data-demo-step="demo-spending">
+              <SpendingChart
+                data={spendingData}
+                totalSpending={monthlyExpenses}
+                previousMonthTotal={monthlyExpenses * 0.95} // Mock data
+                className="h-full"
+              />
+            </div>
 
-      {/* Second Row */}
-      <FadeIn delay={0.2}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          {/* Cash Flow Chart */}
-          <div className="lg:col-span-2 h-full">
-            <CashFlowChart data={cashFlowData} className="h-full" />
-          </div>
-
-          {/* AI Insights */}
-          <div className="lg:col-span-1 h-full">
-            <div data-demo-step="demo-insights">
-              <AIFinancialInsights
-                transactions={transformedTransactions}
-                budgets={transformedBudgets}
-                goals={transformedGoals}
+            {/* Reminders */}
+            <div className="h-full">
+              <RemindersCard
+                reminders={reminders}
+                action={
+                  <AddReminderModal
+                    onReminderAdded={(reminder) => {
+                      const reminderDate = new Date(reminder.date)
+                      setReminders((prev) => [
+                        {
+                          id: reminder.id,
+                          title: reminder.title,
+                          date: reminderDate.toLocaleDateString('en-US'),
+                          time: reminderDate.toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          }),
+                          completed: false,
+                          type: 'custom',
+                        },
+                        ...prev,
+                      ])
+                    }}
+                    buttonLabel="Add"
+                    buttonVariant="ghost"
+                    className={
+                      'h-8 px-3 text-xs font-medium text-blue-700 ' +
+                      'hover:bg-blue-50/50 dark:text-blue-300 ' +
+                      'dark:hover:bg-blue-500/10'
+                    }
+                  />
+                }
+                onToggleReminder={(id) => {
+                  setReminders((prev) =>
+                    prev.filter((reminder) => reminder.id !== id)
+                  )
+                }}
                 className="h-full"
               />
             </div>
           </div>
-        </div>
-      </FadeIn>
+        </FadeIn>
 
-      {/* Third Row - Credit Utilization */}
-      <FadeIn delay={0.25}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          {/* Credit Utilization */}
-          <CreditUtilizationCard creditCards={creditCards} className="h-full" />
+        {/* Second Row */}
+        <FadeIn delay={0.2}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            {/* Cash Flow Chart */}
+            <div className="lg:col-span-2 h-full">
+              <CashFlowChart data={cashFlowData} className="h-full" />
+            </div>
 
-          {/* Analytics Dashboard */}
-          <AnalyticsDashboard
-            transactions={transformedTransactions}
-            budgets={transformedBudgets}
-            goals={transformedGoals}
-            className="h-full"
-          />
-        </div>
-      </FadeIn>
-
-      {/* Fourth Row */}
-      <FadeIn delay={0.3}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          {/* Recent Transactions */}
-          <Card
-            className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full"
-            data-demo-step="demo-transactions"
-          >
-            <CardHeader className="border-b border-border/60">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>
-                    Your latest financial activity
-                  </CardDescription>
-                </div>
+            {/* AI Insights */}
+            <div className="lg:col-span-1 h-full">
+              <div data-demo-step="demo-insights">
+                <AIFinancialInsights
+                  transactions={transformedTransactions}
+                  budgets={transformedBudgets}
+                  goals={transformedGoals}
+                  className="h-full"
+                />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
-              {recentTransactions.length > 0 ? (
-                recentTransactions.map((transaction) => {
-                  const categoryName =
-                    transaction.category ??
-                    transaction.categoryRelation?.name ??
-                    'Other'
-                  return (
-                    <div
-                      key={transaction.id}
-                      className={
-                        'flex items-center justify-between rounded-lg border border-border/60 ' +
-                        'bg-muted/30 p-4 transition-colors hover:bg-muted/40'
-                      }
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div
-                          className={
-                            'flex h-12 w-12 items-center justify-center rounded-xl ' +
-                            'text-white shadow-md'
-                          }
-                          style={{
-                            backgroundColor: getCategoryColor(categoryName),
-                          }}
-                        >
-                          <span className="text-xl">
-                            {getCategoryIcon(categoryName)}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {transaction.description}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {categoryName}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={`text-lg font-semibold ${
-                            transaction.type === 'INCOME'
-                              ? 'text-emerald-600 dark:text-emerald-300'
-                              : 'text-rose-600 dark:text-rose-300'
-                          }`}
-                        >
-                          {transaction.type === 'INCOME' ? '+' : '-'}
-                          {formatCurrency(transaction.amount)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })
-              ) : (
-                <div
-                  className={
-                    'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
-                    'px-4 py-8 text-center'
-                  }
-                >
-                  <p className="text-sm font-medium text-foreground">
-                    No transactions yet
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 mb-5">
-                    Start tracking your finances by adding your first
-                    transaction.
-                  </p>
-                  <AddTransactionDialog />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </FadeIn>
 
-          {/* Budgets and Goals */}
-          <div className="grid gap-6 auto-rows-fr">
-            {/* Budget Progress */}
-            <Card className="border-border/60 bg-card/80 shadow-sm h-full">
-              <CardHeader className="border-b border-border/60">
-                <CardTitle>Budget Progress</CardTitle>
-                <CardDescription>This month&apos;s spending</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {budgets.length > 0 ? (
-                  <div className="space-y-3">
-                    {budgets.slice(0, 3).map((budget) => (
-                      <BudgetProgressItem key={budget.id} budget={budget} />
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    className={
-                      'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
-                      'px-4 py-6 text-center'
-                    }
-                  >
-                    <p className="text-sm font-medium text-foreground">
-                      No budgets yet
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 mb-4">
-                      Create a budget to track monthly spending.
-                    </p>
-                    <Button size="sm" variant="outline">
-                      Create budget
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        {/* Third Row - Credit Utilization */}
+        <FadeIn delay={0.25}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* Credit Utilization */}
+            <CreditUtilizationCard
+              creditCards={creditCards}
+              className="h-full"
+            />
 
-            {/* Goals Progress */}
-            <Card className="border-border/60 bg-card/80 shadow-sm h-full">
-              <CardHeader className="border-b border-border/60">
-                <CardTitle>Financial Goals</CardTitle>
-                <CardDescription>Track your progress</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {goals.length > 0 ? (
-                  <div className="space-y-3">
-                    {goals.slice(0, 3).map((goal) => (
-                      <GoalProgressItem key={goal.id} goal={goal} />
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    className={
-                      'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
-                      'px-4 py-6 text-center'
-                    }
-                  >
-                    <p className="text-sm font-medium text-foreground">
-                      No goals yet
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 mb-4">
-                      Add a goal to keep progress visible.
-                    </p>
-                    <Button size="sm" variant="outline">
-                      Set a goal
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <DonationsCard
-              entries={donationSummary.entries}
-              total={donationSummary.total}
-              hasData={donationSummary.hasData}
+            {/* Analytics Dashboard */}
+            <AnalyticsDashboard
+              transactions={transformedTransactions}
+              budgets={transformedBudgets}
+              goals={transformedGoals}
               className="h-full"
             />
           </div>
-        </div>
-      </FadeIn>
+        </FadeIn>
 
-      <DemoWalkthrough
-        isOpen={isWalkthroughOpen}
-        onClose={() => {
-          setIsWalkthroughOpen(false)
-          if (!hasWalkthrough) {
-            localStorage.setItem('finance-demo-walkthrough', 'skipped')
+        {/* Fourth Row */}
+        <FadeIn delay={0.3}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            {/* Recent Transactions */}
+            <Card
+              className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full"
+              data-demo-step="demo-transactions"
+            >
+              <CardHeader className="border-b border-border/60">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <CardTitle>Recent Transactions</CardTitle>
+                    <CardDescription>
+                      Your latest financial activity
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => {
+                    const categoryName =
+                      transaction.category ??
+                      transaction.categoryRelation?.name ??
+                      'Other'
+                    return (
+                      <div
+                        key={transaction.id}
+                        className={
+                          'flex items-center justify-between rounded-lg border border-border/60 ' +
+                          'bg-muted/30 p-4 transition-colors hover:bg-muted/40'
+                        }
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div
+                            className={
+                              'flex h-12 w-12 items-center justify-center rounded-xl ' +
+                              'text-white shadow-md'
+                            }
+                            style={{
+                              backgroundColor: getCategoryColor(categoryName),
+                            }}
+                          >
+                            <span className="text-xl">
+                              {getCategoryIcon(categoryName)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {transaction.description}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {categoryName}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p
+                            className={`text-lg font-semibold ${
+                              transaction.type === 'INCOME'
+                                ? 'text-emerald-600 dark:text-emerald-300'
+                                : 'text-rose-600 dark:text-rose-300'
+                            }`}
+                          >
+                            {transaction.type === 'INCOME' ? '+' : '-'}
+                            {formatCurrency(transaction.amount)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(transaction.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div
+                    className={
+                      'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                      'px-4 py-8 text-center'
+                    }
+                  >
+                    <p className="text-sm font-medium text-foreground">
+                      No transactions yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 mb-5">
+                      Start tracking your finances by adding your first
+                      transaction.
+                    </p>
+                    <AddTransactionDialog />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Budgets and Goals */}
+            <div className="grid gap-6 auto-rows-fr">
+              {/* Budget Progress */}
+              <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                <CardHeader className="border-b border-border/60">
+                  <CardTitle>Budget Progress</CardTitle>
+                  <CardDescription>This month&apos;s spending</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {budgets.length > 0 ? (
+                    <div className="space-y-3">
+                      {budgets.slice(0, 3).map((budget) => (
+                        <BudgetProgressItem key={budget.id} budget={budget} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                        'px-4 py-6 text-center'
+                      }
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        No budgets yet
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-4">
+                        Create a budget to track monthly spending.
+                      </p>
+                      <Button size="sm" variant="outline">
+                        Create budget
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Goals Progress */}
+              <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                <CardHeader className="border-b border-border/60">
+                  <CardTitle>Financial Goals</CardTitle>
+                  <CardDescription>Track your progress</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {goals.length > 0 ? (
+                    <div className="space-y-3">
+                      {goals.slice(0, 3).map((goal) => (
+                        <GoalProgressItem key={goal.id} goal={goal} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                        'px-4 py-6 text-center'
+                      }
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        No goals yet
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-4">
+                        Add a goal to keep progress visible.
+                      </p>
+                      <Button size="sm" variant="outline">
+                        Set a goal
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <DonationsCard
+                entries={donationSummary.entries}
+                total={donationSummary.total}
+                hasData={donationSummary.hasData}
+                className="h-full"
+              />
+            </div>
+          </div>
+        </FadeIn>
+
+        <DemoWalkthrough
+          isOpen={isWalkthroughOpen}
+          onClose={() => {
+            setIsWalkthroughOpen(false)
+            if (!hasWalkthrough) {
+              localStorage.setItem('finance-demo-walkthrough', 'skipped')
+              setHasWalkthrough(true)
+            }
+          }}
+          onComplete={() => {
+            localStorage.setItem('finance-demo-walkthrough', 'done')
+            setIsWalkthroughOpen(false)
             setHasWalkthrough(true)
-          }
-        }}
-        onComplete={() => {
-          localStorage.setItem('finance-demo-walkthrough', 'done')
-          setIsWalkthroughOpen(false)
-          setHasWalkthrough(true)
-        }}
-      />
-    </div>
+          }}
+        />
+      </div>
+    </>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,6 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Progress } from '@/components/ui/progress'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
@@ -22,9 +30,21 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isDemoLoading, setIsDemoLoading] = useState(false)
+  const [demoProgress, setDemoProgress] = useState(0)
+  const demoProgressIntervalRef = useRef<number | null>(null)
   const router = useRouter()
   const { toast } = useToast()
   const { startDemoMode } = useDemoMode()
+
+  useEffect(() => {
+    return () => {
+      if (demoProgressIntervalRef.current !== null) {
+        window.clearInterval(demoProgressIntervalRef.current)
+        demoProgressIntervalRef.current = null
+      }
+    }
+  }, [])
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,8 +92,32 @@ export default function LoginPage() {
   }
 
   const handleDemoSignIn = () => {
+    if (isLoading) return
+    setIsDemoLoading(true)
+    setDemoProgress(12)
+    if (demoProgressIntervalRef.current !== null) {
+      window.clearInterval(demoProgressIntervalRef.current)
+    }
+    demoProgressIntervalRef.current = window.setInterval(() => {
+      setDemoProgress((current) => {
+        if (current >= 90) return current
+        const next =
+          current < 40 ? current + 8 : current < 70 ? current + 5 : current + 2
+        return Math.min(90, next)
+      })
+    }, 220)
+
+    try {
+      localStorage.setItem('finance-demo-loading', '1')
+    } catch (error) {
+      void error
+    }
+
     startDemoMode()
-    router.push('/dashboard?demo=1')
+    window.setTimeout(() => {
+      setDemoProgress(100)
+      router.push('/dashboard?demo=1')
+    }, 420)
   }
 
   return (
@@ -220,6 +264,24 @@ export default function LoginPage() {
           </Card>
         </div>
       </main>
+
+      <Dialog open={isDemoLoading}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Preparing demo workspace</DialogTitle>
+            <DialogDescription>
+              Loading curated data and analytics so you can explore instantly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Initializing demo session</span>
+              <span>{demoProgress}%</span>
+            </div>
+            <Progress value={demoProgress} className="h-2" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

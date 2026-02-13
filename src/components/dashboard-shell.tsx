@@ -86,6 +86,12 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
   const handleExitDemo = () => {
     stopDemoMode()
+    try {
+      localStorage.removeItem('finance-demo-walkthrough')
+      localStorage.removeItem('finance-demo-loading')
+    } catch (error) {
+      console.warn('Failed to clear demo data', error)
+    }
     router.push('/auth/login')
   }
 
@@ -804,9 +810,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-600 focus:text-red-600"
-                      onClick={() => signOut()}
+                      onClick={isDemoMode ? handleExitDemo : () => signOut()}
                     >
-                      Sign out
+                      {isDemoMode ? 'Exit demo' : 'Sign out'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

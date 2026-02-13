@@ -49,6 +49,7 @@ import {
 import { highlightText } from '@/lib/table'
 import { cn } from '@/lib/utils'
 import { sidebarOpenAtom } from '@/store/ui-atoms'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 
 export interface IDashboardShellProps {
   children: React.ReactNode
@@ -59,6 +60,7 @@ export interface IDashboardShellProps {
 export function DashboardShell({ children, session }: IDashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const { isDemoMode, stopDemoMode } = useDemoMode()
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
@@ -81,6 +83,11 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   )
 
   const closeSidebar = () => setIsSidebarOpen(false)
+
+  const handleExitDemo = () => {
+    stopDemoMode()
+    router.push('/auth/login')
+  }
 
   useEffect(() => {
     try {
@@ -476,13 +483,23 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
             </nav>
 
             <div className="mt-6">
-              <Button
-                variant="outline"
-                className="w-full justify-start rounded-xl"
-                onClick={() => signOut()}
-              >
-                Sign out
-              </Button>
+              {isDemoMode ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start rounded-xl"
+                  onClick={handleExitDemo}
+                >
+                  Exit demo
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start rounded-xl"
+                  onClick={() => signOut()}
+                >
+                  Sign out
+                </Button>
+              )}
             </div>
           </aside>
 
@@ -501,6 +518,11 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <LayoutGrid className="h-4 w-4 text-emerald-500" />
                   Overview
+                  {isDemoMode ? (
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+                      Demo
+                    </span>
+                  ) : null}
                 </div>
               </div>
 

@@ -25,6 +25,7 @@ import { AddReminderModal } from '@/components/add-reminder-modal'
 import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
 import { Skeleton } from '@/components/ui/skeleton'
+import DemoWalkthrough from '@/components/demo-walkthrough'
 import {
   useAccounts,
   useTransactions,
@@ -39,6 +40,7 @@ import {
   queryKeys,
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 
 const SpendingChart = dynamic(
   () => import('@/components/spending-chart').then((mod) => mod.SpendingChart),
@@ -151,6 +153,7 @@ const AnalyticsDashboard = dynamic(
 
 export default function DashboardPage() {
   const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
   const [reminders, setReminders] = useState<
     Array<{
       id: string
@@ -179,11 +182,27 @@ export default function DashboardPage() {
     },
   ])
   const queryClient = useQueryClient()
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false)
+  const [hasWalkthrough, setHasWalkthrough] = useState(false)
 
   // Memoized callbacks
   const handleTellerSuccess = useCallback(() => {
     window.location.reload()
   }, [])
+
+  useEffect(() => {
+    if (!isDemoMode) return
+    try {
+      const stored = localStorage.getItem('finance-demo-walkthrough')
+      if (stored) {
+        setHasWalkthrough(true)
+        return
+      }
+      setIsWalkthroughOpen(true)
+    } catch (error) {
+      setIsWalkthroughOpen(true)
+    }
+  }, [isDemoMode])
 
   // Fetch data using TanStack Query
   const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
@@ -713,9 +732,50 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-8">
+      {isDemoMode ? (
+        <FadeIn>
+          <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-sm">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+                  Demo mode
+                </p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  Explore real workflows with curated data.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Try the guided walkthrough to see the key features in action.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsWalkthroughOpen(true)}
+                >
+                  Start walkthrough
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    localStorage.removeItem('finance-demo-walkthrough')
+                    setHasWalkthrough(false)
+                    setIsWalkthroughOpen(true)
+                  }}
+                >
+                  Reset tour
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
+      ) : null}
+
       {/* Header */}
       <FadeIn>
-        <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div
+          className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between"
+          data-demo-step="demo-welcome"
+        >
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Dashboard
@@ -727,9 +787,15 @@ export default function DashboardPage() {
               Here&apos;s your financial overview for this month
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3" data-demo-step="demo-actions">
             <AddTransactionDialog />
-            <TellerLink onSuccess={handleTellerSuccess} />
+            {isDemoMode ? (
+              <Button variant="outline" disabled>
+                Connect Bank Account
+              </Button>
+            ) : (
+              <TellerLink onSuccess={handleTellerSuccess} />
+            )}
           </div>
         </div>
       </FadeIn>
@@ -760,12 +826,14 @@ export default function DashboardPage() {
           />
 
           {/* Spending Chart */}
-          <SpendingChart
-            data={spendingData}
-            totalSpending={monthlyExpenses}
-            previousMonthTotal={monthlyExpenses * 0.95} // Mock data
-            className="h-full"
-          />
+          <div data-demo-step="demo-spending">
+            <SpendingChart
+              data={spendingData}
+              totalSpending={monthlyExpenses}
+              previousMonthTotal={monthlyExpenses * 0.95} // Mock data
+              className="h-full"
+            />
+          </div>
 
           {/* Reminders */}
           <div className="h-full">
@@ -820,12 +888,14 @@ export default function DashboardPage() {
 
           {/* AI Insights */}
           <div className="lg:col-span-1 h-full">
-            <AIFinancialInsights
-              transactions={transformedTransactions}
-              budgets={transformedBudgets}
-              goals={transformedGoals}
-              className="h-full"
-            />
+            <div data-demo-step="demo-insights">
+              <AIFinancialInsights
+                transactions={transformedTransactions}
+                budgets={transformedBudgets}
+                goals={transformedGoals}
+                className="h-full"
+              />
+            </div>
           </div>
         </div>
       </FadeIn>
@@ -850,7 +920,10 @@ export default function DashboardPage() {
       <FadeIn delay={0.3}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Recent Transactions */}
-          <Card className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full">
+          <Card
+            className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full"
+            data-demo-step="demo-transactions"
+          >
             <CardHeader className="border-b border-border/60">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -1016,6 +1089,22 @@ export default function DashboardPage() {
           </div>
         </div>
       </FadeIn>
+
+      <DemoWalkthrough
+        isOpen={isWalkthroughOpen}
+        onClose={() => {
+          setIsWalkthroughOpen(false)
+          if (!hasWalkthrough) {
+            localStorage.setItem('finance-demo-walkthrough', 'skipped')
+            setHasWalkthrough(true)
+          }
+        }}
+        onComplete={() => {
+          localStorage.setItem('finance-demo-walkthrough', 'done')
+          setIsWalkthroughOpen(false)
+          setHasWalkthrough(true)
+        }}
+      />
     </div>
   )
 }

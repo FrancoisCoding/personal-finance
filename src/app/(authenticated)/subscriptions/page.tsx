@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import {
   CreditCard,
   AlertTriangle,
@@ -129,6 +130,7 @@ export default function SubscriptionsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
+  const { isDemoMode } = useDemoMode()
   const { data: subscriptions = [], isLoading } = useSubscriptions()
   const { data: categories = [] } = useCategories()
   const { data: transactions = [] } = useTransactions()
@@ -141,10 +143,10 @@ export default function SubscriptionsPage() {
   const [addingDetected, setAddingDetected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'unauthenticated' && !isDemoMode) {
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [status, router, isDemoMode])
 
   const activeSubscriptions = subscriptions.filter((s) => s.isActive)
   const totalMonthlyCost = activeSubscriptions.reduce((sum, sub) => {

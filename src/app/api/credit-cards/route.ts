@@ -7,6 +7,8 @@ import {
   invalidateCacheKey,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const CREDIT_CARDS_CACHE_TTL_MS = 30_000
 
@@ -20,8 +22,12 @@ type CreditCardSummary = {
   lastStatement: string
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().creditCards)
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -79,6 +85,20 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const newCard = {
+        id: `demo-card-${Date.now()}`,
+        name: body?.name ?? 'Demo card',
+        balance: parseFloat(body?.balance ?? 0),
+        limit: parseFloat(body?.limit ?? 0),
+        apr: parseFloat(body?.apr ?? 0),
+        dueDate: body?.dueDate ?? new Date().toISOString().split('T')[0],
+        lastStatement: new Date().toISOString().split('T')[0],
+      }
+      return NextResponse.json(newCard, { status: 201 })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import { Github, Mail } from 'lucide-react'
 
 export default function LoginPage() {
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const { startDemoMode } = useDemoMode()
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,6 +71,11 @@ export default function LoginPage() {
     }
   }
 
+  const handleDemoSignIn = () => {
+    startDemoMode()
+    router.push('/dashboard?demo=1')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -96,6 +103,15 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handleDemoSignIn}
+                disabled={isLoading}
+              >
+                Try the live demo
+              </Button>
+
               {/* OAuth Buttons */}
               <div className="space-y-3">
                 <Button

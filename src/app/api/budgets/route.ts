@@ -8,11 +8,17 @@ import {
   invalidateCacheKey,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const BUDGETS_CACHE_TTL_MS = 30_000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().budgets)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -55,6 +61,23 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const budget = {
+        id: `demo-budget-${Date.now()}`,
+        userId: 'demo-user',
+        name: body?.name ?? 'Demo budget',
+        categoryId: body?.categoryId ?? null,
+        amount: parseFloat(body?.amount ?? 0),
+        period: body?.period ?? 'MONTHLY',
+        startDate: body?.startDate ?? new Date().toISOString(),
+        endDate: body?.endDate ?? null,
+        isActive: true,
+        isRecurring: body?.isRecurring ?? false,
+      }
+      return NextResponse.json(budget, { status: 201 })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

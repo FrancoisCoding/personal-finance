@@ -4,9 +4,49 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateEnhancedInsights } from '@/lib/enhanced-ai'
 import type { Transaction, Budget, Goal } from '@prisma/client'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const demoData = buildDemoData()
+      const insights = await generateEnhancedInsights(
+        demoData.transactions.map((transaction) => ({
+          id: transaction.id,
+          description: transaction.description,
+          amount: transaction.amount,
+          category: transaction.category || undefined,
+          date: transaction.date,
+          type: transaction.type,
+        })),
+        demoData.budgets.map((budget) => ({
+          id: budget.id,
+          name: budget.name,
+          amount: budget.amount,
+          category: budget.categoryId || undefined,
+        })),
+        demoData.goals.map((goal) => ({
+          id: goal.id,
+          name: goal.name,
+          targetAmount: goal.targetAmount,
+          currentAmount: goal.currentAmount,
+          targetDate: goal.targetDate || undefined,
+          createdAt: goal.createdAt,
+        }))
+      )
+
+      return NextResponse.json({
+        insights,
+        summary: {
+          totalTransactions: demoData.transactions.length,
+          totalBudgets: demoData.budgets.length,
+          totalGoals: demoData.goals.length,
+          insightsCount: insights.length,
+        },
+      })
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -82,6 +122,33 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const { type, data } = await request.json()
+
+      switch (type) {
+        case 'spending_analysis':
+          return NextResponse.json({
+            insights: await analyzeSpendingPatterns(data.transactions),
+          })
+        case 'budget_review':
+          return NextResponse.json({
+            insights: await analyzeBudgetProgress(
+              data.budgets,
+              data.transactions
+            ),
+          })
+        case 'goal_progress':
+          return NextResponse.json({
+            insights: await analyzeGoalProgress(data.goals, data.transactions),
+          })
+        default:
+          return NextResponse.json(
+            { error: 'Invalid insight type' },
+            { status: 400 }
+          )
+      }
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

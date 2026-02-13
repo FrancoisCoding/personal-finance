@@ -1,11 +1,20 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { seedCategories } from '@/lib/seed-categories'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json({
+        message: 'Demo categories seeded successfully',
+        categories: buildDemoData().categories,
+      })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import {
   Plus,
   CreditCard,
@@ -53,6 +54,7 @@ export default function AccountsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
+  const { isDemoMode } = useDemoMode()
   const { data: accounts = [], isLoading } = useAccounts()
   const { data: transactions = [] } = useTransactions()
   const createAccountMutation = useCreateAccount()
@@ -73,16 +75,16 @@ export default function AccountsPage() {
   })
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'unauthenticated' && !isDemoMode) {
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [status, router, isDemoMode])
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'unauthenticated' && !isDemoMode) {
       router.push('/auth/login')
     }
-  }, [status, router])
+  }, [status, router, isDemoMode])
 
   if (status === 'loading' || isLoading) {
     return (

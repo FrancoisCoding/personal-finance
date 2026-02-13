@@ -10,11 +10,17 @@ import {
   invalidateCacheKeys,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const ACCOUNTS_CACHE_TTL_MS = 30_000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().accounts)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -54,6 +60,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const account = {
+        id: `demo-account-${Date.now()}`,
+        userId: 'demo-user',
+        name: body?.name ?? 'Demo account',
+        type: body?.type ?? 'CHECKING',
+        balance: parseFloat(body?.balance ?? 0),
+        currency: body?.currency ?? 'USD',
+        institution: body?.institution,
+        accountNumber: body?.accountNumber,
+        description: body?.description,
+        isActive: body?.isActive ?? true,
+        creditLimit: body?.creditLimit,
+      }
+      return NextResponse.json(account, { status: 201 })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -94,8 +118,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json({
+        message: 'Demo accounts cleared',
+      })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

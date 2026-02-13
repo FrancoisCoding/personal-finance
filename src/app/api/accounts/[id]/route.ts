@@ -3,12 +3,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json({
+        message: 'Demo account deleted',
+        accountId: params.id,
+      })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

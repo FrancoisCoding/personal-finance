@@ -8,11 +8,17 @@ import {
   invalidateCacheKey,
   setCachedValue,
 } from '@/lib/server-cache'
+import { buildDemoData } from '@/lib/demo-data'
+import { isDemoModeRequest } from '@/lib/demo-mode'
 
 const CATEGORIES_CACHE_TTL_MS = 30_000
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json(buildDemoData().categories)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -51,6 +57,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    if (isDemoModeRequest(request)) {
+      const body = await request.json().catch(() => ({}))
+      const category = {
+        id: `demo-category-${Date.now()}`,
+        userId: 'demo-user',
+        name: body?.name ?? 'Demo category',
+        color: body?.color ?? '#10B981',
+        icon: body?.icon ?? 'Tag',
+      }
+      return NextResponse.json(category)
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {

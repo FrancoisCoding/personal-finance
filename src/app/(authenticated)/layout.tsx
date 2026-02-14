@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { AutoCategorizeModal } from '@/components/auto-categorize-modal'
@@ -19,25 +19,34 @@ export default function AuthenticatedLayout({
   const router = useRouter()
   const { isDemoMode } = useDemoMode()
   const queryClient = useQueryClient()
+  const [isClientReady, setIsClientReady] = useState(false)
+  const isDemoReady = isClientReady && isDemoMode
+  const effectiveSession = session ?? (isDemoReady ? demoSession : null)
 
   useEffect(() => {
+    setIsClientReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isClientReady) return
     if (status === 'loading') return
 
-    if (!session && !isDemoMode) {
+    if (!session && !isDemoReady) {
       router.push('/auth/login')
       return
     }
-  }, [session, status, router, isDemoMode])
+  }, [session, status, router, isDemoReady, isClientReady])
 
   useEffect(() => {
-    if (isDemoMode) {
+    if (!isClientReady) return
+    if (isDemoReady) {
       queryClient.clear()
     }
-  }, [isDemoMode, queryClient])
+  }, [isDemoReady, queryClient, isClientReady])
 
-  if (status === 'loading' && !isDemoMode) {
+  if (!isClientReady || (status === 'loading' && !isDemoReady)) {
     return (
-      <DashboardShell session={session}>
+      <DashboardShell session={effectiveSession}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
@@ -48,12 +57,12 @@ export default function AuthenticatedLayout({
     )
   }
 
-  if (!session && !isDemoMode) {
+  if (!session && !isDemoReady) {
     return null // Will redirect to login
   }
 
   return (
-    <DashboardShell session={session ?? (isDemoMode ? demoSession : null)}>
+    <DashboardShell session={effectiveSession}>
       <AutoCategorizeModal />
       <NotificationTriggers />
       {children}

@@ -227,10 +227,10 @@ export function useSubscriptions() {
 // Computed Data Hooks
 export function useMonthlyStats() {
   const { data: transactions = [] } = useTransactions()
-  const currentMonthKey = new Date().toDateString()
+  const currentMonthKey = new Date().toISOString().slice(0, 7)
 
   return useMemo(() => {
-    const now = new Date()
+    const now = new Date(`${currentMonthKey}-01T00:00:00`)
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
@@ -310,7 +310,7 @@ export function useBudgetProgress(budgetId: string) {
     const budget = budgets.find((b) => b.id === budgetId)
     if (!budget) return 0
 
-    const now = new Date()
+    const now = new Date(currentDayKey)
     const startDate = new Date(budget.startDate)
     const endDate = budget.endDate
       ? new Date(budget.endDate)

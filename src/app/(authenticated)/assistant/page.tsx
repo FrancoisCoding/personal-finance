@@ -375,7 +375,10 @@ export default function FinancialAssistantPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div
+        className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+        data-demo-step="demo-assistant-header"
+      >
         <div className="space-y-1">
           <div
             className={
@@ -402,7 +405,10 @@ export default function FinancialAssistantPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/60 bg-card/80 shadow-sm">
+        <Card
+          className="border-border/60 bg-card/80 shadow-sm"
+          data-demo-step="demo-assistant-chat"
+        >
           <CardHeader className="border-b border-border/60 bg-muted/10">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -524,7 +530,10 @@ export default function FinancialAssistantPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+            <div
+              className="rounded-2xl border border-border/60 bg-background/80 p-4"
+              data-demo-step="demo-assistant-composer"
+            >
               <div className="flex flex-col gap-3">
                 <Textarea
                   ref={inputRef}
@@ -554,7 +563,10 @@ export default function FinancialAssistantPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="border-border/60 bg-card/80 shadow-sm">
+          <Card
+            className="border-border/60 bg-card/80 shadow-sm"
+            data-demo-step="demo-assistant-prompts"
+          >
             <CardHeader>
               <CardTitle className="text-lg">Suggested prompts</CardTitle>
               <CardDescription>
@@ -577,7 +589,10 @@ export default function FinancialAssistantPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 bg-card/80 shadow-sm">
+          <Card
+            className="border-border/60 bg-card/80 shadow-sm"
+            data-demo-step="demo-assistant-context"
+          >
             <CardHeader>
               <CardTitle className="text-lg">Context snapshot</CardTitle>
               <CardDescription>What I can see right now.</CardDescription>

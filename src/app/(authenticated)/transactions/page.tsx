@@ -396,7 +396,10 @@ export default function TransactionsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+            data-demo-step="demo-transaction-filters"
+          >
             <div className="flex flex-1 flex-col gap-3 lg:flex-row lg:items-center">
               <SearchBar
                 containerClassName="max-w-[24rem]"

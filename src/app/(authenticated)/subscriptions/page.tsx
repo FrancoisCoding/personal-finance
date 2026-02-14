@@ -419,7 +419,7 @@ export default function SubscriptionsPage() {
     )
   }
 
-  if (!session) {
+  if (!session && !isDemoMode) {
     return null
   }
 
@@ -481,7 +481,10 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 lg:px-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div
+        className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
+        data-demo-step="demo-subscriptions-header"
+      >
         <div className="space-y-2">
           <div
             className={
@@ -516,7 +519,10 @@ export default function SubscriptionsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        data-demo-step="demo-subscriptions-summary"
+      >
         <Card className="border-border/60 bg-card/80 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-4">
@@ -623,7 +629,10 @@ export default function SubscriptionsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="border-border/60 bg-card/80 shadow-sm">
+        <Card
+          className="border-border/60 bg-card/80 shadow-sm"
+          data-demo-step="demo-subscriptions-detected"
+        >
           <CardHeader className="border-b border-border/60">
             <CardTitle>Detected subscriptions</CardTitle>
             <CardDescription>
@@ -749,7 +758,10 @@ export default function SubscriptionsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/80 shadow-sm">
+        <Card
+          className="border-border/60 bg-card/80 shadow-sm"
+          data-demo-step="demo-subscriptions-renewals"
+        >
           <CardHeader className="border-b border-border/60">
             <CardTitle>Upcoming renewals</CardTitle>
             <CardDescription>Next 30 days of renewals.</CardDescription>
@@ -812,7 +824,10 @@ export default function SubscriptionsPage() {
         </Card>
       </div>
 
-      <Card className="border-border/60 bg-card/80 shadow-sm">
+      <Card
+        className="border-border/60 bg-card/80 shadow-sm"
+        data-demo-step="demo-subscriptions-active"
+      >
         <CardHeader className="border-b border-border/60">
           <CardTitle>Active subscriptions</CardTitle>
           <CardDescription>

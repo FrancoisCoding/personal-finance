@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -92,7 +93,7 @@ const DemoWalkthrough = ({
     ) as HTMLElement | null
 
     if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      target.scrollIntoView({ behavior: 'auto', block: 'center' })
     }
 
     const loopUpdate = () => {
@@ -169,7 +170,11 @@ const DemoWalkthrough = ({
 
   const isLastStep = activeIndex === walkthroughSteps.length - 1
 
-  return (
+  if (typeof document === 'undefined') {
+    return null
+  }
+
+  const overlay = (
     <div className="fixed inset-0 z-[80]">
       <div className="absolute inset-0 bg-black/60" />
 
@@ -234,6 +239,8 @@ const DemoWalkthrough = ({
       </div>
     </div>
   )
+
+  return createPortal(overlay, document.body)
 }
 
 export default DemoWalkthrough

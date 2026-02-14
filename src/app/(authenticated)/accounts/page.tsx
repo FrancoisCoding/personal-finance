@@ -151,7 +151,7 @@ export default function AccountsPage() {
     )
   }
 
-  if (!session) {
+  if (!session && !isDemoMode) {
     return null
   }
 
@@ -299,7 +299,10 @@ export default function AccountsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        data-demo-step="demo-accounts"
+      >
         <Card className="border-border/60 bg-card/80 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between gap-4">

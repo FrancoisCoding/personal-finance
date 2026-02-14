@@ -383,7 +383,10 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions List */}
-      <Card className="border-border/60 bg-card/80 shadow-sm">
+      <Card
+        className="border-border/60 bg-card/80 shadow-sm"
+        data-demo-step="demo-transactions"
+      >
         <CardHeader className="border-b border-border/60">
           <CardTitle>Transaction History</CardTitle>
           <CardDescription>

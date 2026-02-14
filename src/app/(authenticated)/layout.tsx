@@ -3,12 +3,15 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useAtom } from 'jotai'
 import { useQueryClient } from '@tanstack/react-query'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { AutoCategorizeModal } from '@/components/auto-categorize-modal'
 import NotificationTriggers from '@/components/notification-triggers'
+import DemoWalkthrough from '@/components/demo-walkthrough'
 import { demoSession } from '@/lib/demo-mode'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
 
 export default function AuthenticatedLayout({
   children,
@@ -20,6 +23,9 @@ export default function AuthenticatedLayout({
   const { isDemoMode } = useDemoMode()
   const queryClient = useQueryClient()
   const [isClientReady, setIsClientReady] = useState(false)
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useAtom(
+    demoWalkthroughOpenAtom
+  )
   const isDemoReady = isClientReady && isDemoMode
   const effectiveSession = session ?? (isDemoReady ? demoSession : null)
 
@@ -44,6 +50,22 @@ export default function AuthenticatedLayout({
     }
   }, [isDemoReady, queryClient, isClientReady])
 
+  useEffect(() => {
+    if (!isClientReady) return
+    if (!isDemoReady) {
+      setIsWalkthroughOpen(false)
+      return
+    }
+    try {
+      const stored = localStorage.getItem('finance-demo-walkthrough')
+      if (!stored) {
+        setIsWalkthroughOpen(true)
+      }
+    } catch (error) {
+      setIsWalkthroughOpen(true)
+    }
+  }, [isClientReady, isDemoReady, setIsWalkthroughOpen])
+
   if (!isClientReady || (status === 'loading' && !isDemoReady)) {
     return (
       <DashboardShell session={effectiveSession}>
@@ -65,6 +87,28 @@ export default function AuthenticatedLayout({
     <DashboardShell session={effectiveSession}>
       <AutoCategorizeModal />
       <NotificationTriggers />
+      <DemoWalkthrough
+        isOpen={isDemoReady && isWalkthroughOpen}
+        onClose={() => {
+          setIsWalkthroughOpen(false)
+          try {
+            const stored = localStorage.getItem('finance-demo-walkthrough')
+            if (!stored) {
+              localStorage.setItem('finance-demo-walkthrough', 'skipped')
+            }
+          } catch (error) {
+            void error
+          }
+        }}
+        onComplete={() => {
+          try {
+            localStorage.setItem('finance-demo-walkthrough', 'done')
+          } catch (error) {
+            void error
+          }
+          setIsWalkthroughOpen(false)
+        }}
+      />
       {children}
     </DashboardShell>
   )

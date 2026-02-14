@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -10,6 +11,7 @@ type WalkthroughStep = {
   target: string
   title: string
   description: string
+  route?: string
   placement?: 'below' | 'above' | 'top' | 'right' | 'left'
   scroll?: 'center' | 'start'
   offsetY?: number
@@ -23,6 +25,7 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Welcome to the live demo',
     description:
       'Explore realistic financial data without connecting a bank account.',
+    route: '/dashboard',
     placement: 'below',
     scroll: 'center',
   },
@@ -32,6 +35,7 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Explore the modules',
     description:
       'Jump between accounts, transactions, subscriptions, and the assistant.',
+    route: '/dashboard',
     placement: 'right',
     scroll: 'center',
   },
@@ -41,8 +45,28 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Add or explore activity',
     description:
       'Create transactions or review demo activity. The data refreshes instantly.',
+    route: '/dashboard',
     placement: 'below',
     scroll: 'center',
+  },
+  {
+    id: 'accounts',
+    target: 'demo-accounts',
+    title: 'Accounts at a glance',
+    description: 'Review balances across checking, savings, and credit.',
+    route: '/accounts',
+    placement: 'below',
+    scroll: 'center',
+  },
+  {
+    id: 'transactions',
+    target: 'demo-transactions',
+    title: 'Transaction history',
+    description: 'Review activity, categories, and cash flow at a glance.',
+    route: '/transactions',
+    placement: 'right',
+    scroll: 'start',
+    scrollOffsetY: -120,
   },
   {
     id: 'spending',
@@ -50,6 +74,7 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Spending trends',
     description:
       'See category breakdowns and monthly trends to spot spending patterns.',
+    route: '/dashboard',
     placement: 'below',
     scroll: 'center',
   },
@@ -59,18 +84,10 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'AI insights',
     description:
       'Ask the assistant about your spending and subscriptions using demo data.',
+    route: '/dashboard',
     placement: 'right',
     scroll: 'start',
     offsetY: 0,
-    scrollOffsetY: -120,
-  },
-  {
-    id: 'transactions',
-    target: 'demo-transactions',
-    title: 'Transaction history',
-    description: 'Review activity, categories, and cash flow at a glance.',
-    placement: 'right',
-    scroll: 'start',
     scrollOffsetY: -120,
   },
 ]
@@ -86,8 +103,11 @@ const DemoWalkthrough = ({
   onClose,
   onComplete,
 }: DemoWalkthroughProps) => {
+  const router = useRouter()
+  const pathname = usePathname()
   const [activeIndex, setActiveIndex] = useState(0)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
+  const pendingRouteRef = useRef<string | null>(null)
 
   const activeStep = walkthroughSteps[activeIndex]
 
@@ -98,6 +118,15 @@ const DemoWalkthrough = ({
 
   useEffect(() => {
     if (!isOpen || !activeStep) return
+    if (activeStep.route && pathname !== activeStep.route) {
+      if (pendingRouteRef.current !== activeStep.route) {
+        pendingRouteRef.current = activeStep.route
+        router.push(activeStep.route)
+      }
+      setHighlightRect(null)
+      return
+    }
+    pendingRouteRef.current = null
 
     let rafId = 0
     let rafFrames = 0
@@ -167,7 +196,7 @@ const DemoWalkthrough = ({
       window.removeEventListener('resize', updateHighlight)
       window.removeEventListener('scroll', updateHighlight, true)
     }
-  }, [activeStep, isOpen])
+  }, [activeStep, isOpen, pathname, router])
 
   const tooltipStyle = useMemo(() => {
     if (!highlightRect) {

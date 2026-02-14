@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useAtom } from 'jotai'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,7 +34,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
-import DemoWalkthrough from '@/components/demo-walkthrough'
 import {
   useAccounts,
   useTransactions,
@@ -49,6 +49,7 @@ import {
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
 
 const SpendingChart = dynamic(
   () => import('@/components/spending-chart').then((mod) => mod.SpendingChart),
@@ -190,8 +191,7 @@ export default function DashboardPage() {
     },
   ])
   const queryClient = useQueryClient()
-  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState(false)
-  const [hasWalkthrough, setHasWalkthrough] = useState(false)
+  const [, setIsWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const [demoProgress, setDemoProgress] = useState(0)
   const demoProgressIntervalRef = useRef<number | null>(null)
@@ -200,20 +200,6 @@ export default function DashboardPage() {
   const handleTellerSuccess = useCallback(() => {
     window.location.reload()
   }, [])
-
-  useEffect(() => {
-    if (!isDemoMode) return
-    try {
-      const stored = localStorage.getItem('finance-demo-walkthrough')
-      if (stored) {
-        setHasWalkthrough(true)
-        return
-      }
-      setIsWalkthroughOpen(true)
-    } catch (error) {
-      setIsWalkthroughOpen(true)
-    }
-  }, [isDemoMode])
 
   useEffect(() => {
     return () => {
@@ -853,7 +839,6 @@ export default function DashboardPage() {
                     variant="ghost"
                     onClick={() => {
                       localStorage.removeItem('finance-demo-walkthrough')
-                      setHasWalkthrough(false)
                       setIsWalkthroughOpen(true)
                     }}
                   >
@@ -1187,22 +1172,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </FadeIn>
-
-        <DemoWalkthrough
-          isOpen={isWalkthroughOpen}
-          onClose={() => {
-            setIsWalkthroughOpen(false)
-            if (!hasWalkthrough) {
-              localStorage.setItem('finance-demo-walkthrough', 'skipped')
-              setHasWalkthrough(true)
-            }
-          }}
-          onComplete={() => {
-            localStorage.setItem('finance-demo-walkthrough', 'done')
-            setIsWalkthroughOpen(false)
-            setHasWalkthrough(true)
-          }}
-        />
       </div>
     </>
   )

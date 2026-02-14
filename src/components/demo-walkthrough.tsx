@@ -49,9 +49,9 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'AI insights',
     description:
       'Ask the assistant about your spending and subscriptions using demo data.',
-    placement: 'top',
-    scroll: 'start',
-    offsetY: -32,
+    placement: 'above',
+    scroll: 'center',
+    offsetY: -8,
   },
   {
     id: 'transactions',

@@ -13,6 +13,7 @@ type WalkthroughStep = {
   placement?: 'below' | 'above' | 'top' | 'right' | 'left'
   scroll?: 'center' | 'start'
   offsetY?: number
+  scrollOffsetY?: number
 }
 
 const walkthroughSteps: WalkthroughStep[] = [
@@ -50,8 +51,9 @@ const walkthroughSteps: WalkthroughStep[] = [
     description:
       'Ask the assistant about your spending and subscriptions using demo data.',
     placement: 'right',
-    scroll: 'center',
+    scroll: 'start',
     offsetY: 0,
+    scrollOffsetY: -120,
   },
   {
     id: 'transactions',
@@ -111,6 +113,11 @@ const DemoWalkthrough = ({
         behavior: 'auto',
         block: activeStep.scroll ?? 'center',
       })
+      if (activeStep.scrollOffsetY) {
+        window.requestAnimationFrame(() => {
+          window.scrollBy({ top: activeStep.scrollOffsetY ?? 0, left: 0 })
+        })
+      }
     }
 
     const loopUpdate = () => {

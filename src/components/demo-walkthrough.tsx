@@ -12,6 +12,7 @@ type WalkthroughStep = {
   description: string
   placement?: 'below' | 'above' | 'top'
   scroll?: 'center' | 'start'
+  offsetY?: number
 }
 
 const walkthroughSteps: WalkthroughStep[] = [
@@ -50,6 +51,7 @@ const walkthroughSteps: WalkthroughStep[] = [
       'Ask the assistant about your spending and subscriptions using demo data.',
     placement: 'top',
     scroll: 'start',
+    offsetY: -32,
   },
   {
     id: 'transactions',
@@ -167,13 +169,20 @@ const DemoWalkthrough = ({
         ? highlightRect.top + padding
         : highlightRect.bottom + padding
     const fallbackTop = highlightRect.top - tooltipHeight - padding
+    const offsetY = activeStep.offsetY ?? 0
     const top =
       activeStep.placement === 'above'
-        ? Math.max(padding, highlightRect.top - tooltipHeight - padding)
+        ? Math.max(
+            padding,
+            highlightRect.top - tooltipHeight - padding + offsetY
+          )
         : preferredTop + tooltipHeight > window.innerHeight &&
             fallbackTop > padding
           ? fallbackTop
-          : Math.min(preferredTop, window.innerHeight - tooltipHeight - padding)
+          : Math.min(
+              preferredTop + offsetY,
+              window.innerHeight - tooltipHeight - padding
+            )
     const left = Math.min(
       Math.max(highlightRect.left, padding),
       window.innerWidth - tooltipWidth - padding
@@ -183,7 +192,7 @@ const DemoWalkthrough = ({
       top,
       left,
     }
-  }, [activeStep.placement, highlightRect])
+  }, [activeStep.offsetY, activeStep.placement, highlightRect])
 
   if (!isOpen || !activeStep) {
     return null

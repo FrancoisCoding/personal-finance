@@ -44,8 +44,7 @@ const walkthroughSteps: WalkthroughStep[] = [
     id: 'transactions',
     target: 'demo-transactions',
     title: 'Transaction history',
-    description:
-      'Review activity, categories, and cash flow at a glance.',
+    description: 'Review activity, categories, and cash flow at a glance.',
   },
 ]
 
@@ -73,6 +72,10 @@ const DemoWalkthrough = ({
   useEffect(() => {
     if (!isOpen || !activeStep) return
 
+    let rafId = 0
+    let rafFrames = 0
+    const maxFrames = 24
+
     const updateHighlight = () => {
       const target = document.querySelector(
         `[data-demo-step="${activeStep.target}"]`
@@ -84,11 +87,48 @@ const DemoWalkthrough = ({
       setHighlightRect(target.getBoundingClientRect())
     }
 
+    const target = document.querySelector(
+      `[data-demo-step="${activeStep.target}"]`
+    ) as HTMLElement | null
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
+    const loopUpdate = () => {
+      updateHighlight()
+      if (rafFrames < maxFrames) {
+        rafFrames += 1
+        rafId = window.requestAnimationFrame(loopUpdate)
+      }
+    }
+
     updateHighlight()
+    rafId = window.requestAnimationFrame(loopUpdate)
+
+    const resizeObserver = new ResizeObserver(updateHighlight)
+    if (target) {
+      resizeObserver.observe(target)
+    }
+
+    const mutationObserver = new MutationObserver(updateHighlight)
+    if (target) {
+      mutationObserver.observe(target, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+      })
+    }
+
     window.addEventListener('resize', updateHighlight)
     window.addEventListener('scroll', updateHighlight, true)
 
     return () => {
+      if (rafId) {
+        window.cancelAnimationFrame(rafId)
+      }
+      resizeObserver.disconnect()
+      mutationObserver.disconnect()
       window.removeEventListener('resize', updateHighlight)
       window.removeEventListener('scroll', updateHighlight, true)
     }
@@ -170,9 +210,7 @@ const DemoWalkthrough = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                setActiveIndex((prev) => Math.max(prev - 1, 0))
-              }
+              onClick={() => setActiveIndex((prev) => Math.max(prev - 1, 0))}
               disabled={activeIndex === 0}
             >
               Back

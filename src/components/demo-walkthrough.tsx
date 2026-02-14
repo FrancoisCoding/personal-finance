@@ -10,6 +10,8 @@ type WalkthroughStep = {
   target: string
   title: string
   description: string
+  placement?: 'below' | 'above' | 'top'
+  scroll?: 'center' | 'start'
 }
 
 const walkthroughSteps: WalkthroughStep[] = [
@@ -19,6 +21,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Welcome to the live demo',
     description:
       'Explore realistic financial data without connecting a bank account.',
+    placement: 'below',
+    scroll: 'center',
   },
   {
     id: 'actions',
@@ -26,6 +30,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Add or explore activity',
     description:
       'Create transactions or review demo activity. The data refreshes instantly.',
+    placement: 'below',
+    scroll: 'center',
   },
   {
     id: 'spending',
@@ -33,6 +39,8 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'Spending trends',
     description:
       'See category breakdowns and monthly trends to spot spending patterns.',
+    placement: 'below',
+    scroll: 'center',
   },
   {
     id: 'insights',
@@ -40,12 +48,16 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'AI insights',
     description:
       'Ask the assistant about your spending and subscriptions using demo data.',
+    placement: 'top',
+    scroll: 'start',
   },
   {
     id: 'transactions',
     target: 'demo-transactions',
     title: 'Transaction history',
     description: 'Review activity, categories, and cash flow at a glance.',
+    placement: 'above',
+    scroll: 'center',
   },
 ]
 
@@ -93,7 +105,10 @@ const DemoWalkthrough = ({
     ) as HTMLElement | null
 
     if (target) {
-      target.scrollIntoView({ behavior: 'auto', block: 'center' })
+      target.scrollIntoView({
+        behavior: 'auto',
+        block: activeStep.scroll ?? 'center',
+      })
     }
 
     const loopUpdate = () => {
@@ -147,12 +162,18 @@ const DemoWalkthrough = ({
     const padding = 16
     const tooltipWidth = 320
     const tooltipHeight = 180
-    const preferredTop = highlightRect.bottom + padding
+    const preferredTop =
+      activeStep.placement === 'top'
+        ? highlightRect.top + padding
+        : highlightRect.bottom + padding
     const fallbackTop = highlightRect.top - tooltipHeight - padding
     const top =
-      preferredTop + tooltipHeight > window.innerHeight && fallbackTop > padding
-        ? fallbackTop
-        : Math.min(preferredTop, window.innerHeight - tooltipHeight - padding)
+      activeStep.placement === 'above'
+        ? Math.max(padding, highlightRect.top - tooltipHeight - padding)
+        : preferredTop + tooltipHeight > window.innerHeight &&
+            fallbackTop > padding
+          ? fallbackTop
+          : Math.min(preferredTop, window.innerHeight - tooltipHeight - padding)
     const left = Math.min(
       Math.max(highlightRect.left, padding),
       window.innerWidth - tooltipWidth - padding
@@ -162,7 +183,7 @@ const DemoWalkthrough = ({
       top,
       left,
     }
-  }, [highlightRect])
+  }, [activeStep.placement, highlightRect])
 
   if (!isOpen || !activeStep) {
     return null

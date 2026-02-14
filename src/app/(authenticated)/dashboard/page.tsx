@@ -882,28 +882,32 @@ export default function DashboardPage() {
 
         {/* Financial Overview Cards */}
         <FadeIn delay={0.1}>
-          <FinancialOverviewCards
-            totalBalance={totalBalance}
-            monthlyIncome={monthlyIncome}
-            monthlyExpenses={monthlyExpenses}
-            netIncome={netIncome}
-            creditCardUtilization={creditCardUtilization}
-          />
+          <div data-demo-step="demo-overview-cards">
+            <FinancialOverviewCards
+              totalBalance={totalBalance}
+              monthlyIncome={monthlyIncome}
+              monthlyExpenses={monthlyExpenses}
+              netIncome={netIncome}
+              creditCardUtilization={creditCardUtilization}
+            />
+          </div>
         </FadeIn>
 
         {/* Main Content Grid */}
         <FadeIn delay={0.15}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {/* Net Worth Card */}
-            <NetWorthSummaryCard
-              netWorth={netWorth}
-              summaryItems={netWorthSummaryItems}
-              forecastRange={forecastRange}
-              forecastAverage={forecastAverage}
-              forecastProjected={forecastProjected}
-              hasData={hasNetWorthData}
-              className="h-full"
-            />
+            <div data-demo-step="demo-net-worth" className="h-full">
+              <NetWorthSummaryCard
+                netWorth={netWorth}
+                summaryItems={netWorthSummaryItems}
+                forecastRange={forecastRange}
+                forecastAverage={forecastAverage}
+                forecastProjected={forecastProjected}
+                hasData={hasNetWorthData}
+                className="h-full"
+              />
+            </div>
 
             {/* Spending Chart */}
             <div data-demo-step="demo-spending">
@@ -916,7 +920,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Reminders */}
-            <div className="h-full">
+            <div className="h-full" data-demo-step="demo-reminders">
               <RemindersCard
                 reminders={reminders}
                 action={
@@ -962,7 +966,10 @@ export default function DashboardPage() {
         <FadeIn delay={0.2}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {/* Cash Flow Chart */}
-            <div className="lg:col-span-2 h-full">
+            <div
+              className="lg:col-span-2 h-full"
+              data-demo-step="demo-cashflow"
+            >
               <CashFlowChart data={cashFlowData} className="h-full" />
             </div>
 
@@ -984,18 +991,22 @@ export default function DashboardPage() {
         <FadeIn delay={0.25}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* Credit Utilization */}
-            <CreditUtilizationCard
-              creditCards={creditCards}
-              className="h-full"
-            />
+            <div data-demo-step="demo-credit-utilization" className="h-full">
+              <CreditUtilizationCard
+                creditCards={creditCards}
+                className="h-full"
+              />
+            </div>
 
             {/* Analytics Dashboard */}
-            <AnalyticsDashboard
-              transactions={transformedTransactions}
-              budgets={transformedBudgets}
-              goals={transformedGoals}
-              className="h-full"
-            />
+            <div data-demo-step="demo-analytics" className="h-full">
+              <AnalyticsDashboard
+                transactions={transformedTransactions}
+                budgets={transformedBudgets}
+                goals={transformedGoals}
+                className="h-full"
+              />
+            </div>
           </div>
         </FadeIn>
 
@@ -1005,7 +1016,7 @@ export default function DashboardPage() {
             {/* Recent Transactions */}
             <Card
               className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full"
-              data-demo-step="demo-transactions"
+              data-demo-step="demo-recent-transactions"
             >
               <CardHeader className="border-b border-border/60">
                 <div className="flex items-center justify-between gap-4">
@@ -1096,7 +1107,10 @@ export default function DashboardPage() {
             {/* Budgets and Goals */}
             <div className="grid gap-6 auto-rows-fr">
               {/* Budget Progress */}
-              <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+              <Card
+                className="border-border/60 bg-card/80 shadow-sm h-full"
+                data-demo-step="demo-budget-progress"
+              >
                 <CardHeader className="border-b border-border/60">
                   <CardTitle>Budget Progress</CardTitle>
                   <CardDescription>This month&apos;s spending</CardDescription>
@@ -1130,7 +1144,10 @@ export default function DashboardPage() {
               </Card>
 
               {/* Goals Progress */}
-              <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+              <Card
+                className="border-border/60 bg-card/80 shadow-sm h-full"
+                data-demo-step="demo-goals-progress"
+              >
                 <CardHeader className="border-b border-border/60">
                   <CardTitle>Financial Goals</CardTitle>
                   <CardDescription>Track your progress</CardDescription>
@@ -1163,12 +1180,14 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <DonationsCard
-                entries={donationSummary.entries}
-                total={donationSummary.total}
-                hasData={donationSummary.hasData}
-                className="h-full"
-              />
+              <div data-demo-step="demo-donations" className="h-full">
+                <DonationsCard
+                  entries={donationSummary.entries}
+                  total={donationSummary.total}
+                  hasData={donationSummary.hasData}
+                  className="h-full"
+                />
+              </div>
             </div>
           </div>
         </FadeIn>

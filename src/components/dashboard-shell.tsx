@@ -542,7 +542,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
               </div>
 
               <div className="flex flex-1 items-center justify-end gap-3">
-                <div className="relative hidden max-w-xs flex-1 items-center md:flex">
+                <div
+                  className="relative hidden max-w-xs flex-1 items-center md:flex"
+                  data-demo-step="demo-search"
+                >
                   {suggestion && searchValue.trim() && (
                     <div
                       className={
@@ -778,7 +781,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     </div>
                   )}
                 </div>
-                <NotificationBell />
+                <div data-demo-step="demo-notifications">
+                  <NotificationBell />
+                </div>
                 <ThemeToggle />
 
                 <DropdownMenu>

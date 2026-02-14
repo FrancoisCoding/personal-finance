@@ -278,7 +278,7 @@ export const buildDemoData = () => {
       categoryId: 'cat-gifts',
       category: 'Gifts',
       amount: 100,
-      description: 'Atitude Igreja donation',
+      description: 'Riverside Church donation',
       date: toIso(daysAgo(3)),
       type: 'EXPENSE',
       isRecurring: false,

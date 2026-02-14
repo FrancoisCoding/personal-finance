@@ -99,6 +99,7 @@ export default function AuthenticatedLayout({
           } catch (error) {
             void error
           }
+          router.push('/dashboard')
         }}
         onComplete={() => {
           try {
@@ -107,6 +108,7 @@ export default function AuthenticatedLayout({
             void error
           }
           setIsWalkthroughOpen(false)
+          router.push('/dashboard')
         }}
       />
       {children}

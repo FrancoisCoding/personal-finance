@@ -27,6 +27,15 @@ const walkthroughSteps: WalkthroughStep[] = [
     scroll: 'center',
   },
   {
+    id: 'navigation',
+    target: 'demo-navigation',
+    title: 'Explore the modules',
+    description:
+      'Jump between accounts, transactions, subscriptions, and the assistant.',
+    placement: 'right',
+    scroll: 'center',
+  },
+  {
     id: 'actions',
     target: 'demo-actions',
     title: 'Add or explore activity',

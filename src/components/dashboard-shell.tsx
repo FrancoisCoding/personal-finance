@@ -465,7 +465,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
               </p>
             </div>
 
-            <nav className="mt-6 space-y-1.5">
+            <nav className="mt-6 space-y-1.5" data-demo-step="demo-navigation">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
                 return (

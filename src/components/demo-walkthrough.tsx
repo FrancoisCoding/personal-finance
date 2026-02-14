@@ -10,7 +10,7 @@ type WalkthroughStep = {
   target: string
   title: string
   description: string
-  placement?: 'below' | 'above' | 'top'
+  placement?: 'below' | 'above' | 'top' | 'right' | 'left'
   scroll?: 'center' | 'start'
   offsetY?: number
 }
@@ -49,9 +49,9 @@ const walkthroughSteps: WalkthroughStep[] = [
     title: 'AI insights',
     description:
       'Ask the assistant about your spending and subscriptions using demo data.',
-    placement: 'above',
+    placement: 'right',
     scroll: 'center',
-    offsetY: -8,
+    offsetY: 0,
   },
   {
     id: 'transactions',
@@ -183,10 +183,32 @@ const DemoWalkthrough = ({
               preferredTop + offsetY,
               window.innerHeight - tooltipHeight - padding
             )
-    const left = Math.min(
-      Math.max(highlightRect.left, padding),
-      window.innerWidth - tooltipWidth - padding
-    )
+
+    const left = (() => {
+      if (activeStep.placement === 'right') {
+        const preferredLeft = highlightRect.right + padding
+        if (preferredLeft + tooltipWidth <= window.innerWidth - padding) {
+          return preferredLeft
+        }
+        const fallbackLeft = highlightRect.left - tooltipWidth - padding
+        return Math.max(padding, fallbackLeft)
+      }
+      if (activeStep.placement === 'left') {
+        const preferredLeft = highlightRect.left - tooltipWidth - padding
+        if (preferredLeft >= padding) {
+          return preferredLeft
+        }
+        const fallbackLeft = highlightRect.right + padding
+        return Math.min(
+          fallbackLeft,
+          window.innerWidth - tooltipWidth - padding
+        )
+      }
+      return Math.min(
+        Math.max(highlightRect.left, padding),
+        window.innerWidth - tooltipWidth - padding
+      )
+    })()
 
     return {
       top,

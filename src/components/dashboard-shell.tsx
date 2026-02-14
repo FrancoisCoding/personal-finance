@@ -61,6 +61,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { isDemoMode, stopDemoMode } = useDemoMode()
+  const [isMounted, setIsMounted] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
@@ -70,6 +71,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchPanelId = useId()
   const searchListboxId = `${searchPanelId}-listbox`
+  const isDemoReady = isMounted && isDemoMode
+  const displayName = isMounted ? session?.user?.name || 'User' : 'User'
+  const displayEmail = isMounted ? session?.user?.email || '' : ''
+  const displayInitial = displayName.charAt(0) || 'U'
 
   const navigation = useMemo(
     () => [
@@ -94,6 +99,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     }
     router.push('/auth/login')
   }
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     try {
@@ -458,7 +467,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                 Welcome back
               </p>
               <p className="mt-2 text-lg font-semibold text-foreground">
-                {session?.user?.name?.split(' ')[0] || 'User'}
+                {displayName.split(' ')[0] || 'User'}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Your financial overview is ready.
@@ -489,7 +498,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
             </nav>
 
             <div className="mt-6">
-              {isDemoMode ? (
+              {isDemoReady ? (
                 <Button
                   variant="outline"
                   className="w-full justify-start rounded-xl"
@@ -524,7 +533,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <LayoutGrid className="h-4 w-4 text-emerald-500" />
                   Overview
-                  {isDemoMode ? (
+                  {isDemoReady ? (
                     <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
                       Demo
                     </span>
@@ -782,13 +791,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                       <Avatar className="h-9 w-9">
                         <AvatarImage
                           src={session?.user?.image || ''}
-                          alt={session?.user?.name || ''}
+                          alt={displayName}
                         />
-                        <AvatarFallback>
-                          {session?.user?.name?.charAt(0) ||
-                            session?.user?.email?.charAt(0) ||
-                            'U'}
-                        </AvatarFallback>
+                        <AvatarFallback>{displayInitial}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -796,10 +801,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          {session?.user?.name || 'User'}
+                          {displayName}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {session?.user?.email}
+                          {displayEmail}
                         </p>
                       </div>
                     </DropdownMenuLabel>
@@ -810,9 +815,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-600 focus:text-red-600"
-                      onClick={isDemoMode ? handleExitDemo : () => signOut()}
+                      onClick={isDemoReady ? handleExitDemo : () => signOut()}
                     >
-                      {isDemoMode ? 'Exit demo' : 'Sign out'}
+                      {isDemoReady ? 'Exit demo' : 'Sign out'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -60,8 +60,9 @@ const walkthroughSteps: WalkthroughStep[] = [
     target: 'demo-transactions',
     title: 'Transaction history',
     description: 'Review activity, categories, and cash flow at a glance.',
-    placement: 'above',
-    scroll: 'center',
+    placement: 'right',
+    scroll: 'start',
+    scrollOffsetY: -120,
   },
 ]
 

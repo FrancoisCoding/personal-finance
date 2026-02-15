@@ -80,11 +80,48 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
   const navigation = useMemo(
     () => [
-      { name: 'Overview', href: '/dashboard', icon: LayoutGrid },
-      { name: 'Accounts', href: '/accounts', icon: Wallet },
-      { name: 'Transactions', href: '/transactions', icon: Receipt },
-      { name: 'Subscriptions', href: '/subscriptions', icon: CreditCard },
-      { name: 'Financial Assistant', href: '/assistant', icon: Sparkles },
+      {
+        name: 'Overview',
+        href: '/dashboard',
+        icon: LayoutGrid,
+        description: 'Dashboard summary and financial highlights.',
+        keywords: ['dashboard', 'home', 'summary', 'insights', 'overview'],
+      },
+      {
+        name: 'Accounts',
+        href: '/accounts',
+        icon: Wallet,
+        description: 'Bank accounts, balances, and cash positions.',
+        keywords: ['balances', 'banks', 'cash', 'checking', 'savings'],
+      },
+      {
+        name: 'Transactions',
+        href: '/transactions',
+        icon: Receipt,
+        description: 'Recent activity, categories, and transaction history.',
+        keywords: ['activity', 'expenses', 'history', 'spending', 'transfers'],
+      },
+      {
+        name: 'Subscriptions',
+        href: '/subscriptions',
+        icon: CreditCard,
+        description: 'Recurring charges, renewals, and subscriptions.',
+        keywords: ['recurring', 'renewals', 'subscriptions', 'upcoming'],
+      },
+      {
+        name: 'Financial Assistant',
+        href: '/assistant',
+        icon: Sparkles,
+        description: 'Ask questions and get personalized guidance.',
+        keywords: [
+          'advice',
+          'assistant',
+          'chat',
+          'guidance',
+          'help',
+          'insights',
+        ],
+      },
     ],
     []
   )
@@ -122,19 +159,86 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
   const quickQuestions = useMemo(
     () => [
-      'Give me a quick summary of my spending in the last 30 days.',
-      'What are my top three expense categories right now?',
-      'How much cash do I have across checking and savings?',
-      'Show me upcoming subscriptions and monthly totals.',
+      {
+        text: 'Give me a quick summary of my spending in the last 30 days.',
+        keywords: [
+          'summary',
+          'spending',
+          'last 30 days',
+          'snapshot',
+          'monthly',
+        ],
+      },
+      {
+        text: 'What are my top three expense categories right now?',
+        keywords: ['categories', 'top', 'spend', 'expenses', 'biggest'],
+      },
+      {
+        text: 'How much cash do I have across checking and savings?',
+        keywords: ['cash', 'checking', 'savings', 'balances', 'available'],
+      },
+      {
+        text: 'Show me upcoming subscriptions and monthly totals.',
+        keywords: ['subscriptions', 'recurring', 'monthly', 'renewals'],
+      },
+      {
+        text: 'How much did I spend on donations this month?',
+        keywords: ['donations', 'charity', 'church', 'giving'],
+      },
+      {
+        text: 'What is my credit card spend this month?',
+        keywords: ['credit', 'credit card', 'cards', 'monthly'],
+      },
+      {
+        text: 'Show me my largest transactions over $500.',
+        keywords: ['large', 'largest', 'big', 'over', 'transactions'],
+      },
+      {
+        text: 'How is my net worth trending this month?',
+        keywords: ['net worth', 'trend', 'growth', 'assets', 'liabilities'],
+      },
     ],
     []
   )
 
+  const normalizedSearch = searchValue.trim().toLowerCase()
+  const searchTokens = useMemo(() => {
+    if (!normalizedSearch) return []
+    return normalizedSearch.split(/\s+/).filter(Boolean)
+  }, [normalizedSearch])
+
+  const navigationSearchItems = useMemo(() => {
+    return navigation.map((item) => ({
+      ...item,
+      searchText: [item.name, item.description, ...item.keywords]
+        .join(' ')
+        .toLowerCase(),
+    }))
+  }, [navigation])
+
+  const questionSuggestions = useMemo(() => {
+    const baseQuestions = quickQuestions.map((question) => ({
+      ...question,
+      searchText: [question.text, ...question.keywords].join(' ').toLowerCase(),
+    }))
+
+    if (searchTokens.length === 0) {
+      return baseQuestions.slice(0, 5)
+    }
+
+    const matches = baseQuestions.filter((question) =>
+      searchTokens.some((token) => question.searchText.includes(token))
+    )
+
+    return (matches.length > 0 ? matches : baseQuestions).slice(0, 5)
+  }, [quickQuestions, searchTokens])
+
   const suggestionPool = useMemo(() => {
     const combined = [
       ...searchHistory,
-      ...navigation.map((item) => item.name),
-      ...quickQuestions,
+      ...navigationSearchItems.map((item) => item.name),
+      ...navigationSearchItems.flatMap((item) => item.keywords),
+      ...questionSuggestions.map((question) => question.text),
     ]
     const deduped = new Map<string, string>()
     combined.forEach((item) => {
@@ -146,7 +250,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       }
     })
     return Array.from(deduped.values())
-  }, [navigation, quickQuestions, searchHistory])
+  }, [navigationSearchItems, questionSuggestions, searchHistory])
 
   const suggestion = useMemo(() => {
     const trimmed = searchValue.trim()
@@ -158,8 +262,6 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     )
     return match ?? ''
   }, [searchValue, suggestionPool])
-
-  const normalizedSearch = searchValue.trim().toLowerCase()
 
   const storeSearchHistory = (value: string) => {
     const trimmedValue = value.trim()
@@ -203,13 +305,36 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     if (!trimmedValue) return
 
     const lower = trimmedValue.toLowerCase()
-    const navMatch =
-      navigation.find((item) => item.name.toLowerCase() === lower) ??
-      navigation.find((item) => item.name.toLowerCase().startsWith(lower)) ??
-      navigation.find((item) => item.name.toLowerCase().includes(lower))
+    const isQuestionLike =
+      trimmedValue.includes('?') ||
+      /^(how|what|why|when|where|who|can|should|do|is|are|am)\b/i.test(
+        trimmedValue
+      )
+    const navigationMatch =
+      navigationSearchItems.find((item) => item.name.toLowerCase() === lower) ??
+      navigationSearchItems.find((item) =>
+        item.keywords.some((keyword) => keyword.toLowerCase() === lower)
+      ) ??
+      navigationSearchItems.find((item) =>
+        item.name.toLowerCase().startsWith(lower)
+      ) ??
+      navigationSearchItems.find((item) =>
+        item.keywords.some((keyword) => keyword.toLowerCase().startsWith(lower))
+      ) ??
+      navigationSearchItems.find((item) =>
+        item.name.toLowerCase().includes(lower)
+      ) ??
+      navigationSearchItems.find((item) =>
+        item.keywords.some((keyword) => keyword.toLowerCase().includes(lower))
+      ) ??
+      (searchTokens.length
+        ? navigationSearchItems.find((item) =>
+            searchTokens.every((token) => item.searchText.includes(token))
+          )
+        : undefined)
 
-    if (navMatch) {
-      handleNavigate(navMatch.href)
+    if (navigationMatch && !isQuestionLike) {
+      handleNavigate(navigationMatch.href)
       return
     }
 
@@ -307,22 +432,24 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }
 
   const filteredNavigation = useMemo(() => {
-    return navigation
-      .filter((item) => {
-        if (!searchValue.trim()) return true
-        return item.name.toLowerCase().includes(searchValue.toLowerCase())
-      })
+    if (searchTokens.length === 0) {
+      return navigationSearchItems.slice(0, 5)
+    }
+    return navigationSearchItems
+      .filter((item) =>
+        searchTokens.every((token) => item.searchText.includes(token))
+      )
       .slice(0, 5)
-  }, [navigation, searchValue])
+  }, [navigationSearchItems, searchTokens])
 
   const filteredHistory = useMemo(() => {
+    if (!normalizedSearch) {
+      return searchHistory.slice(0, 4)
+    }
     return searchHistory
-      .filter((item) => {
-        if (!searchValue.trim()) return true
-        return item.toLowerCase().includes(searchValue.toLowerCase())
-      })
+      .filter((item) => item.toLowerCase().includes(normalizedSearch))
       .slice(0, 4)
-  }, [searchHistory, searchValue])
+  }, [normalizedSearch, searchHistory])
 
   const optionList = useMemo(() => {
     const options: Array<{
@@ -358,11 +485,11 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       })
     })
 
-    quickQuestions.forEach((question, index) => {
+    questionSuggestions.forEach((question, index) => {
       options.push({
         id: `${searchPanelId}-option-question-${index}`,
         type: 'question',
-        label: question,
+        label: question.text,
       })
     })
 
@@ -370,7 +497,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }, [
     filteredHistory,
     filteredNavigation,
-    quickQuestions,
+    questionSuggestions,
     searchPanelId,
     searchValue,
   ])
@@ -562,14 +689,14 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                   )}
                   <Input
                     type="search"
-                    placeholder="Search here"
+                    placeholder="Ask a question or jump to a page"
                     className="h-10 rounded-full border-border/60 bg-muted/30 pl-10 text-sm"
                     value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}
                     onKeyDown={handleSearchKeyDown}
                     onFocus={handleSearchFocus}
                     onBlur={handleSearchBlur}
-                    aria-label="Search the app"
+                    aria-label="Search the app or ask a question"
                     aria-expanded={isSearchOpen}
                     aria-controls={searchListboxId}
                     aria-activedescendant={activeOptionId}
@@ -627,55 +754,67 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                           </button>
                         )}
 
-                        <div
-                          className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
-                          role="presentation"
-                        >
-                          Navigate
-                        </div>
-                        <div className="space-y-1">
-                          {filteredNavigation.map((item) => {
-                            const optionMeta = optionLookup.get(
-                              `navigate:${item.href}`
-                            )
-                            const isActive =
-                              optionMeta?.index === activeOptionIndex
-                            const isHighlighted =
-                              normalizedSearch &&
-                              item.name.toLowerCase().includes(normalizedSearch)
-                            return (
-                              <button
-                                key={item.href}
-                                type="button"
-                                role="option"
-                                aria-selected={isActive}
-                                id={optionMeta?.id}
-                                onClick={() => handleNavigate(item.href)}
-                                onMouseEnter={() => {
-                                  if (optionMeta) {
-                                    setActiveOptionIndex(optionMeta.index)
-                                  }
-                                }}
-                                className={
-                                  'flex w-full items-center justify-between rounded-xl ' +
-                                  'px-3 py-2 text-left text-sm transition-colors ' +
-                                  (isActive
-                                    ? 'bg-muted/50 ring-1 ring-emerald-500/20'
-                                    : isHighlighted
-                                      ? 'bg-muted/40'
-                                      : 'hover:bg-muted/40')
-                                }
-                              >
-                                <span className="text-foreground">
-                                  {highlightText(item.name, searchValue)}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  Go to page
-                                </span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        {filteredNavigation.length > 0 && (
+                          <>
+                            <div
+                              className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
+                              role="presentation"
+                            >
+                              Navigate
+                            </div>
+                            <div className="space-y-1">
+                              {filteredNavigation.map((item) => {
+                                const optionMeta = optionLookup.get(
+                                  `navigate:${item.href}`
+                                )
+                                const isActive =
+                                  optionMeta?.index === activeOptionIndex
+                                const isHighlighted =
+                                  normalizedSearch &&
+                                  item.searchText.includes(normalizedSearch)
+                                return (
+                                  <button
+                                    key={item.href}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isActive}
+                                    id={optionMeta?.id}
+                                    onClick={() => handleNavigate(item.href)}
+                                    onMouseEnter={() => {
+                                      if (optionMeta) {
+                                        setActiveOptionIndex(optionMeta.index)
+                                      }
+                                    }}
+                                    className={
+                                      'flex w-full items-center justify-between rounded-xl ' +
+                                      'px-3 py-2 text-left text-sm transition-colors ' +
+                                      (isActive
+                                        ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                        : isHighlighted
+                                          ? 'bg-muted/40'
+                                          : 'hover:bg-muted/40')
+                                    }
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="text-foreground">
+                                        {highlightText(item.name, searchValue)}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {highlightText(
+                                          item.description,
+                                          searchValue
+                                        )}
+                                      </span>
+                                    </div>
+                                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                                      Navigate
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                        )}
 
                         {searchHistory.length > 0 && (
                           <>
@@ -731,55 +870,64 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                           </>
                         )}
 
-                        <div
-                          className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
-                          role="presentation"
-                        >
-                          Suggested questions
-                        </div>
-                        <div className="space-y-1">
-                          {quickQuestions.map((question) => {
-                            const optionMeta = optionLookup.get(
-                              `question:${question}`
-                            )
-                            const isActive =
-                              optionMeta?.index === activeOptionIndex
-                            const isHighlighted =
-                              normalizedSearch &&
-                              question.toLowerCase().includes(normalizedSearch)
-                            return (
-                              <button
-                                key={question}
-                                type="button"
-                                role="option"
-                                aria-selected={isActive}
-                                id={optionMeta?.id}
-                                onClick={() => handleAskAssistant(question)}
-                                onMouseEnter={() => {
-                                  if (optionMeta) {
-                                    setActiveOptionIndex(optionMeta.index)
-                                  }
-                                }}
-                                className={
-                                  'flex w-full items-start justify-between rounded-xl ' +
-                                  'px-3 py-2 text-left text-sm transition-colors ' +
-                                  (isActive
-                                    ? 'bg-muted/50 ring-1 ring-emerald-500/20'
-                                    : isHighlighted
-                                      ? 'bg-muted/40'
-                                      : 'hover:bg-muted/40')
-                                }
-                              >
-                                <span className="text-foreground">
-                                  {highlightText(question, searchValue)}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  Ask
-                                </span>
-                              </button>
-                            )
-                          })}
-                        </div>
+                        {questionSuggestions.length > 0 && (
+                          <>
+                            <div
+                              className="px-3 pt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground"
+                              role="presentation"
+                            >
+                              Suggested questions
+                            </div>
+                            <div className="space-y-1">
+                              {questionSuggestions.map((question) => {
+                                const optionMeta = optionLookup.get(
+                                  `question:${question.text}`
+                                )
+                                const isActive =
+                                  optionMeta?.index === activeOptionIndex
+                                const isHighlighted =
+                                  normalizedSearch &&
+                                  question.searchText.includes(normalizedSearch)
+                                return (
+                                  <button
+                                    key={question.text}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isActive}
+                                    id={optionMeta?.id}
+                                    onClick={() =>
+                                      handleAskAssistant(question.text)
+                                    }
+                                    onMouseEnter={() => {
+                                      if (optionMeta) {
+                                        setActiveOptionIndex(optionMeta.index)
+                                      }
+                                    }}
+                                    className={
+                                      'flex w-full items-start justify-between rounded-xl ' +
+                                      'px-3 py-2 text-left text-sm transition-colors ' +
+                                      (isActive
+                                        ? 'bg-muted/50 ring-1 ring-emerald-500/20'
+                                        : isHighlighted
+                                          ? 'bg-muted/40'
+                                          : 'hover:bg-muted/40')
+                                    }
+                                  >
+                                    <span className="text-foreground">
+                                      {highlightText(
+                                        question.text,
+                                        searchValue
+                                      )}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      Ask
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

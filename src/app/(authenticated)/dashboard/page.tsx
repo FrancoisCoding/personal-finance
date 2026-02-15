@@ -257,6 +257,21 @@ export default function DashboardPage() {
   }, [isDemoMode])
 
   useEffect(() => {
+    if (isDemoMode) return
+    if (demoProgressIntervalRef.current !== null) {
+      window.clearInterval(demoProgressIntervalRef.current)
+      demoProgressIntervalRef.current = null
+    }
+    setIsDemoLoading(false)
+    setDemoProgress(0)
+    try {
+      localStorage.removeItem('finance-demo-loading')
+    } catch (error) {
+      void error
+    }
+  }, [isDemoMode])
+
+  useEffect(() => {
     if (!isDemoLoading) return
     if (isLoading) return
 

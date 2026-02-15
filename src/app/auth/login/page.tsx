@@ -108,6 +108,8 @@ export default function LoginPage() {
     }, 220)
 
     try {
+      localStorage.removeItem('finance-demo-walkthrough')
+      localStorage.removeItem('finance-demo-loading')
       localStorage.setItem('finance-demo-loading', '1')
     } catch (error) {
       void error

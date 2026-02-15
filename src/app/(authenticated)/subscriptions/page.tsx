@@ -639,7 +639,7 @@ export default function SubscriptionsPage() {
               Review these recurring charges and add the ones you want to track.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             {detectedSubscriptions.length === 0 ? (
               <div
                 className={
@@ -766,7 +766,7 @@ export default function SubscriptionsPage() {
             <CardTitle>Upcoming renewals</CardTitle>
             <CardDescription>Next 30 days of renewals.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-3 pt-6">
             {upcomingRenewals.length === 0 ? (
               <div
                 className={
@@ -834,7 +834,7 @@ export default function SubscriptionsPage() {
             Manage the subscriptions you are currently tracking.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           {subscriptions.length === 0 ? (
             <div
               className={

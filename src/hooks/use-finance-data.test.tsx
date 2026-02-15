@@ -5,8 +5,13 @@ import { SessionProvider } from 'next-auth/react'
 
 import { createFetchResponse } from '../../tests/test-utils'
 
+const demoModeMock = vi.fn()
 const toastSpy = vi.fn()
 const defaultSession = { user: { id: 'user-1', name: 'Test User' } }
+
+vi.mock('@/hooks/use-demo-mode', () => ({
+  useDemoMode: () => demoModeMock(),
+}))
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: toastSpy }),
@@ -34,6 +39,12 @@ const createQueryWrapper = (session = defaultSession) => {
 describe('use-finance-data hooks', () => {
   beforeEach(() => {
     toastSpy.mockReset()
+    demoModeMock.mockReset()
+    demoModeMock.mockReturnValue({
+      isDemoMode: false,
+      startDemoMode: vi.fn(),
+      stopDemoMode: vi.fn(),
+    })
   })
 
   afterEach(() => {
@@ -1346,6 +1357,45 @@ describe('use-finance-data hooks', () => {
       expect(result.current.data).toEqual([{ id: 'cc2' }])
     })
     expect(fetchMock).toHaveBeenCalledWith('/api/credit-cards')
+  })
+
+  it('fetches credit cards in demo mode without a session', async () => {
+    const { useCreditCards } = await loadHooks()
+    demoModeMock.mockReturnValue({
+      isDemoMode: true,
+      startDemoMode: vi.fn(),
+      stopDemoMode: vi.fn(),
+    })
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        createFetchResponse({ ok: true, json: [{ id: 'demo-cc' }] })
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    document.cookie = 'demo_mode=1'
+
+    const { wrapper } = createQueryWrapper(null)
+    const { result } = renderHook(() => useCreditCards(), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual([{ id: 'demo-cc' }])
+    })
+    expect(fetchMock).toHaveBeenCalled()
+  })
+
+  it('skips credit card queries without session or demo mode', async () => {
+    const { useCreditCards } = await loadHooks()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    document.cookie = 'demo_mode=; path=/; max-age=0'
+
+    const { wrapper } = createQueryWrapper(null)
+    const { result } = renderHook(() => useCreditCards(), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current.fetchStatus).toBe('idle')
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('exposes budgets, goals, categories, and subscriptions', async () => {

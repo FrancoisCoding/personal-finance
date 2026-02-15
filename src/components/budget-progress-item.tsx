@@ -14,16 +14,16 @@ export function BudgetProgressItem({ budget }: BudgetProgressItemProps) {
   const progress = useBudgetProgress(budget.id)
 
   return (
-    <div className="space-y-2 rounded-lg border border-border/60 bg-background/80 p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">
+    <div className="space-y-2.5 rounded-xl border border-border/50 bg-card/70 p-3.5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-foreground">
           {budget.name}
         </span>
         <span className="text-xs font-semibold text-muted-foreground">
           {Math.round(progress)}%
         </span>
       </div>
-      <Progress value={progress} className="h-1.5" />
+      <Progress value={progress} className="h-2" />
     </div>
   )
 }

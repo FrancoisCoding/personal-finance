@@ -1015,10 +1015,10 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {/* Recent Transactions */}
             <Card
-              className="border-border/60 bg-card/80 shadow-sm lg:col-span-2 h-full"
+              className="border-border/70 bg-card/90 shadow-sm lg:col-span-2 h-full"
               data-demo-step="demo-recent-transactions"
             >
-              <CardHeader className="border-b border-border/60">
+              <CardHeader className="border-b border-border/60 pb-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <CardTitle>Recent Transactions</CardTitle>
@@ -1039,11 +1039,11 @@ export default function DashboardPage() {
                       <div
                         key={transaction.id}
                         className={
-                          'flex items-center justify-between rounded-lg border border-border/60 ' +
-                          'bg-muted/30 p-4 transition-colors hover:bg-muted/40'
+                          'flex items-center justify-between rounded-xl border border-border/50 ' +
+                          'bg-card/70 p-4 shadow-sm transition-colors hover:bg-muted/30'
                         }
                       >
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 min-w-0">
                           <div
                             className={
                               'flex h-12 w-12 items-center justify-center rounded-xl ' +
@@ -1057,8 +1057,8 @@ export default function DashboardPage() {
                               {getCategoryIcon(categoryName)}
                             </span>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate">
                               {transaction.description}
                             </p>
                             <p className="text-sm text-muted-foreground">
@@ -1087,7 +1087,7 @@ export default function DashboardPage() {
                 ) : (
                   <div
                     className={
-                      'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                      'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
                       'px-4 py-8 text-center'
                     }
                   >
@@ -1108,10 +1108,10 @@ export default function DashboardPage() {
             <div className="grid gap-6 auto-rows-fr">
               {/* Budget Progress */}
               <Card
-                className="border-border/60 bg-card/80 shadow-sm h-full"
+                className="border-border/70 bg-card/90 shadow-sm h-full"
                 data-demo-step="demo-budget-progress"
               >
-                <CardHeader className="border-b border-border/60">
+                <CardHeader className="border-b border-border/60 pb-3">
                   <CardTitle>Budget Progress</CardTitle>
                   <CardDescription>This month&apos;s spending</CardDescription>
                 </CardHeader>
@@ -1145,10 +1145,10 @@ export default function DashboardPage() {
 
               {/* Goals Progress */}
               <Card
-                className="border-border/60 bg-card/80 shadow-sm h-full"
+                className="border-border/70 bg-card/90 shadow-sm h-full"
                 data-demo-step="demo-goals-progress"
               >
-                <CardHeader className="border-b border-border/60">
+                <CardHeader className="border-b border-border/60 pb-3">
                   <CardTitle>Financial Goals</CardTitle>
                   <CardDescription>Track your progress</CardDescription>
                 </CardHeader>

@@ -49,9 +49,9 @@ const DonationsCard = ({
 
   return (
     <Card
-      className={cn('bg-card/80 border border-border/60 shadow-sm', className)}
+      className={cn('bg-card/90 border border-border/70 shadow-sm', className)}
     >
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle className="text-lg font-semibold text-foreground">
@@ -61,7 +61,7 @@ const DonationsCard = ({
               Track churches, charities, and community support.
             </CardDescription>
           </div>
-          <span className="rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs text-muted-foreground">
+          <span className="rounded-full border border-border/60 bg-muted/20 px-3 py-1 text-xs text-muted-foreground">
             Last 30 days
           </span>
         </div>
@@ -74,14 +74,15 @@ const DonationsCard = ({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2">
         {hasData ? (
           entries.map((entry) => (
             <div
               key={entry.name}
               className={
-                'flex items-center justify-between rounded-lg border ' +
-                'border-border/60 bg-muted/30 px-3 py-2'
+                'flex items-center justify-between rounded-xl border ' +
+                'border-border/50 bg-card/70 px-3.5 py-2.5 shadow-sm ' +
+                'transition-colors hover:bg-muted/30'
               }
             >
               <div className="min-w-0">
@@ -101,7 +102,7 @@ const DonationsCard = ({
         ) : (
           <div
             className={
-              'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+              'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
               'px-4 py-6 text-center'
             }
           >

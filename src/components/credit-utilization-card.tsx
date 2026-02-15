@@ -1,4 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
@@ -128,13 +134,18 @@ export function CreditUtilizationCard({
 
   return (
     <Card
-      className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
+      className={`bg-card/90 border border-border/70 shadow-sm ${className}`}
     >
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Credit Utilization
-          </CardTitle>
+      <CardHeader className="pb-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Credit Utilization
+            </CardTitle>
+            <CardDescription>
+              Monitor balances, limits, and paydown momentum.
+            </CardDescription>
+          </div>
           <Badge
             variant="outline"
             className={`${utilizationStatus.color} ${utilizationStatus.bgColor} border-current`}
@@ -143,7 +154,7 @@ export function CreditUtilizationCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-7">
         {/* Overall Utilization */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -156,7 +167,7 @@ export function CreditUtilizationCard({
           </div>
           <Progress
             value={Math.min(totalUtilization, 100)}
-            className="h-3"
+            className="h-2.5"
             style={
               {
                 '--progress-background': utilizationStatus.progressColor,
@@ -173,8 +184,8 @@ export function CreditUtilizationCard({
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">
                 Total Balance
@@ -187,7 +198,7 @@ export function CreditUtilizationCard({
               Across {creditCards.length} cards
             </div>
           </div>
-          <div className="p-4 rounded-lg border border-border/60 bg-muted/30">
+          <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">
                 Available Credit
@@ -203,7 +214,7 @@ export function CreditUtilizationCard({
         </div>
 
         {/* Monthly Interest Cost */}
-        <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+        <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
@@ -222,7 +233,7 @@ export function CreditUtilizationCard({
         {/* Individual Cards */}
         {creditCards.length > 0 ? (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">
+            <h4 className="text-sm font-semibold text-foreground/90">
               Individual Cards
             </h4>
             {creditCards.map((card) => {
@@ -232,7 +243,7 @@ export function CreditUtilizationCard({
               return (
                 <div
                   key={card.id}
-                  className="p-3 rounded-lg border border-border/60 bg-muted/30"
+                  className="p-3 rounded-xl border border-border/50 bg-card/70 shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-foreground">
@@ -263,7 +274,7 @@ export function CreditUtilizationCard({
         ) : (
           <div
             className={
-              'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+              'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
               'px-4 py-6 text-center'
             }
           >
@@ -278,7 +289,7 @@ export function CreditUtilizationCard({
         )}
 
         {/* Recommendations */}
-        <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+        <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
           <div className="mb-3">
             <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
               {recommendations.title}

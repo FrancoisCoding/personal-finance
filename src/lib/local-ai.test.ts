@@ -226,7 +226,141 @@ describe('local-ai', () => {
     expect(none).toContain('No subscriptions are connected')
   })
 
+  it('answers cash flow, net worth, and credit utilization prompts', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-15T12:00:00Z'))
+
+    const { chatWithAI } = await import('./local-ai')
+    const context = {
+      transactions: [
+        {
+          description: 'Salary',
+          amount: 2000,
+          type: 'INCOME',
+          date: '2026-02-05',
+        },
+        {
+          description: 'Rent',
+          amount: -500,
+          type: 'EXPENSE',
+          date: '2026-02-08',
+        },
+      ],
+      accounts: [
+        { id: 'chk', type: 'CHECKING', balance: 1000 },
+        { id: 'sav', type: 'SAVINGS', balance: 500 },
+        { id: 'cc1', type: 'CREDIT_CARD', balance: -300, creditLimit: 2000 },
+      ],
+      subscriptions: [],
+    }
+
+    const cashFlow = await chatWithAI('cash flow summary', context)
+    expect(cashFlow).toContain('Cash flow')
+    expect(cashFlow).toContain('Income: $2,000.00')
+    expect(cashFlow).toContain('Expenses: $500.00')
+    expect(cashFlow).toContain('Net: $1,500.00')
+
+    const netWorth = await chatWithAI('net worth', context)
+    expect(netWorth).toContain('Net worth estimate')
+    expect(netWorth).toContain('$1,200.00')
+
+    const utilization = await chatWithAI('credit utilization', context)
+    expect(utilization).toContain('Credit utilization')
+    expect(utilization).toContain('$300.00')
+    expect(utilization).toContain('$2,000.00')
+  })
+
+  it('answers largest expenses, donations, and upcoming subscriptions', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-15T12:00:00Z'))
+
+    const { chatWithAI } = await import('./local-ai')
+    const context = {
+      transactions: [
+        {
+          description: 'Vacation',
+          amount: -600,
+          type: 'EXPENSE',
+          date: '2026-02-12',
+        },
+        {
+          description: 'Charity donation',
+          amount: -50,
+          type: 'EXPENSE',
+          date: '2026-02-11',
+        },
+      ],
+      accounts: [],
+      subscriptions: [
+        {
+          name: 'Streaming',
+          amount: 15,
+          billingCycle: 'MONTHLY',
+          nextBillingDate: '2026-02-20',
+        },
+      ],
+    }
+
+    const largest = await chatWithAI('largest transactions over $400', context)
+    expect(largest).toContain('Largest expenses')
+    expect(largest).toContain('Vacation')
+    expect(largest).toContain('$600.00')
+
+    const donations = await chatWithAI('donations this month', context)
+    expect(donations).toContain('Donations in the last 30 days')
+    expect(donations).toContain('$50.00')
+
+    const upcoming = await chatWithAI('upcoming subscriptions', context)
+    expect(upcoming).toContain('Upcoming renewals')
+    expect(upcoming).toContain('Streaming')
+  })
+
+  it('describes spending spikes with or without history', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-15T12:00:00Z'))
+
+    const { chatWithAI } = await import('./local-ai')
+    const withHistory = await chatWithAI('spending spike', {
+      transactions: [
+        {
+          description: 'Dining',
+          amount: -200,
+          type: 'EXPENSE',
+          date: '2026-02-12',
+        },
+        {
+          description: 'Groceries',
+          amount: -100,
+          type: 'EXPENSE',
+          date: '2026-02-10',
+        },
+        {
+          description: 'Utilities',
+          amount: -50,
+          type: 'EXPENSE',
+          date: '2026-02-02',
+        },
+      ],
+    })
+    expect(withHistory).toContain('Spending trend')
+
+    const withoutHistory = await chatWithAI('spending spike', {
+      transactions: [
+        {
+          description: 'Groceries',
+          amount: -100,
+          type: 'EXPENSE',
+          date: '2026-02-12',
+        },
+      ],
+    })
+    expect(withoutHistory).toContain('not enough prior spending history')
+  })
+
   it('falls back to OpenRouter when no deterministic answer is found', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-15T12:00:00Z'))
+
     setEnv({ OPENROUTER_API_KEY: 'key', OPENROUTER_BASE_URL: 'https://api' })
     const fetchMock = vi.fn().mockResolvedValue(
       createFetchResponse({
@@ -238,12 +372,21 @@ describe('local-ai', () => {
 
     const { chatWithAI } = await import('./local-ai')
     const response = await chatWithAI('What should I do next?', {
-      transactions: [],
-      accounts: [],
+      transactions: [
+        {
+          description: 'Groceries',
+          amount: -50,
+          type: 'EXPENSE',
+          date: '2026-02-10',
+        },
+      ],
+      accounts: [{ id: 'chk', type: 'CHECKING', balance: 1200 }],
       subscriptions: [],
     })
 
-    expect(response).toBe('Snapshot summary.')
+    expect(response).toContain('Snapshot summary.')
+    expect(response).toContain('Quick data snapshot:')
+    expect(response).toContain('30-day spending: $50.00')
   })
 
   it('returns fallback chat responses on OpenRouter errors', async () => {
@@ -262,11 +405,33 @@ describe('local-ai', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { chatWithAI } = await import('./local-ai')
-    const empty = await chatWithAI('Need advice', {})
-    expect(empty).toContain('trouble with the AI service')
+    const empty = await chatWithAI('Need advice', {
+      transactions: [
+        {
+          description: 'Groceries',
+          amount: -40,
+          type: 'EXPENSE',
+          date: '2026-02-10',
+        },
+      ],
+      accounts: [{ id: 'chk', type: 'CHECKING', balance: 800 }],
+      subscriptions: [],
+    })
+    expect(empty).toContain('Quick data snapshot')
 
-    const failure = await chatWithAI('Need advice', {})
-    expect(failure).toContain('trouble with the AI service')
+    const failure = await chatWithAI('Need advice', {
+      transactions: [
+        {
+          description: 'Fuel',
+          amount: -60,
+          type: 'EXPENSE',
+          date: '2026-02-11',
+        },
+      ],
+      accounts: [{ id: 'chk', type: 'CHECKING', balance: 900 }],
+      subscriptions: [],
+    })
+    expect(failure).toContain('Quick data snapshot')
   })
 
   it('generates financial insights and handles failures', async () => {
@@ -451,7 +616,18 @@ describe('local-ai', () => {
   it('returns fallback chat responses without API keys', async () => {
     setEnv({ OPENROUTER_API_KEY: '' })
     const { chatWithAI } = await import('./local-ai')
-    const response = await chatWithAI('Give me advice', {})
-    expect(response).toContain('trouble with the AI service')
+    const response = await chatWithAI('Give me advice', {
+      transactions: [
+        {
+          description: 'Groceries',
+          amount: -20,
+          type: 'EXPENSE',
+          date: '2026-02-10',
+        },
+      ],
+      accounts: [{ id: 'chk', type: 'CHECKING', balance: 400 }],
+      subscriptions: [],
+    })
+    expect(response).toContain('Quick data snapshot')
   })
 })

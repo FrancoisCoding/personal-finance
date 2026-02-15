@@ -252,8 +252,7 @@ export default function FinancialAssistantPage() {
   }
 
   const handleQuickPrompt = (prompt: string) => {
-    setInput(prompt)
-    inputRef.current?.focus()
+    handleSendMessage(prompt)
   }
 
   const handleNewThread = () => {
@@ -267,6 +266,9 @@ export default function FinancialAssistantPage() {
   const recentTransactionCount = transactions.filter(
     (transaction) => new Date(transaction.date) >= thirtyDaysAgo
   ).length
+  const dataSummary =
+    `${transactions.length} transactions | ${accounts.length} accounts | ` +
+    `${subscriptions.length} subscriptions`
 
   const isDataLoading =
     isTransactionsLoading || isAccountsLoading || isSubscriptionsLoading
@@ -395,6 +397,9 @@ export default function FinancialAssistantPage() {
           <p className="max-w-2xl text-sm text-muted-foreground">
             Ask about spending, cash flow, or subscriptions and get clear next
             steps based on your activity.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Using the last 90 days of activity. {dataSummary}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -269,6 +269,15 @@ const DemoWalkthrough = ({
   const [activeIndex, setActiveIndex] = useState(0)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   const pendingRouteRef = useRef<string | null>(null)
+  const routesToPrefetch = useMemo(() => {
+    return Array.from(
+      new Set(
+        walkthroughSteps
+          .map((step) => step.route)
+          .filter((route): route is string => Boolean(route))
+      )
+    )
+  }, [])
 
   const activeStep = walkthroughSteps[activeIndex]
 
@@ -276,6 +285,63 @@ const DemoWalkthrough = ({
     if (!isOpen) return
     setActiveIndex(0)
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    routesToPrefetch.forEach((route) => {
+      router.prefetch(route)
+    })
+  }, [isOpen, router, routesToPrefetch])
+
+  const handleNext = useCallback(() => {
+    const isLastStep = activeIndex === walkthroughSteps.length - 1
+    if (isLastStep) {
+      onComplete()
+      return
+    }
+    setActiveIndex((prev) => Math.min(prev + 1, walkthroughSteps.length - 1))
+  }, [activeIndex, onComplete])
+
+  const handleBack = useCallback(() => {
+    setActiveIndex((prev) => Math.max(prev - 1, 0))
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const isTextInputTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false
+      const tagName = target.tagName.toLowerCase()
+      return (
+        tagName === 'input' ||
+        tagName === 'textarea' ||
+        target.isContentEditable
+      )
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isTextInputTarget(event.target)) {
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key === 'ArrowRight' || event.key === 'Enter') {
+        event.preventDefault()
+        handleNext()
+        return
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        handleBack()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleBack, handleNext, isOpen, onClose])
 
   useEffect(() => {
     if (!isOpen || !activeStep) return
@@ -439,13 +505,15 @@ const DemoWalkthrough = ({
 
       {highlightRect ? (
         <div
-          className="absolute rounded-2xl ring-2 ring-white/70"
+          className="absolute rounded-2xl ring-2 ring-white/70 transition-all duration-200 ease-out"
           style={{
             top: Math.max(highlightRect.top - 8, 8),
             left: Math.max(highlightRect.left - 8, 8),
             width: Math.max(highlightRect.width + 16, 24),
             height: Math.max(highlightRect.height + 16, 24),
             boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+            transition:
+              'top 200ms ease-out, left 200ms ease-out, width 200ms ease-out, height 200ms ease-out',
           }}
         />
       ) : null}
@@ -453,7 +521,7 @@ const DemoWalkthrough = ({
       <div
         className={cn(
           'absolute z-[90] w-[320px] rounded-2xl border border-border/60',
-          'bg-card/95 p-4 shadow-xl backdrop-blur'
+          'bg-card/95 p-4 shadow-xl backdrop-blur transition-all duration-200 ease-out'
         )}
         style={tooltipStyle}
       >
@@ -474,23 +542,12 @@ const DemoWalkthrough = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveIndex((prev) => Math.max(prev - 1, 0))}
+              onClick={handleBack}
               disabled={activeIndex === 0}
             >
               Back
             </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                if (isLastStep) {
-                  onComplete()
-                  return
-                }
-                setActiveIndex((prev) =>
-                  Math.min(prev + 1, walkthroughSteps.length - 1)
-                )
-              }}
-            >
+            <Button size="sm" onClick={handleNext}>
               {isLastStep ? 'Finish' : 'Next'}
             </Button>
           </div>

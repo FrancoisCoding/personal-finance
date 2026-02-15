@@ -393,6 +393,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
 
     const reportPayload = buildReportPayload()
     const lines: string[] = []
+    const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
 
     const addSection = (title: string, headers: string[], rows: string[][]) => {
       lines.push(title)
@@ -412,11 +413,30 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       lines.push('')
     }
 
-    addSection(
-      'Summary',
-      ['Metric', 'Value'],
-      reportPayload.summary.map((item) => [item.label, item.value])
+    lines.push('Summary')
+    lines.push(
+      [
+        'Report date',
+        'Avg daily spend',
+        'Savings rate',
+        'Total income',
+        'Total expenses',
+      ]
+        .map((header) => escapeCsv(header))
+        .join(',')
     )
+    lines.push(
+      [
+        reportDateStamp,
+        avgDailySpend.toFixed(2),
+        `${savingsRate.toFixed(1)}%`,
+        totalIncome.toFixed(2),
+        totalExpenses.toFixed(2),
+      ]
+        .map((value) => escapeCsv(value))
+        .join(',')
+    )
+    lines.push('')
     addSection(
       'Transactions',
       ['Date', 'Description', 'Category', 'Type', 'Amount'],
@@ -425,7 +445,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
         transaction.description,
         transaction.category,
         transaction.type,
-        formatCurrency(transaction.amount),
+        transaction.amount.toFixed(2),
       ])
     )
     addSection(
@@ -434,9 +454,9 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       reportPayload.budgetRows.map((budget) => [
         budget.name,
         budget.category,
-        formatCurrency(budget.budgeted),
-        formatCurrency(budget.spent),
-        formatCurrency(budget.remaining),
+        budget.budgeted.toFixed(2),
+        budget.spent.toFixed(2),
+        budget.remaining.toFixed(2),
         `${budget.utilization.toFixed(1)}%`,
       ])
     )
@@ -445,11 +465,11 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       ['Name', 'Target', 'Current', 'Remaining', 'Progress', 'Target date'],
       reportPayload.goalRows.map((goal) => [
         goal.name,
-        formatCurrency(goal.target),
-        formatCurrency(goal.current),
-        formatCurrency(goal.remaining),
+        goal.target.toFixed(2),
+        goal.current.toFixed(2),
+        goal.remaining.toFixed(2),
         `${goal.progress.toFixed(1)}%`,
-        goal.targetDate,
+        goal.targetDate === '—' ? '' : goal.targetDate,
       ])
     )
 

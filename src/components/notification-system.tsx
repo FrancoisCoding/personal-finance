@@ -5,6 +5,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useMemo,
   useRef,
   useId,
 } from 'react'
@@ -14,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, CheckCircle, AlertTriangle, Info, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 // Utility function to safely extract category name
 function getCategoryName(category: unknown): string | null {
@@ -27,8 +28,204 @@ function getCategoryName(category: unknown): string | null {
   return null
 }
 
+const getSeverityBadgeClasses = (severity: NotificationType) => {
+  switch (severity) {
+    case 'success':
+      return 'border-emerald-500/30 text-emerald-500'
+    case 'error':
+      return 'border-rose-500/30 text-rose-500'
+    case 'warning':
+      return 'border-amber-500/30 text-amber-500'
+    case 'info':
+      return 'border-sky-500/30 text-sky-500'
+    default:
+      return 'border-border/60 text-muted-foreground'
+  }
+}
+
 // Notification types
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'
+
+export const notificationThresholds = {
+  lowBalance: 500,
+  utilizationWarning: 70,
+  budgetWarningRatio: 0.85,
+  budgetOverRatio: 1,
+  spendingSpikeRatio: 0.25,
+  spendingSpikeMinimum: 200,
+  largeTransactionMinimum: 500,
+  largeTransactionMultiplier: 3,
+  subscriptionLookaheadDays: 7,
+  goalDeadlineDays: 14,
+  goalProgressWarning: 0.8,
+  incomeDropRatio: 0.8,
+} as const
+
+const budgetWarningPercent = Math.round(
+  notificationThresholds.budgetWarningRatio * 100
+)
+const spendingSpikePercent = Math.round(
+  notificationThresholds.spendingSpikeRatio * 100
+)
+const incomeDropPercent = Math.round(
+  (1 - notificationThresholds.incomeDropRatio) * 100
+)
+
+export interface IAlertRuleDefinition {
+  id: string
+  title: string
+  description: string
+  category: string
+  severity: NotificationType
+  detail: string
+  defaultEnabled: boolean
+}
+
+export const alertRules: IAlertRuleDefinition[] = [
+  {
+    id: 'low-balance',
+    title: 'Low cash balance',
+    description: 'Warn when combined checking and savings dip too low.',
+    category: 'system',
+    severity: 'warning',
+    detail: `Cash below ${formatCurrency(
+      notificationThresholds.lowBalance
+    )}.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'credit-utilization',
+    title: 'Credit utilization elevated',
+    description: 'Alert when credit card utilization stays high.',
+    category: 'budget',
+    severity: 'warning',
+    detail: `Utilization above ${notificationThresholds.utilizationWarning}%.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'budget-warning',
+    title: 'Budget nearing limit',
+    description: 'Heads-up when a budget is close to its cap.',
+    category: 'budget',
+    severity: 'warning',
+    detail: `Usage above ${budgetWarningPercent}%.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'budget-over',
+    title: 'Budget exceeded',
+    description: 'Critical alert when a budget is overspent.',
+    category: 'budget',
+    severity: 'error',
+    detail: 'Usage over 100%.',
+    defaultEnabled: true,
+  },
+  {
+    id: 'spending-spike',
+    title: 'Spending spike detected',
+    description: 'Detect unusual week-over-week spending increases.',
+    category: 'transaction',
+    severity: 'warning',
+    detail: `Weekly spend up ${spendingSpikePercent}% and ${formatCurrency(
+      notificationThresholds.spendingSpikeMinimum
+    )}+.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'large-transaction',
+    title: 'Large transaction',
+    description: 'Flag unusually large expenses that need review.',
+    category: 'transaction',
+    severity: 'info',
+    detail: `Expense above ${formatCurrency(
+      notificationThresholds.largeTransactionMinimum
+    )} or 3x average.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'subscription-due',
+    title: 'Subscription due soon',
+    description: 'Remind you before a subscription renews.',
+    category: 'system',
+    severity: 'info',
+    detail: `Renews within ${notificationThresholds.subscriptionLookaheadDays} days.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'subscription-new',
+    title: 'New subscription added',
+    description: 'Alert when a new recurring charge is detected.',
+    category: 'system',
+    severity: 'success',
+    detail: 'New recurring charge added.',
+    defaultEnabled: true,
+  },
+  {
+    id: 'goal-deadline',
+    title: 'Goal deadline approaching',
+    description: 'Prompt when goals are behind schedule.',
+    category: 'goal',
+    severity: 'warning',
+    detail: `Deadline within ${notificationThresholds.goalDeadlineDays} days and <80% funded.`,
+    defaultEnabled: true,
+  },
+  {
+    id: 'goal-complete',
+    title: 'Goal achieved',
+    description: 'Celebrate when you reach a financial goal.',
+    category: 'goal',
+    severity: 'success',
+    detail: 'Goal hits 100% funding.',
+    defaultEnabled: true,
+  },
+  {
+    id: 'goal-new',
+    title: 'New goal added',
+    description: 'Confirm new goals are set up correctly.',
+    category: 'goal',
+    severity: 'success',
+    detail: 'New goal created.',
+    defaultEnabled: true,
+  },
+  {
+    id: 'income-drop',
+    title: 'Income trending down',
+    description: 'Warn when income dips compared to last month.',
+    category: 'system',
+    severity: 'warning',
+    detail: `Income down ${incomeDropPercent}% vs last month.`,
+    defaultEnabled: true,
+  },
+]
+
+const alertRuleGroups = alertRules.reduce<Record<string, IAlertRuleDefinition[]>>(
+  (groups, rule) => {
+    const category =
+      rule.category.charAt(0).toUpperCase() + rule.category.slice(1)
+    if (!groups[category]) {
+      groups[category] = []
+    }
+    groups[category].push(rule)
+    return groups
+  },
+  {}
+)
+
+const orderedAlertRuleGroups = Object.entries(alertRuleGroups).sort(
+  ([a], [b]) => a.localeCompare(b)
+)
+
+const defaultAlertRuleState = alertRules.reduce<Record<string, boolean>>(
+  (acc, rule) => {
+    acc[rule.id] = rule.defaultEnabled
+    return acc
+  },
+  {}
+)
+
+const alertRulesStorageKey = 'financeflow.alert-rules'
+const notificationHistoryStorageKey = 'financeflow.notification-history'
+const notificationHistoryLimit = 160
 
 // Notification interface
 export interface Notification {
@@ -41,6 +238,7 @@ export interface Notification {
   showToast?: boolean
   dedupeKey?: string
   throttleMinutes?: number
+  ruleId?: string
   action?: {
     label: string
     onClick: () => void
@@ -62,6 +260,10 @@ interface NotificationContextType {
   clearAll: () => void
   showNotificationCenter: boolean
   setShowNotificationCenter: (show: boolean) => void
+  alertRuleState: Record<string, boolean>
+  toggleAlertRule: (id: string) => void
+  resetAlertRules: () => void
+  isAlertRuleEnabled: (id: string) => boolean
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -76,9 +278,91 @@ export function NotificationProvider({
 }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotificationCenter, setShowNotificationCenter] = useState(false)
+  const [alertRuleState, setAlertRuleState] = useState<Record<string, boolean>>(
+    () => ({ ...defaultAlertRuleState })
+  )
   const dedupeCacheRef = useRef<Map<string, number>>(new Map())
 
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(alertRulesStorageKey)
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      if (!parsed || typeof parsed !== 'object') return
+      setAlertRuleState((prev) => ({ ...prev, ...parsed }))
+    } catch (error) {
+      console.warn('Failed to load alert rules', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        alertRulesStorageKey,
+        JSON.stringify(alertRuleState)
+      )
+    } catch (error) {
+      console.warn('Failed to persist alert rules', error)
+    }
+  }, [alertRuleState])
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(
+        notificationHistoryStorageKey
+      )
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      if (!Array.isArray(parsed)) return
+      const hydrated = parsed
+        .filter((item) => item && typeof item === 'object')
+        .map((item) => {
+          const timestamp = new Date(item.timestamp)
+          return {
+            ...item,
+            timestamp,
+            read: Boolean(item.read),
+          } as Notification
+        })
+        .filter((item) => !Number.isNaN(item.timestamp.getTime()))
+      if (hydrated.length === 0) return
+      setNotifications((prev) => {
+        if (prev.length === 0) {
+          return hydrated.slice(0, notificationHistoryLimit)
+        }
+        const existingIds = new Set(prev.map((item) => item.id))
+        const merged = [
+          ...prev,
+          ...hydrated.filter((item) => !existingIds.has(item.id)),
+        ]
+        return merged.slice(0, notificationHistoryLimit)
+      })
+    } catch (error) {
+      console.warn('Failed to load notification history', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const payload = notifications
+        .slice(0, notificationHistoryLimit)
+        .map((notification) => {
+          const { action, timestamp, ...rest } = notification
+          return {
+            ...rest,
+            timestamp: timestamp.toISOString(),
+          }
+        })
+      window.localStorage.setItem(
+        notificationHistoryStorageKey,
+        JSON.stringify(payload)
+      )
+    } catch (error) {
+      console.warn('Failed to persist notification history', error)
+    }
+  }, [notifications])
 
   const addNotification = (
     notification: Omit<Notification, 'id' | 'timestamp' | 'read'>
@@ -118,7 +402,9 @@ export function NotificationProvider({
       read: false,
       showToast: notification.showToast ?? true,
     }
-    setNotifications((prev) => [newNotification, ...prev])
+    setNotifications((prev) =>
+      [newNotification, ...prev].slice(0, notificationHistoryLimit)
+    )
   }
 
   const markAsRead = (id: string) => {
@@ -145,6 +431,19 @@ export function NotificationProvider({
     setNotifications([])
   }
 
+  const toggleAlertRule = (id: string) => {
+    setAlertRuleState((prev) => ({
+      ...prev,
+      [id]: !(prev[id] ?? true),
+    }))
+  }
+
+  const resetAlertRules = () => {
+    setAlertRuleState({ ...defaultAlertRuleState })
+  }
+
+  const isAlertRuleEnabled = (id: string) => alertRuleState[id] ?? true
+
   return (
     <NotificationContext.Provider
       value={{
@@ -158,6 +457,10 @@ export function NotificationProvider({
         clearAll,
         showNotificationCenter,
         setShowNotificationCenter,
+        alertRuleState,
+        toggleAlertRule,
+        resetAlertRules,
+        isAlertRuleEnabled,
       }}
     >
       {children}
@@ -345,10 +648,14 @@ export function NotificationCenter() {
     clearAll,
     showNotificationCenter,
     setShowNotificationCenter,
+    alertRuleState,
+    toggleAlertRule,
+    resetAlertRules,
   } = useNotifications()
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
 
+  const [activeTab, setActiveTab] = useState<'history' | 'rules'>('history')
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
@@ -389,6 +696,43 @@ export function NotificationCenter() {
     },
     {}
   )
+
+  const historyStats = useMemo(() => {
+    if (notifications.length === 0) {
+      return { last7: 0, last30: 0 }
+    }
+    const now = Date.now()
+    const weekMs = 7 * 24 * 60 * 60 * 1000
+    const monthMs = 30 * 24 * 60 * 60 * 1000
+    let last7 = 0
+    let last30 = 0
+    notifications.forEach((notification) => {
+      const diff = now - notification.timestamp.getTime()
+      if (diff <= weekMs) last7 += 1
+      if (diff <= monthMs) last30 += 1
+    })
+    return { last7, last30 }
+  }, [notifications])
+
+  const ruleActivity = useMemo(() => {
+    const map = new Map<string, { count: number; lastTriggered?: Date }>()
+    notifications.forEach((notification) => {
+      if (!notification.ruleId) return
+      const existing = map.get(notification.ruleId)
+      const nextCount = (existing?.count ?? 0) + 1
+      const lastTriggered =
+        !existing?.lastTriggered ||
+        notification.timestamp > existing.lastTriggered
+          ? notification.timestamp
+          : existing.lastTriggered
+      map.set(notification.ruleId, {
+        count: nextCount,
+        lastTriggered,
+      })
+    })
+    return map
+  }, [notifications])
+
 
   const filterOptions = [
     { id: 'all', label: 'All', count: notifications.length },
@@ -438,7 +782,7 @@ export function NotificationCenter() {
             'bg-card/95 shadow-2xl'
           }
         >
-          <div className="border-b border-border/60 px-5 py-4">
+          <div className="border-b border-border/60 px-5 py-4 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -447,7 +791,7 @@ export function NotificationCenter() {
                     className="text-lg font-semibold text-foreground"
                     id={titleId}
                   >
-                    Notifications
+                    Alerts center
                   </p>
                   {unreadCount > 0 && (
                     <Badge
@@ -460,7 +804,7 @@ export function NotificationCenter() {
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
                   {notifications.length > 0
-                    ? 'Stay on top of your finances with timely alerts.'
+                    ? 'Track alerts, rules, and financial signals.'
                     : 'You are all caught up.'}
                 </p>
               </div>
@@ -474,158 +818,326 @@ export function NotificationCenter() {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={markAllAsRead}
-                disabled={unreadCount === 0}
-                className="h-8 px-3 text-xs"
-              >
-                Mark all read
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearRead}
-                disabled={readCount === 0}
-                className="h-8 px-3 text-xs"
-              >
-                Clear read
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                disabled={notifications.length === 0}
-                className="h-8 px-3 text-xs"
-              >
-                Clear all
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-1 rounded-full bg-muted/30 p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('history')}
+                  className={cn(
+                    'h-7 px-3 text-xs rounded-full',
+                    activeTab === 'history'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  History
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('rules')}
+                  className={cn(
+                    'h-7 px-3 text-xs rounded-full',
+                    activeTab === 'rules'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  Rules
+                </Button>
+              </div>
+              {activeTab === 'rules' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetAlertRules}
+                  className="h-8 px-3 text-xs"
+                >
+                  Reset defaults
+                </Button>
+              )}
             </div>
-          </div>
-
-          <div className="px-5 py-3 border-b border-border/60 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              {filterOptions.map((option) => {
-                const isActive = filter === option.id
-                return (
-                  <Button
-                    key={option.id}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'h-7 px-3 text-xs rounded-full',
-                      isActive
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                    onClick={() => setFilter(option.id)}
-                  >
-                    {option.label}
-                    <span className="ml-2 text-[10px] text-muted-foreground">
-                      {option.count}
-                    </span>
-                  </Button>
-                )
-              })}
-            </div>
-            {categories.length > 0 && (
+            {activeTab === 'history' && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  Categories
-                </span>
-                {['all', ...categories].map((category) => {
-                  const isActive = categoryFilter === category
-                  return (
-                    <Button
-                      key={category}
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        'h-7 px-3 text-xs rounded-full',
-                        isActive
-                          ? 'bg-muted text-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      )}
-                      onClick={() => setCategoryFilter(category)}
-                    >
-                      {category === 'all'
-                        ? 'All'
-                        : category.charAt(0).toUpperCase() + category.slice(1)}
-                      {category !== 'all' && (
-                        <span className="ml-2 text-[10px] text-muted-foreground">
-                          {categoryCounts[category] ?? 0}
-                        </span>
-                      )}
-                    </Button>
-                  )
-                })}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={markAllAsRead}
+                  disabled={unreadCount === 0}
+                  className="h-8 px-3 text-xs"
+                >
+                  Mark all read
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearRead}
+                  disabled={readCount === 0}
+                  className="h-8 px-3 text-xs"
+                >
+                  Clear read
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAll}
+                  disabled={notifications.length === 0}
+                  className="h-8 px-3 text-xs"
+                >
+                  Clear all
+                </Button>
               </div>
             )}
           </div>
 
-          <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
-              {filteredNotifications.length === 0 ? (
-                <div
-                  className={
-                    'rounded-xl border border-dashed border-border/70 ' +
-                    'bg-muted/20 px-4 py-6 text-center'
-                  }
-                >
-                  <p className="text-sm font-medium text-foreground">
-                    No notifications
+          {activeTab === 'history' ? (
+            <>
+              <div className="px-5 py-3 border-b border-border/60 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  {filterOptions.map((option) => {
+                    const isActive = filter === option.id
+                    return (
+                      <Button
+                        key={option.id}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-7 px-3 text-xs rounded-full',
+                          isActive
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        )}
+                        onClick={() => setFilter(option.id)}
+                      >
+                        {option.label}
+                        <span className="ml-2 text-[10px] text-muted-foreground">
+                          {option.count}
+                        </span>
+                      </Button>
+                    )
+                  })}
+                </div>
+                {categories.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      Categories
+                    </span>
+                    {['all', ...categories].map((category) => {
+                      const isActive = categoryFilter === category
+                      return (
+                        <Button
+                          key={category}
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            'h-7 px-3 text-xs rounded-full',
+                            isActive
+                              ? 'bg-muted text-foreground'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                          onClick={() => setCategoryFilter(category)}
+                        >
+                          {category === 'all'
+                            ? 'All'
+                            : category.charAt(0).toUpperCase() +
+                              category.slice(1)}
+                          {category !== 'all' && (
+                            <span className="ml-2 text-[10px] text-muted-foreground">
+                              {categoryCounts[category] ?? 0}
+                            </span>
+                          )}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                )}
+                {notifications.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Last 7 days
+                      </p>
+                      <p className="text-lg font-semibold text-foreground">
+                        {historyStats.last7}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Last 30 days
+                      </p>
+                      <p className="text-lg font-semibold text-foreground">
+                        {historyStats.last30}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <ScrollArea className="flex-1">
+                <div className="p-4 space-y-4">
+                  {filteredNotifications.length === 0 ? (
+                    <div
+                      className={
+                        'rounded-xl border border-dashed border-border/70 ' +
+                        'bg-muted/20 px-4 py-6 text-center'
+                      }
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        No notifications
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Everything is up to date.
+                      </p>
+                    </div>
+                  ) : filter === 'all' ? (
+                    <div className="space-y-4">
+                      {filteredUnread.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="uppercase tracking-[0.2em]">
+                              New
+                            </span>
+                            <span>{filteredUnread.length}</span>
+                          </div>
+                          {filteredUnread.map((notification) => (
+                            <NotificationItem
+                              key={notification.id}
+                              notification={notification}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {filteredRead.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="uppercase tracking-[0.2em]">
+                              Earlier
+                            </span>
+                            <span>{filteredRead.length}</span>
+                          </div>
+                          {filteredRead.map((notification) => (
+                            <NotificationItem
+                              key={notification.id}
+                              notification={notification}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredNotifications.map((notification) => (
+                        <NotificationItem
+                          key={notification.id}
+                          notification={notification}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </>
+          ) : (
+            <ScrollArea className="flex-1">
+              <div className="p-5 space-y-6">
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Alert rules
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Everything is up to date.
+                    Toggle what signals should create alerts and toast updates.
                   </p>
                 </div>
-              ) : filter === 'all' ? (
-                <div className="space-y-4">
-                  {filteredUnread.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="uppercase tracking-[0.2em]">New</span>
-                        <span>{filteredUnread.length}</span>
-                      </div>
-                      {filteredUnread.map((notification) => (
-                        <NotificationItem
-                          key={notification.id}
-                          notification={notification}
-                        />
-                      ))}
+                {orderedAlertRuleGroups.map(([category, rules]) => (
+                  <div key={category} className="space-y-3">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="uppercase tracking-[0.2em]">
+                        {category}
+                      </span>
+                      <span>{rules.length}</span>
                     </div>
-                  )}
-                  {filteredRead.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="uppercase tracking-[0.2em]">
-                          Earlier
-                        </span>
-                        <span>{filteredRead.length}</span>
-                      </div>
-                      {filteredRead.map((notification) => (
-                        <NotificationItem
-                          key={notification.id}
-                          notification={notification}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                    {rules.map((rule) => {
+                      const isEnabled = alertRuleState[rule.id] ?? true
+                      const ruleMeta = ruleActivity.get(rule.id)
+                      return (
+                        <div
+                          key={rule.id}
+                          className={cn(
+                            'rounded-2xl border border-border/60 bg-muted/10 p-4',
+                            !isEnabled && 'opacity-70'
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-semibold text-foreground">
+                                  {rule.title}
+                                </p>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    'text-[10px]',
+                                    getSeverityBadgeClasses(rule.severity)
+                                  )}
+                                >
+                                  {rule.severity}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {rule.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {rule.detail}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={isEnabled}
+                              aria-label={`Toggle ${rule.title}`}
+                              onClick={() => toggleAlertRule(rule.id)}
+                              className={cn(
+                                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                                isEnabled
+                                  ? 'bg-emerald-500/80'
+                                  : 'bg-muted/60'
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'inline-block h-4 w-4 rounded-full bg-white shadow transition-transform',
+                                  isEnabled
+                                    ? 'translate-x-5'
+                                    : 'translate-x-1'
+                                )}
+                              />
+                            </button>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                            <span>
+                              {ruleMeta?.count
+                                ? `${ruleMeta.count} alert${
+                                    ruleMeta.count === 1 ? '' : 's'
+                                  }`
+                                : 'No alerts yet'}
+                            </span>
+                            <span>
+                              {ruleMeta?.lastTriggered
+                                ? formatDistanceToNow(ruleMeta.lastTriggered, {
+                                    addSuffix: true,
+                                  })
+                                : 'Not triggered yet'}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       </div>
     </div>

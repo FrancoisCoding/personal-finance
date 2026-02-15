@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useNotifications } from '@/components/notification-system'
+import {
+  notificationThresholds,
+  useNotifications,
+} from '@/components/notification-system'
 import {
   useAccounts,
   useTransactions,
@@ -12,20 +15,9 @@ import {
 } from '@/hooks/use-finance-data'
 import { formatCurrency } from '@/lib/utils'
 
-const lowBalanceThreshold = 500
-const utilizationWarningThreshold = 70
-const budgetWarningThreshold = 0.85
-const budgetOverThreshold = 1
-const spendingSpikeThreshold = 0.25
-const spendingSpikeMinimum = 200
-const largeTransactionMinimum = 500
-const largeTransactionMultiplier = 3
-const subscriptionLookaheadDays = 7
-const goalDeadlineDays = 14
-
 /** Background notification triggers for high-signal finance events. */
 const NotificationTriggers = () => {
-  const { addNotification } = useNotifications()
+  const { addNotification, isAlertRuleEnabled } = useNotifications()
   const { data: accounts = [] } = useAccounts()
   const { data: transactions = [] } = useTransactions()
   const { data: budgets = [] } = useBudgets()
@@ -37,6 +29,7 @@ const NotificationTriggers = () => {
 
   useEffect(() => {
     if (accounts.length === 0) return
+    if (!isAlertRuleEnabled('low-balance')) return
 
     const liquidBalance = accounts
       .filter(
@@ -45,7 +38,10 @@ const NotificationTriggers = () => {
       .reduce((total, account) => total + account.balance, 0)
     const monthKey = new Date().toISOString().slice(0, 7)
 
-    if (liquidBalance > 0 && liquidBalance <= lowBalanceThreshold) {
+    if (
+      liquidBalance > 0 &&
+      liquidBalance <= notificationThresholds.lowBalance
+    ) {
       addNotification({
         type: 'warning',
         title: 'Low cash balance',
@@ -53,15 +49,21 @@ const NotificationTriggers = () => {
           liquidBalance
         )}. Consider moving funds or adjusting spend.`,
         category: 'system',
+        ruleId: 'low-balance',
         showToast: true,
         dedupeKey: `low-balance-${monthKey}`,
         throttleMinutes: 720,
       })
     }
-  }, [accounts, addNotification])
+  }, [accounts, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
-    if (creditCardUtilization <= utilizationWarningThreshold) return
+    if (!isAlertRuleEnabled('credit-utilization')) return
+    if (
+      creditCardUtilization <= notificationThresholds.utilizationWarning
+    ) {
+      return
+    }
 
     const monthKey = new Date().toISOString().slice(0, 7)
     addNotification({
@@ -71,14 +73,18 @@ const NotificationTriggers = () => {
         1
       )}% of your credit limit. Consider a payoff or balance transfer.`,
       category: 'budget',
+      ruleId: 'credit-utilization',
       showToast: true,
       dedupeKey: `utilization-${monthKey}`,
       throttleMinutes: 720,
     })
-  }, [creditCardUtilization, addNotification])
+  }, [creditCardUtilization, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (budgets.length === 0 || transactions.length === 0) return
+    const budgetWarningEnabled = isAlertRuleEnabled('budget-warning')
+    const budgetOverEnabled = isAlertRuleEnabled('budget-over')
+    if (!budgetWarningEnabled && !budgetOverEnabled) return
 
     const currentDate = new Date()
     const endOfMonth = new Date(
@@ -113,7 +119,10 @@ const NotificationTriggers = () => {
         .reduce((total, transaction) => total + Math.abs(transaction.amount), 0)
 
       const percent = spent / budget.amount
-      if (percent >= budgetOverThreshold) {
+      if (percent >= notificationThresholds.budgetOverRatio) {
+        if (!budgetOverEnabled) {
+          return
+        }
         addNotification({
           type: 'error',
           title: 'Budget exceeded',
@@ -121,6 +130,7 @@ const NotificationTriggers = () => {
             spent
           )} spent.`,
           category: 'budget',
+          ruleId: 'budget-over',
           showToast: true,
           dedupeKey: `budget-over-${budget.id}-${monthKey}`,
           throttleMinutes: 720,
@@ -128,22 +138,27 @@ const NotificationTriggers = () => {
         return
       }
 
-      if (percent >= budgetWarningThreshold) {
+      if (percent >= notificationThresholds.budgetWarningRatio) {
+        if (!budgetWarningEnabled) {
+          return
+        }
         addNotification({
           type: 'warning',
           title: 'Budget nearing limit',
           message: `${budget.name} is ${Math.round(percent * 100)}% used.`,
           category: 'budget',
+          ruleId: 'budget-warning',
           showToast: false,
           dedupeKey: `budget-warning-${budget.id}-${monthKey}`,
           throttleMinutes: 720,
         })
       }
     })
-  }, [budgets, transactions, addNotification])
+  }, [budgets, transactions, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (transactions.length === 0) return
+    if (!isAlertRuleEnabled('spending-spike')) return
 
     const currentDate = new Date()
     const dayInMilliseconds = 24 * 60 * 60 * 1000
@@ -176,8 +191,10 @@ const NotificationTriggers = () => {
 
     if (
       previousTotal > 0 &&
-      recentTotal > previousTotal * (1 + spendingSpikeThreshold) &&
-      recentTotal - previousTotal >= spendingSpikeMinimum
+      recentTotal >
+        previousTotal * (1 + notificationThresholds.spendingSpikeRatio) &&
+      recentTotal - previousTotal >=
+        notificationThresholds.spendingSpikeMinimum
     ) {
       addNotification({
         type: 'warning',
@@ -186,15 +203,17 @@ const NotificationTriggers = () => {
           recentTotal
         )}, up from ${formatCurrency(previousTotal)}.`,
         category: 'transaction',
+        ruleId: 'spending-spike',
         showToast: true,
         dedupeKey: `spending-spike-${recentStart.toISOString().slice(0, 10)}`,
         throttleMinutes: 1440,
       })
     }
-  }, [transactions, addNotification])
+  }, [transactions, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (transactions.length === 0) return
+    if (!isAlertRuleEnabled('large-transaction')) return
 
     const currentDate = new Date()
     const dayInMilliseconds = 24 * 60 * 60 * 1000
@@ -219,8 +238,8 @@ const NotificationTriggers = () => {
           ) / recentExpenses.length
         : 0
     const largeTransactionThreshold = Math.max(
-      largeTransactionMinimum,
-      averageExpense * largeTransactionMultiplier
+      notificationThresholds.largeTransactionMinimum,
+      averageExpense * notificationThresholds.largeTransactionMultiplier
     )
 
     const largeTransactions = transactions.filter((transaction) => {
@@ -241,15 +260,17 @@ const NotificationTriggers = () => {
           Math.abs(transaction.amount)
         )} on ${new Date(transaction.date).toLocaleDateString()}.`,
         category: 'transaction',
+        ruleId: 'large-transaction',
         showToast: true,
         dedupeKey: `large-transaction-${transaction.id}`,
         throttleMinutes: 1440,
       })
     })
-  }, [transactions, addNotification])
+  }, [transactions, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (subscriptions.length === 0) return
+    if (!isAlertRuleEnabled('subscription-due')) return
 
     const currentDate = new Date()
     const dayInMilliseconds = 24 * 60 * 60 * 1000
@@ -259,7 +280,10 @@ const NotificationTriggers = () => {
       const daysUntil = Math.ceil(
         (billingDate.getTime() - currentDate.getTime()) / dayInMilliseconds
       )
-      if (daysUntil >= 0 && daysUntil <= subscriptionLookaheadDays) {
+      if (
+        daysUntil >= 0 &&
+        daysUntil <= notificationThresholds.subscriptionLookaheadDays
+      ) {
         addNotification({
           type: 'info',
           title: 'Subscription due soon',
@@ -267,6 +291,7 @@ const NotificationTriggers = () => {
             daysUntil === 1 ? '' : 's'
           }.`,
           category: 'system',
+          ruleId: 'subscription-due',
           showToast: false,
           dedupeKey: `subscription-due-${subscription.id}-${billingDate
             .toISOString()
@@ -275,10 +300,11 @@ const NotificationTriggers = () => {
         })
       }
     })
-  }, [subscriptions, addNotification])
+  }, [subscriptions, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (subscriptions.length === 0) return
+    if (!isAlertRuleEnabled('subscription-new')) return
 
     if (previousSubscriptionIds.current.length === 0) {
       previousSubscriptionIds.current = subscriptions.map(
@@ -300,6 +326,7 @@ const NotificationTriggers = () => {
           subscription.amount
         )} per cycle.`,
         category: 'system',
+        ruleId: 'subscription-new',
         showToast: true,
         dedupeKey: `subscription-new-${subscription.id}`,
         throttleMinutes: 1440,
@@ -309,10 +336,13 @@ const NotificationTriggers = () => {
     previousSubscriptionIds.current = subscriptions.map(
       (subscription) => subscription.id
     )
-  }, [subscriptions, addNotification])
+  }, [subscriptions, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (goals.length === 0) return
+    const deadlineEnabled = isAlertRuleEnabled('goal-deadline')
+    const completeEnabled = isAlertRuleEnabled('goal-complete')
+    if (!deadlineEnabled && !completeEnabled) return
 
     const currentDate = new Date()
     goals.forEach((goal) => {
@@ -323,7 +353,12 @@ const NotificationTriggers = () => {
       )
       const progress = goal.currentAmount / goal.targetAmount
 
-      if (daysUntil >= 0 && daysUntil <= goalDeadlineDays && progress < 0.8) {
+      if (
+        deadlineEnabled &&
+        daysUntil >= 0 &&
+        daysUntil <= notificationThresholds.goalDeadlineDays &&
+        progress < notificationThresholds.goalProgressWarning
+      ) {
         addNotification({
           type: 'warning',
           title: 'Goal deadline approaching',
@@ -331,6 +366,7 @@ const NotificationTriggers = () => {
             progress * 100
           )}% funded with ${daysUntil} days to go.`,
           category: 'goal',
+          ruleId: 'goal-deadline',
           showToast: false,
           dedupeKey: `goal-deadline-${goal.id}-${targetDate
             .toISOString()
@@ -339,7 +375,7 @@ const NotificationTriggers = () => {
         })
       }
 
-      if (progress >= 1 && !goal.isCompleted) {
+      if (completeEnabled && progress >= 1 && !goal.isCompleted) {
         addNotification({
           type: 'success',
           title: 'Goal achieved',
@@ -347,16 +383,18 @@ const NotificationTriggers = () => {
             goal.currentAmount
           )}.`,
           category: 'goal',
+          ruleId: 'goal-complete',
           showToast: true,
           dedupeKey: `goal-complete-${goal.id}`,
           throttleMinutes: 1440,
         })
       }
     })
-  }, [goals, addNotification])
+  }, [goals, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (goals.length === 0) return
+    if (!isAlertRuleEnabled('goal-new')) return
 
     if (previousGoalIds.current.length === 0) {
       previousGoalIds.current = goals.map((goal) => goal.id)
@@ -374,6 +412,7 @@ const NotificationTriggers = () => {
           goal.targetAmount
         )}.`,
         category: 'goal',
+        ruleId: 'goal-new',
         showToast: true,
         dedupeKey: `goal-new-${goal.id}`,
         throttleMinutes: 1440,
@@ -381,10 +420,11 @@ const NotificationTriggers = () => {
     })
 
     previousGoalIds.current = goals.map((goal) => goal.id)
-  }, [goals, addNotification])
+  }, [goals, addNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (transactions.length === 0) return
+    if (!isAlertRuleEnabled('income-drop')) return
 
     const currentDate = new Date()
     const currentMonthStart = new Date(
@@ -425,7 +465,11 @@ const NotificationTriggers = () => {
       })
       .reduce((sum, transaction) => sum + transaction.amount, 0)
 
-    if (previousIncome > 0 && currentIncome < previousIncome * 0.8) {
+    if (
+      previousIncome > 0 &&
+      currentIncome <
+        previousIncome * notificationThresholds.incomeDropRatio
+    ) {
       addNotification({
         type: 'warning',
         title: 'Income trending down',
@@ -433,12 +477,13 @@ const NotificationTriggers = () => {
           currentIncome
         )} vs ${formatCurrency(previousIncome)} last month.`,
         category: 'system',
+        ruleId: 'income-drop',
         showToast: false,
         dedupeKey: `income-drop-${currentMonthStart.toISOString().slice(0, 7)}`,
         throttleMinutes: 1440,
       })
     }
-  }, [transactions, addNotification])
+  }, [transactions, addNotification, isAlertRuleEnabled])
 
   return null
 }

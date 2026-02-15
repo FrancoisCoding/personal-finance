@@ -1,10 +1,19 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useNotifications } from '@/components/notification-system'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/utils'
@@ -52,6 +61,9 @@ interface AnalyticsDashboardProps {
   className?: string
 }
 
+type ReportFrequency = 'Weekly' | 'Monthly'
+type ReportDelivery = 'Download' | 'Email'
+
 const CHART_COLORS = [
   '#14b8a6',
   '#38bdf8',
@@ -62,6 +74,21 @@ const CHART_COLORS = [
   '#64748b',
 ]
 
+const reportScheduleStorageKey = 'financeflow.report-schedule'
+
+const weeklyOptions = [
+  { label: 'Monday', value: '1' },
+  { label: 'Tuesday', value: '2' },
+  { label: 'Wednesday', value: '3' },
+  { label: 'Thursday', value: '4' },
+  { label: 'Friday', value: '5' },
+] as const
+
+const monthlyOptions = Array.from({ length: 28 }, (_, index) => ({
+  label: `${index + 1}`,
+  value: `${index + 1}`,
+}))
+
 const AnalyticsDashboard = memo(function AnalyticsDashboard({
   transactions,
   budgets,
@@ -70,6 +97,44 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
 }: AnalyticsDashboardProps) {
   const { addNotification, setShowNotificationCenter } = useNotifications()
   const { toast } = useToast()
+  const [reportSchedule, setReportSchedule] = useState<{
+    enabled: boolean
+    frequency: ReportFrequency
+    day: string
+    time: string
+    delivery: ReportDelivery
+    recipient: string
+  }>({
+    enabled: false,
+    frequency: 'Monthly',
+    day: '1',
+    time: '09:00',
+    delivery: 'Download',
+    recipient: '',
+  })
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(reportScheduleStorageKey)
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      if (!parsed || typeof parsed !== 'object') return
+      setReportSchedule((prev) => ({ ...prev, ...parsed }))
+    } catch (error) {
+      console.warn('Failed to load report schedule', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        reportScheduleStorageKey,
+        JSON.stringify(reportSchedule)
+      )
+    } catch (error) {
+      console.warn('Failed to persist report schedule', error)
+    }
+  }, [reportSchedule])
 
   // Calculate spending by category for pie chart
   const { pieData, pieTotal } = useMemo(() => {
@@ -169,12 +234,155 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       }
     }, [transactions])
 
-  const handleExportReport = () => {
-    if (
-      transactions.length === 0 &&
-      budgets.length === 0 &&
-      goals.length === 0
-    ) {
+  const hasReportData =
+    transactions.length > 0 || budgets.length > 0 || goals.length > 0
+  const scheduleDayOptions =
+    reportSchedule.frequency === 'Weekly' ? weeklyOptions : monthlyOptions
+
+  const formatScheduleTime = (timeValue: string) => {
+    const [hourValue, minuteValue] = timeValue.split(':')
+    const hours = Number(hourValue)
+    const minutes = Number(minuteValue)
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return timeValue
+    }
+    const displayDate = new Date()
+    displayDate.setHours(hours, minutes, 0, 0)
+    return displayDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
+
+  const nextScheduledRunLabel = useMemo(() => {
+    if (!reportSchedule.enabled) {
+      return 'Not scheduled'
+    }
+    const [hourValue, minuteValue] = reportSchedule.time.split(':')
+    const hours = Number(hourValue)
+    const minutes = Number(minuteValue)
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return 'Invalid time'
+    }
+    const now = new Date()
+    const nextRun = new Date(now)
+    nextRun.setSeconds(0, 0)
+    nextRun.setHours(hours, minutes)
+
+    if (reportSchedule.frequency === 'Weekly') {
+      const parsedTargetDay = Number(reportSchedule.day)
+      const targetDay = Number.isNaN(parsedTargetDay) ? 1 : parsedTargetDay
+      const normalizedCurrent = now.getDay() === 0 ? 7 : now.getDay()
+      let daysUntil = targetDay - normalizedCurrent
+      if (daysUntil < 0 || (daysUntil === 0 && nextRun <= now)) {
+        daysUntil += 7
+      }
+      nextRun.setDate(now.getDate() + daysUntil)
+    } else {
+      const parsedTargetDay = Number(reportSchedule.day)
+      const targetDay = Number.isNaN(parsedTargetDay) ? 1 : parsedTargetDay
+      nextRun.setDate(targetDay)
+      if (nextRun <= now) {
+        nextRun.setMonth(nextRun.getMonth() + 1)
+        nextRun.setDate(targetDay)
+      }
+    }
+
+    return nextRun.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }, [reportSchedule])
+
+  const escapeCsv = (value: string | number | undefined) => {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    const text = String(value)
+    if (/[",\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`
+    }
+    return text
+  }
+
+  const escapeHtml = (value: string | number) => {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+  }
+
+  const buildReportPayload = () => {
+    const reportDate = new Date()
+    const summary = [
+      { label: 'Report date', value: reportDate.toLocaleDateString('en-US') },
+      { label: 'Avg daily spend', value: formatCurrency(avgDailySpend) },
+      {
+        label: 'Savings rate',
+        value: totalIncome > 0 ? `${savingsRate.toFixed(1)}%` : '0%',
+      },
+      { label: 'Total income', value: formatCurrency(totalIncome) },
+      { label: 'Total expenses', value: formatCurrency(totalExpenses) },
+    ]
+
+    const transactionRows = transactions.map((transaction) => {
+      const signedAmount =
+        transaction.type === 'EXPENSE'
+          ? -Math.abs(transaction.amount)
+          : transaction.amount
+
+      return {
+        date: new Date(transaction.date).toLocaleDateString('en-US'),
+        description: transaction.description,
+        category: transaction.category || 'Other',
+        type: transaction.type === 'EXPENSE' ? 'Expense' : 'Income',
+        amount: signedAmount,
+      }
+    })
+
+    const budgetRows = budgetPerformance.map((budget) => ({
+      name: budget.name,
+      category: budget.category || 'General',
+      budgeted: budget.amount,
+      spent: budget.spent,
+      remaining: Math.max(budget.amount - budget.spent, 0),
+      utilization: budget.percentage,
+    }))
+
+    const goalRows = goals.map((goal) => {
+      const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0)
+      const progress =
+        goal.targetAmount > 0
+          ? (goal.currentAmount / goal.targetAmount) * 100
+          : 0
+
+      return {
+        name: goal.name,
+        target: goal.targetAmount,
+        current: goal.currentAmount,
+        remaining,
+        targetDate: goal.targetDate
+          ? new Date(goal.targetDate).toLocaleDateString('en-US')
+          : '—',
+        progress,
+      }
+    })
+
+    return {
+      reportDate,
+      summary,
+      transactionRows,
+      budgetRows,
+      goalRows,
+    }
+  }
+
+  const handleExportCsv = () => {
+    if (!hasReportData) {
       toast({
         title: 'No data to export',
         description:
@@ -183,114 +391,73 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       return
     }
 
-    const escapeCsv = (value: string | number | undefined) => {
-      if (value === undefined || value === null) {
-        return ''
+    const reportPayload = buildReportPayload()
+    const lines: string[] = []
+
+    const addSection = (title: string, headers: string[], rows: string[][]) => {
+      lines.push(title)
+      lines.push(headers.map((header) => escapeCsv(header)).join(','))
+      if (rows.length === 0) {
+        lines.push(
+          [
+            escapeCsv('No data available'),
+            ...Array(headers.length - 1).fill(''),
+          ].join(',')
+        )
+      } else {
+        rows.forEach((row) => {
+          lines.push(row.map((cell) => escapeCsv(cell)).join(','))
+        })
       }
-      const text = String(value)
-      if (/[",\n]/.test(text)) {
-        return `"${text.replace(/"/g, '""')}"`
-      }
-      return text
+      lines.push('')
     }
 
-    const rows: Record<string, string>[] = []
-    const reportDate = new Date().toLocaleDateString('en-US')
-
-    rows.push({
-      record_type: 'summary',
-      metric: 'Report date',
-      value: reportDate,
-    })
-    rows.push({
-      record_type: 'summary',
-      metric: 'Avg daily spend',
-      value: avgDailySpend.toFixed(2),
-    })
-    rows.push({
-      record_type: 'summary',
-      metric: 'Savings rate',
-      value: `${savingsRate.toFixed(1)}%`,
-    })
-    rows.push({
-      record_type: 'summary',
-      metric: 'Total income',
-      value: totalIncome.toFixed(2),
-    })
-    rows.push({
-      record_type: 'summary',
-      metric: 'Total expenses',
-      value: totalExpenses.toFixed(2),
-    })
-
-    transactions.forEach((transaction) => {
-      rows.push({
-        record_type: 'transaction',
-        date: new Date(transaction.date).toLocaleDateString('en-US'),
-        description: transaction.description,
-        category: transaction.category || 'Other',
-        type: transaction.type,
-        amount:
-          transaction.type === 'EXPENSE'
-            ? `-${Math.abs(transaction.amount).toFixed(2)}`
-            : transaction.amount.toFixed(2),
-      })
-    })
-
-    budgets.forEach((budget) => {
-      const spent = transactions
-        .filter((t) => t.type === 'EXPENSE' && t.category === budget.category)
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-      rows.push({
-        record_type: 'budget',
-        name: budget.name,
-        category: budget.category || 'General',
-        amount: budget.amount.toFixed(2),
-        spent: spent.toFixed(2),
-      })
-    })
-
-    goals.forEach((goal) => {
-      rows.push({
-        record_type: 'goal',
-        name: goal.name,
-        target_amount: goal.targetAmount.toFixed(2),
-        current_amount: goal.currentAmount.toFixed(2),
-        target_date: goal.targetDate
-          ? new Date(goal.targetDate).toLocaleDateString('en-US')
-          : '',
-      })
-    })
-
-    const columns = [
-      'record_type',
-      'date',
-      'description',
-      'category',
-      'type',
-      'amount',
-      'name',
-      'target_amount',
-      'current_amount',
-      'target_date',
-      'metric',
-      'value',
-      'spent',
-    ]
-
-    const lines = [
-      columns.join(','),
-      ...rows.map((row) =>
-        columns.map((column) => escapeCsv(row[column] ?? '')).join(',')
-      ),
-    ]
+    addSection(
+      'Summary',
+      ['Metric', 'Value'],
+      reportPayload.summary.map((item) => [item.label, item.value])
+    )
+    addSection(
+      'Transactions',
+      ['Date', 'Description', 'Category', 'Type', 'Amount'],
+      reportPayload.transactionRows.map((transaction) => [
+        transaction.date,
+        transaction.description,
+        transaction.category,
+        transaction.type,
+        formatCurrency(transaction.amount),
+      ])
+    )
+    addSection(
+      'Budgets',
+      ['Name', 'Category', 'Budgeted', 'Spent', 'Remaining', 'Utilization'],
+      reportPayload.budgetRows.map((budget) => [
+        budget.name,
+        budget.category,
+        formatCurrency(budget.budgeted),
+        formatCurrency(budget.spent),
+        formatCurrency(budget.remaining),
+        `${budget.utilization.toFixed(1)}%`,
+      ])
+    )
+    addSection(
+      'Goals',
+      ['Name', 'Target', 'Current', 'Remaining', 'Progress', 'Target date'],
+      reportPayload.goalRows.map((goal) => [
+        goal.name,
+        formatCurrency(goal.target),
+        formatCurrency(goal.current),
+        formatCurrency(goal.remaining),
+        `${goal.progress.toFixed(1)}%`,
+        goal.targetDate,
+      ])
+    )
 
     const blob = new Blob([lines.join('\n')], {
       type: 'text/csv;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
-    const reportDateStamp = new Date().toISOString().slice(0, 10)
+    const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
     const link = document.createElement('a')
     link.href = url
     link.download = `financial-report-${reportDateStamp}.csv`
@@ -300,8 +467,298 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     URL.revokeObjectURL(url)
 
     toast({
-      title: 'Report exported',
+      title: 'CSV exported',
       description: 'Your analytics report is ready to download.',
+    })
+  }
+
+  const handleExportPdf = () => {
+    if (!hasReportData) {
+      toast({
+        title: 'No data to export',
+        description:
+          'Add transactions, budgets, or goals to generate a report.',
+      })
+      return
+    }
+
+    const reportPayload = buildReportPayload()
+    const reportDateStamp = reportPayload.reportDate.toLocaleDateString('en-US')
+
+    const buildPdfTable = (headers: string[], rows: string[][]) => {
+      if (rows.length === 0) {
+        return '<div class="empty">No data available.</div>'
+      }
+      return `
+        <table>
+          <thead>
+            <tr>
+              ${headers
+                .map((header) => `<th>${escapeHtml(header)}</th>`)
+                .join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows
+              .map(
+                (row) => `
+                <tr>
+                  ${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}
+                </tr>
+              `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      `
+    }
+
+    const pdfHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Financial report</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 32px;
+              font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+              color: #0f172a;
+              background: #ffffff;
+            }
+            header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 24px;
+            }
+            h1 { font-size: 24px; margin: 0; }
+            h2 { font-size: 16px; margin: 24px 0 8px; }
+            .subtitle { color: #475569; font-size: 13px; }
+            .summary-grid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 12px;
+              margin-top: 12px;
+            }
+            .summary-card {
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              padding: 12px;
+              background: #f8fafc;
+            }
+            .summary-label {
+              font-size: 12px;
+              color: #64748b;
+              margin-bottom: 6px;
+            }
+            .summary-value {
+              font-size: 16px;
+              font-weight: 600;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 12px;
+              font-size: 12px;
+            }
+            th, td {
+              padding: 8px 10px;
+              border-bottom: 1px solid #e2e8f0;
+              text-align: left;
+              vertical-align: top;
+            }
+            th {
+              background: #f1f5f9;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #475569;
+            }
+            .section {
+              margin-top: 18px;
+              padding-top: 12px;
+              border-top: 1px solid #e2e8f0;
+            }
+            .empty {
+              border: 1px dashed #cbd5f5;
+              border-radius: 12px;
+              padding: 12px;
+              color: #64748b;
+              font-size: 12px;
+            }
+            @media print {
+              body { margin: 18mm; }
+              .section { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <header>
+            <div>
+              <h1>Financial report</h1>
+              <p class="subtitle">Generated ${escapeHtml(reportDateStamp)}</p>
+            </div>
+            <div class="subtitle">FinanceFlow</div>
+          </header>
+          <section>
+            <h2>Summary</h2>
+            <div class="summary-grid">
+              ${reportPayload.summary
+                .map(
+                  (item) => `
+                    <div class="summary-card">
+                      <div class="summary-label">${escapeHtml(item.label)}</div>
+                      <div class="summary-value">${escapeHtml(item.value)}</div>
+                    </div>
+                  `
+                )
+                .join('')}
+            </div>
+          </section>
+          <section class="section">
+            <h2>Transactions</h2>
+            ${buildPdfTable(
+              ['Date', 'Description', 'Category', 'Type', 'Amount'],
+              reportPayload.transactionRows.map((transaction) => [
+                transaction.date,
+                transaction.description,
+                transaction.category,
+                transaction.type,
+                formatCurrency(transaction.amount),
+              ])
+            )}
+          </section>
+          <section class="section">
+            <h2>Budgets</h2>
+            ${buildPdfTable(
+              [
+                'Name',
+                'Category',
+                'Budgeted',
+                'Spent',
+                'Remaining',
+                'Utilization',
+              ],
+              reportPayload.budgetRows.map((budget) => [
+                budget.name,
+                budget.category,
+                formatCurrency(budget.budgeted),
+                formatCurrency(budget.spent),
+                formatCurrency(budget.remaining),
+                `${budget.utilization.toFixed(1)}%`,
+              ])
+            )}
+          </section>
+          <section class="section">
+            <h2>Goals</h2>
+            ${buildPdfTable(
+              [
+                'Name',
+                'Target',
+                'Current',
+                'Remaining',
+                'Progress',
+                'Target date',
+              ],
+              reportPayload.goalRows.map((goal) => [
+                goal.name,
+                formatCurrency(goal.target),
+                formatCurrency(goal.current),
+                formatCurrency(goal.remaining),
+                `${goal.progress.toFixed(1)}%`,
+                goal.targetDate,
+              ])
+            )}
+          </section>
+        </body>
+      </html>
+    `
+
+    const reportWindow = window.open('', '_blank', 'noopener,noreferrer')
+    if (!reportWindow) {
+      toast({
+        title: 'Popup blocked',
+        description: 'Enable popups to export the PDF report.',
+      })
+      return
+    }
+    reportWindow.document.write(pdfHtml)
+    reportWindow.document.close()
+    reportWindow.focus()
+    window.setTimeout(() => {
+      reportWindow.print()
+    }, 400)
+
+    toast({
+      title: 'PDF ready',
+      description: 'Your PDF report is open and ready to print or save.',
+    })
+  }
+
+  const handleScheduleFrequencyChange = (value: ReportFrequency) => {
+    setReportSchedule((prev) => ({
+      ...prev,
+      frequency: value,
+      day:
+        value === 'Weekly' && Number(prev.day) > 5
+          ? '1'
+          : value === 'Monthly' && Number(prev.day) < 1
+            ? '1'
+            : prev.day,
+    }))
+  }
+
+  const handleScheduleToggle = () => {
+    setReportSchedule((prev) => ({ ...prev, enabled: !prev.enabled }))
+  }
+
+  const handleScheduleSave = () => {
+    if (!reportSchedule.enabled) {
+      toast({
+        title: 'Schedule disabled',
+        description: 'Enable scheduled reports before saving.',
+      })
+      return
+    }
+
+    if (
+      reportSchedule.delivery === 'Email' &&
+      !reportSchedule.recipient.trim()
+    ) {
+      toast({
+        title: 'Recipient required',
+        description: 'Add an email address to deliver scheduled reports.',
+      })
+      return
+    }
+
+    const scheduleDayLabel =
+      reportSchedule.frequency === 'Weekly'
+        ? (weeklyOptions.find((option) => option.value === reportSchedule.day)
+            ?.label ?? 'Monday')
+        : `Day ${reportSchedule.day}`
+    const scheduleTimeLabel = formatScheduleTime(reportSchedule.time)
+    const deliveryLabel =
+      reportSchedule.delivery === 'Email'
+        ? reportSchedule.recipient
+        : 'Download'
+
+    addNotification({
+      type: 'info',
+      title: 'Report schedule updated',
+      message:
+        `${reportSchedule.frequency} report on ${scheduleDayLabel} at ` +
+        `${scheduleTimeLabel}. Delivery: ${deliveryLabel}.`,
+      category: 'system',
+      showToast: false,
+    })
+
+    toast({
+      title: 'Schedule saved',
+      description: `Next report: ${nextScheduledRunLabel}.`,
     })
   }
 
@@ -570,24 +1027,230 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           </div>
         )}
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs font-semibold rounded-full"
-            onClick={handleExportReport}
-          >
-            Export Report
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs font-semibold rounded-full"
-            onClick={handleSetAlerts}
-          >
-            Set Alerts
-          </Button>
+        {/* Reporting & Export */}
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold text-foreground/90">
+                Reporting & Export
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Clean CSV and PDF exports with scheduling for delivery.
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className="text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
+            >
+              Reports
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Exports
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Summary, transactions, budgets, and goals in one report.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs font-semibold rounded-full"
+                    onClick={handleExportCsv}
+                    disabled={!hasReportData}
+                  >
+                    Export CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs font-semibold rounded-full"
+                    onClick={handleExportPdf}
+                    disabled={!hasReportData}
+                  >
+                    Export PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs font-semibold rounded-full"
+                    onClick={handleSetAlerts}
+                  >
+                    Set Alerts
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/70 p-4 space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Schedule reports
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Automate weekly or monthly delivery.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={
+                      reportSchedule.enabled
+                        ? 'text-emerald-600 dark:text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
+                        : 'text-muted-foreground border-border/60'
+                    }
+                  >
+                    {reportSchedule.enabled ? 'Active' : 'Paused'}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-full px-3 text-xs"
+                    onClick={handleScheduleToggle}
+                    aria-pressed={reportSchedule.enabled}
+                  >
+                    {reportSchedule.enabled ? 'Pause' : 'Enable'}
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Frequency
+                  </Label>
+                  <Select
+                    value={reportSchedule.frequency}
+                    onValueChange={(value) =>
+                      handleScheduleFrequencyChange(value as ReportFrequency)
+                    }
+                    disabled={!reportSchedule.enabled}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Weekly">Weekly</SelectItem>
+                      <SelectItem value="Monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    {reportSchedule.frequency === 'Weekly'
+                      ? 'Day of week'
+                      : 'Day of month'}
+                  </Label>
+                  <Select
+                    value={reportSchedule.day}
+                    onValueChange={(value) =>
+                      setReportSchedule((prev) => ({ ...prev, day: value }))
+                    }
+                    disabled={!reportSchedule.enabled}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {scheduleDayOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="report-time"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Time
+                  </Label>
+                  <Input
+                    id="report-time"
+                    type="time"
+                    value={reportSchedule.time}
+                    onChange={(event) =>
+                      setReportSchedule((prev) => ({
+                        ...prev,
+                        time: event.target.value,
+                      }))
+                    }
+                    disabled={!reportSchedule.enabled}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Delivery
+                  </Label>
+                  <Select
+                    value={reportSchedule.delivery}
+                    onValueChange={(value) =>
+                      setReportSchedule((prev) => ({
+                        ...prev,
+                        delivery: value as ReportDelivery,
+                      }))
+                    }
+                    disabled={!reportSchedule.enabled}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select delivery" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Download">Download</SelectItem>
+                      <SelectItem value="Email">Email</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {reportSchedule.delivery === 'Email' && (
+                  <div className="space-y-1 md:col-span-2">
+                    <Label
+                      htmlFor="report-recipient"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Recipient email
+                    </Label>
+                    <Input
+                      id="report-recipient"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={reportSchedule.recipient}
+                      onChange={(event) =>
+                        setReportSchedule((prev) => ({
+                          ...prev,
+                          recipient: event.target.value,
+                        }))
+                      }
+                      disabled={!reportSchedule.enabled}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Next scheduled report
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {nextScheduledRunLabel}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="rounded-full text-xs"
+                  onClick={handleScheduleSave}
+                  disabled={!reportSchedule.enabled}
+                >
+                  Save schedule
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

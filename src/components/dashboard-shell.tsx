@@ -14,6 +14,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
@@ -61,6 +62,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { isDemoMode, stopDemoMode } = useDemoMode()
+  const queryClient = useQueryClient()
   const [isMounted, setIsMounted] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
@@ -91,6 +93,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
   const handleExitDemo = () => {
     stopDemoMode()
+    queryClient.clear()
     try {
       localStorage.removeItem('finance-demo-walkthrough')
       localStorage.removeItem('finance-demo-loading')

@@ -435,6 +435,15 @@ export default function DashboardPage() {
     return cleaned || trimmedDescription
   }, [])
 
+  const getMedian = useCallback((values: number[]) => {
+    const sorted = [...values].sort((a, b) => a - b)
+    if (sorted.length === 0) return 0
+    const mid = Math.floor(sorted.length / 2)
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid]
+  }, [])
+
   const inferDonationCause = useCallback(
     (category: string | undefined, description: string) => {
       const normalizedCategory = category?.toLowerCase() ?? ''

@@ -9,19 +9,33 @@ import { isDemoModeRequest } from '@/lib/demo-mode'
 
 export async function POST(request: NextRequest) {
   try {
+    const confidenceThreshold = 0.7
+
     if (isDemoModeRequest(request)) {
       const body = await request.json().catch(() => ({}))
       const transactionIds = Array.isArray(body?.transactionIds)
         ? body.transactionIds
         : []
+      const demoResults = transactionIds.map((id: string) => ({
+        transactionId: id,
+        suggestedCategory: 'Food & Dining',
+        confidence: 0.72,
+        reason: 'Demo categorization',
+      }))
+      const applied = demoResults.filter(
+        (result) => result.confidence >= confidenceThreshold
+      )
+      const review = demoResults.filter(
+        (result) => result.confidence < confidenceThreshold
+      )
       return NextResponse.json({
         message: `Demo categorized ${transactionIds.length} transactions`,
-        results: transactionIds.map((id: string) => ({
-          transactionId: id,
-          suggestedCategory: 'Food & Dining',
-          confidence: 0.72,
-          reason: 'Demo categorization',
-        })),
+        results: demoResults,
+        applied,
+        review,
+        appliedCount: applied.length,
+        reviewCount: review.length,
+        confidenceThreshold,
       })
     }
 
@@ -82,6 +96,12 @@ export async function POST(request: NextRequest) {
     if (transactions.length === 0) {
       return NextResponse.json({
         message: 'No uncategorized transactions found',
+        results: [],
+        applied: [],
+        review: [],
+        appliedCount: 0,
+        reviewCount: 0,
+        confidenceThreshold,
       })
     }
 
@@ -115,8 +135,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update transactions with suggested categories
-    const updatePromises = categorizationResults.map((result) => {
+    const appliedResults = categorizationResults.filter(
+      (result) => result.confidence >= confidenceThreshold
+    )
+    const reviewResults = categorizationResults.filter(
+      (result) => result.confidence < confidenceThreshold
+    )
+
+    // Update transactions with high-confidence categories
+    const updatePromises = appliedResults.map((result) => {
       const normalizedCategory = result.suggestedCategory.trim().toLowerCase()
       const matchedCategoryId = categoryIdByName.get(normalizedCategory)
 
@@ -137,8 +164,13 @@ export async function POST(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      message: `Successfully categorized ${categorizationResults.length} transactions`,
+      message: `Categorized ${appliedResults.length} transactions`,
       results: categorizationResults,
+      applied: appliedResults,
+      review: reviewResults,
+      appliedCount: appliedResults.length,
+      reviewCount: reviewResults.length,
+      confidenceThreshold,
     })
   } catch (error) {
     console.error('Bulk categorization error:', error)

@@ -11,9 +11,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { useNotifications } from '@/components/notification-system'
 import {
   CreditCard,
   AlertTriangle,
@@ -24,6 +33,7 @@ import {
   Edit,
   Zap,
   Loader2,
+  Bell,
 } from 'lucide-react'
 import {
   formatCurrency,
@@ -131,6 +141,7 @@ export default function SubscriptionsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { isDemoMode } = useDemoMode()
+  const { addNotification, setShowNotificationCenter } = useNotifications()
   const { data: subscriptions = [], isLoading } = useSubscriptions()
   const { data: categories = [] } = useCategories()
   const { data: transactions = [] } = useTransactions()
@@ -141,6 +152,7 @@ export default function SubscriptionsPage() {
   const isDeletingSubscription = deleteSubscriptionMutation.isPending
 
   const [addingDetected, setAddingDetected] = useState<Set<string>>(new Set())
+  const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated' && !isDemoMode) {
@@ -477,6 +489,66 @@ export default function SubscriptionsPage() {
       id: subscriptionId,
       updates: { isActive: !subscription.isActive },
     })
+  }
+
+  const handleRenewalReminder = (
+    subscription: Subscription,
+    daysUntilRenewal: number
+  ) => {
+    addNotification({
+      type: 'info',
+      title: 'Renewal reminder set',
+      message:
+        `${subscription.name} renews in ${daysUntilRenewal} days ` +
+        `on ${formatDate(subscription.nextBillingDate)}.`,
+      category: 'reminder',
+      dedupeKey: `subscription-reminder-${subscription.id}`,
+      throttleMinutes: 60 * 24,
+      action: {
+        label: 'View alerts',
+        onClick: () => setShowNotificationCenter(true),
+      },
+    })
+    setShowNotificationCenter(true)
+  }
+
+  const handleConfirmCancel = () => {
+    if (!cancelTarget) return
+    const cancellationNote = `Cancellation requested ${new Date().toLocaleDateString(
+      'en-US'
+    )}`
+    const nextNotes = cancelTarget.notes
+      ? `${cancelTarget.notes} | ${cancellationNote}`
+      : cancellationNote
+
+    updateSubscriptionMutation.mutate(
+      {
+        id: cancelTarget.id,
+        updates: { isActive: false, notes: nextNotes },
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'Cancellation started',
+            description: `${cancelTarget.name} has been paused. Follow the checklist to finish canceling with the provider.`,
+          })
+          addNotification({
+            type: 'warning',
+            title: 'Cancel subscription',
+            message:
+              `${cancelTarget.name} is paused here. Visit the provider to ` +
+              'finish the cancellation and remove payment methods.',
+            category: 'system',
+            action: {
+              label: 'View alerts',
+              onClick: () => setShowNotificationCenter(true),
+            },
+          })
+          setShowNotificationCenter(true)
+          setCancelTarget(null)
+        },
+      }
+    )
   }
 
   return (
@@ -816,6 +888,17 @@ export default function SubscriptionsPage() {
                         {formatDate(subscription.nextBillingDate)}
                       </p>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-3"
+                      onClick={() =>
+                        handleRenewalReminder(subscription, daysUntilRenewal)
+                      }
+                    >
+                      <Bell className="mr-2 h-4 w-4" />
+                      Remind me
+                    </Button>
                   </div>
                 )
               })
@@ -949,6 +1032,15 @@ export default function SubscriptionsPage() {
                     >
                       {subscription.isActive ? 'Pause' : 'Activate'}
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-rose-600 hover:text-rose-600"
+                      onClick={() => setCancelTarget(subscription)}
+                      disabled={isUpdatingSubscription}
+                    >
+                      Cancel
+                    </Button>
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -970,6 +1062,44 @@ export default function SubscriptionsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={Boolean(cancelTarget)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setCancelTarget(null)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Cancel subscription</DialogTitle>
+            <DialogDescription>
+              We will pause this subscription and guide you to finish
+              cancellation with the provider.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4 text-sm">
+            <p className="font-medium text-foreground">Checklist</p>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>Visit the provider billing page.</li>
+              <li>Confirm cancellation and save the confirmation email.</li>
+              <li>Remove saved payment methods if required.</li>
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>
+              Keep active
+            </Button>
+            <Button
+              onClick={handleConfirmCancel}
+              disabled={!cancelTarget || isUpdatingSubscription}
+            >
+              Pause and start cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

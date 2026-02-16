@@ -41,6 +41,11 @@ export interface CategorizationResult {
 export interface BulkCategorizeResponse {
   message: string
   results: CategorizationResult[]
+  applied: CategorizationResult[]
+  review: CategorizationResult[]
+  appliedCount: number
+  reviewCount: number
+  confidenceThreshold: number
 }
 
 // AI Categorization Types

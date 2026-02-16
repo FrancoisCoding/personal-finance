@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,6 +13,13 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import {
@@ -21,6 +28,8 @@ import {
   BulkCategorizeResponse,
   CategorizationResult,
 } from '@/types/api'
+import { useCategories } from '@/hooks/use-finance-data'
+import { formatCurrency } from '@/lib/utils'
 
 interface BulkCategorizeModalProps {
   uncategorizedCount: number
@@ -35,8 +44,14 @@ export function BulkCategorizeModal({
 
   const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<CategorizationResult[]>([])
+  const [reviewResults, setReviewResults] = useState<CategorizationResult[]>([])
+  const [reviewSelections, setReviewSelections] = useState<
+    Record<string, string>
+  >({})
+  const [isApplyingReview, setIsApplyingReview] = useState(false)
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { data: categories = [] } = useCategories()
 
   // Fetch transactions query
   const { data: transactions = [] } = useQuery<TransactionApiResponse[]>({
@@ -77,20 +92,33 @@ export function BulkCategorizeModal({
       return response.json()
     },
     onSuccess: (data) => {
-      setResults(data.results)
+      const applied = data.applied ?? []
+      const review = data.review ?? []
+      setResults(applied)
+      setReviewResults(review)
+      setReviewSelections(
+        review.reduce<Record<string, string>>((acc, item) => {
+          acc[item.transactionId] = item.suggestedCategory
+          return acc
+        }, {})
+      )
       setProgress(100)
       queryClient.invalidateQueries({ queryKey: ['transactions'] })
 
       toast({
         title: 'Categorization complete',
-        description: `Successfully categorized ${data.results.length} transactions.`,
+        description: `Categorized ${applied.length} transactions${
+          review.length > 0 ? ` · ${review.length} need review` : ''
+        }.`,
       })
 
-      setTimeout(() => {
-        setOpen(false)
-        setProgress(0)
-        setResults([])
-      }, 2000)
+      if (review.length === 0) {
+        setTimeout(() => {
+          setOpen(false)
+          setProgress(0)
+          setResults([])
+        }, 2000)
+      }
     },
     onError: (error) => {
       console.error('Bulk categorization error:', error)
@@ -125,6 +153,67 @@ export function BulkCategorizeModal({
 
   // Use mutation loading state
   const loading = bulkCategorizeMutation.isPending
+  const hasReview = reviewResults.length > 0
+  const transactionLookup = useMemo(
+    () =>
+      new Map(transactions.map((transaction) => [transaction.id, transaction])),
+    [transactions]
+  )
+  const reviewItems = useMemo(
+    () =>
+      reviewResults.map((result) => ({
+        result,
+        transaction: transactionLookup.get(result.transactionId),
+      })),
+    [reviewResults, transactionLookup]
+  )
+
+  const handleApplyReview = async () => {
+    if (reviewResults.length === 0) {
+      setOpen(false)
+      setProgress(0)
+      setResults([])
+      return
+    }
+
+    setIsApplyingReview(true)
+    try {
+      await Promise.all(
+        reviewResults.map((result) =>
+          fetch(`/api/transactions/${result.transactionId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              category: reviewSelections[result.transactionId],
+            }),
+          }).then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to update transaction')
+            }
+            return response.json()
+          })
+        )
+      )
+      queryClient.invalidateQueries({ queryKey: ['transactions'] })
+      toast({
+        title: 'Review applied',
+        description: 'Low-confidence suggestions were applied.',
+      })
+      setOpen(false)
+      setProgress(0)
+      setResults([])
+      setReviewResults([])
+    } catch (error) {
+      console.error('Review apply error:', error)
+      toast({
+        title: 'Unable to apply review',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsApplyingReview(false)
+    }
+  }
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -176,7 +265,8 @@ export function BulkCategorizeModal({
           <DialogDescription>
             Use AI to automatically categorize {uncategorizedCount}{' '}
             uncategorized transactions. This will analyze transaction
-            descriptions and assign appropriate categories.
+            descriptions, apply high-confidence matches, and send the rest to
+            review.
           </DialogDescription>
         </DialogHeader>
 
@@ -191,26 +281,26 @@ export function BulkCategorizeModal({
             </div>
           )}
 
-          {results.length > 0 && (
+          {(results.length > 0 || hasReview) && (
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Categorization Results</h4>
               <div className="max-h-60 overflow-y-auto space-y-2">
-                {results.slice(0, 10).map((result, index) => {
+                {results.map((result, index) => {
                   const categoryName = result.suggestedCategory
                   return (
                     <div
-                      key={index}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      key={`${result.transactionId}-${index}`}
+                      className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-2"
                     >
                       <div className="flex items-center space-x-2">
                         <span
                           className={`h-2 w-2 rounded-full ${
                             result.confidence > 0.7
-                              ? 'bg-green-500'
-                              : 'bg-yellow-500'
+                              ? 'bg-emerald-500'
+                              : 'bg-amber-500'
                           }`}
                         />
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-muted-foreground">
                           {result.reason.includes('"')
                             ? result.reason.split('"')[1]
                             : 'Transaction'}
@@ -222,12 +312,103 @@ export function BulkCategorizeModal({
                     </div>
                   )
                 })}
-                {results.length > 10 && (
-                  <div className="text-sm text-gray-500 text-center">
-                    ... and {results.length - 10} more transactions
+                {hasReview && (
+                  <div className="rounded-lg border border-dashed border-border/60 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
+                    {reviewResults.length} transaction
+                    {reviewResults.length === 1 ? '' : 's'} need review below.
                   </div>
                 )}
               </div>
+              {hasReview && !loading && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground">
+                      Review low-confidence suggestions
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={handleApplyReview}
+                      disabled={isApplyingReview}
+                    >
+                      {isApplyingReview ? 'Applying...' : 'Apply all'}
+                    </Button>
+                  </div>
+                  <div className="max-h-60 space-y-2 overflow-y-auto pr-2">
+                    {reviewItems.map(({ result, transaction }) => (
+                      <div
+                        key={result.transactionId}
+                        className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 space-y-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {transaction?.description ?? 'Transaction'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {transaction?.date
+                                ? new Date(transaction.date).toLocaleDateString(
+                                    'en-US'
+                                  )
+                                : 'Unknown date'}{' '}
+                              ·{' '}
+                              {formatCurrency(
+                                Math.abs(transaction?.amount ?? 0)
+                              )}
+                            </p>
+                          </div>
+                          <div className="w-44">
+                            <Select
+                              value={reviewSelections[result.transactionId]}
+                              onValueChange={(value) =>
+                                setReviewSelections((prev) => ({
+                                  ...prev,
+                                  [result.transactionId]: value,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.name}
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setOpen(false)
+                        setProgress(0)
+                        setResults([])
+                        setReviewResults([])
+                      }}
+                    >
+                      Review later
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleApplyReview}
+                      disabled={isApplyingReview}
+                    >
+                      Apply suggestions
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -472,7 +472,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       type: 'text/csv;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
-    const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
     const link = document.createElement('a')
     link.href = url
     link.download = `financial-report-${reportDateStamp}.csv`

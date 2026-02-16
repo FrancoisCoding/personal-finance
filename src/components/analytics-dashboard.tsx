@@ -62,7 +62,6 @@ interface AnalyticsDashboardProps {
 }
 
 type ReportFrequency = 'Weekly' | 'Monthly'
-type ReportDelivery = 'Download' | 'Email'
 
 const CHART_COLORS = [
   '#14b8a6',
@@ -102,15 +101,11 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     frequency: ReportFrequency
     day: string
     time: string
-    delivery: ReportDelivery
-    recipient: string
   }>({
     enabled: false,
     frequency: 'Monthly',
     day: '1',
     time: '09:00',
-    delivery: 'Download',
-    recipient: '',
   })
 
   useEffect(() => {
@@ -744,34 +739,19 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       return
     }
 
-    if (
-      reportSchedule.delivery === 'Email' &&
-      !reportSchedule.recipient.trim()
-    ) {
-      toast({
-        title: 'Recipient required',
-        description: 'Add an email address to deliver scheduled reports.',
-      })
-      return
-    }
-
     const scheduleDayLabel =
       reportSchedule.frequency === 'Weekly'
         ? (weeklyOptions.find((option) => option.value === reportSchedule.day)
             ?.label ?? 'Monday')
         : `Day ${reportSchedule.day}`
     const scheduleTimeLabel = formatScheduleTime(reportSchedule.time)
-    const deliveryLabel =
-      reportSchedule.delivery === 'Email'
-        ? reportSchedule.recipient
-        : 'Download'
 
     addNotification({
       type: 'info',
       title: 'Report schedule updated',
       message:
         `${reportSchedule.frequency} report on ${scheduleDayLabel} at ` +
-        `${scheduleTimeLabel}. Delivery: ${deliveryLabel}.`,
+        `${scheduleTimeLabel}.`,
       category: 'system',
       showToast: false,
     })
@@ -1055,7 +1035,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                 Reporting & Export
               </h4>
               <p className="text-xs text-muted-foreground">
-                Clean CSV and PDF exports with scheduling for delivery.
+                Clean CSV and PDF exports with scheduling built in.
               </p>
             </div>
             <Badge
@@ -1113,7 +1093,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                     Schedule reports
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Automate weekly or monthly delivery.
+                    Automate weekly or monthly exports.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1208,48 +1188,10 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                   <Label className="text-xs text-muted-foreground">
                     Delivery
                   </Label>
-                  <Select
-                    value={reportSchedule.delivery}
-                    onValueChange={(value) =>
-                      setReportSchedule((prev) => ({
-                        ...prev,
-                        delivery: value as ReportDelivery,
-                      }))
-                    }
-                    disabled={!reportSchedule.enabled}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select delivery" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Download">Download</SelectItem>
-                      <SelectItem value="Email">Email</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {reportSchedule.delivery === 'Email' && (
-                  <div className="space-y-1 md:col-span-2">
-                    <Label
-                      htmlFor="report-recipient"
-                      className="text-xs text-muted-foreground"
-                    >
-                      Recipient email
-                    </Label>
-                    <Input
-                      id="report-recipient"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={reportSchedule.recipient}
-                      onChange={(event) =>
-                        setReportSchedule((prev) => ({
-                          ...prev,
-                          recipient: event.target.value,
-                        }))
-                      }
-                      disabled={!reportSchedule.enabled}
-                    />
+                  <div className="flex h-10 items-center rounded-md border border-border/60 bg-muted/30 px-3 text-sm text-muted-foreground">
+                    Download
                   </div>
-                )}
+                </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
                 <div>

@@ -435,6 +435,73 @@ export default function DashboardPage() {
     return cleaned || trimmedDescription
   }, [])
 
+  const inferDonationCause = useCallback(
+    (category: string | undefined, description: string) => {
+      const normalizedCategory = category?.toLowerCase() ?? ''
+      const normalizedDescription = description.toLowerCase()
+
+      const causeMatchers = [
+        {
+          name: 'Church',
+          keywords: [
+            'church',
+            'chapel',
+            'parish',
+            'ministry',
+            'tithe',
+            'offering',
+            'igrej',
+          ],
+        },
+        {
+          name: 'Charity',
+          keywords: [
+            'charity',
+            'foundation',
+            'nonprofit',
+            'ngo',
+            'donation',
+            'relief',
+          ],
+        },
+        {
+          name: 'Community',
+          keywords: ['community', 'food bank', 'shelter', 'outreach'],
+        },
+        {
+          name: 'Education',
+          keywords: ['school', 'education', 'scholar', 'university', 'college'],
+        },
+        {
+          name: 'Health',
+          keywords: ['hospital', 'medical', 'clinic', 'health'],
+        },
+      ]
+
+      for (const matcher of causeMatchers) {
+        if (
+          matcher.keywords.some(
+            (keyword) =>
+              normalizedDescription.includes(keyword) ||
+              normalizedCategory.includes(keyword)
+          )
+        ) {
+          return matcher.name
+        }
+      }
+
+      if (
+        normalizedCategory.includes('donation') ||
+        normalizedCategory.includes('charity')
+      ) {
+        return 'Charity'
+      }
+
+      return 'Other'
+    },
+    []
+  )
+
   const donationSummary = useMemo(() => {
     const donationCategoryNames = new Set([
       'charity',
@@ -455,14 +522,15 @@ export default function DashboardPage() {
       'giving',
       'igreja',
     ]
-    const thirtyDaysAgo = new Date()
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now)
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const ninetyDaysAgo = new Date(now)
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
 
     const donationTransactions = transformedTransactions.filter(
       (transaction) => {
         if (transaction.type !== 'EXPENSE') return false
-        const transactionDate = new Date(transaction.date)
-        if (transactionDate < thirtyDaysAgo) return false
         const category = transaction.category?.toLowerCase() ?? ''
         const description = transaction.description.toLowerCase()
 
@@ -471,6 +539,13 @@ export default function DashboardPage() {
           donationKeywords.some((keyword) => description.includes(keyword))
         )
       }
+    )
+
+    const recentDonations = donationTransactions.filter(
+      (transaction) => new Date(transaction.date) >= thirtyDaysAgo
+    )
+    const recurringWindow = donationTransactions.filter(
+      (transaction) => new Date(transaction.date) >= ninetyDaysAgo
     )
 
     const recipientMap = new Map<
@@ -484,7 +559,7 @@ export default function DashboardPage() {
       }
     >()
 
-    donationTransactions.forEach((transaction) => {
+    recentDonations.forEach((transaction) => {
       const recipientName = normalizeDonationRecipient(transaction.description)
       const existing = recipientMap.get(recipientName)
       const transactionDate = new Date(transaction.date)
@@ -512,6 +587,16 @@ export default function DashboardPage() {
       recipientMap.set(recipientName, existing)
     })
 
+    const causeTotals = new Map<string, number>()
+    recentDonations.forEach((transaction) => {
+      const cause = inferDonationCause(
+        transaction.category,
+        transaction.description
+      )
+      const currentTotal = causeTotals.get(cause) ?? 0
+      causeTotals.set(cause, currentTotal + Math.abs(transaction.amount))
+    })
+
     const entries = Array.from(recipientMap.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 4)
@@ -522,17 +607,96 @@ export default function DashboardPage() {
         lastDate: entry.lastDate,
       }))
 
-    const total = donationTransactions.reduce(
+    const total = recentDonations.reduce(
       (sum, transaction) => sum + Math.abs(transaction.amount),
       0
     )
 
+    const causes = Array.from(causeTotals.entries())
+      .map(([name, value]) => ({
+        name,
+        total: value,
+        percent: total > 0 ? (value / total) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4)
+
+    const cadenceFromMedian = (medianDays: number) => {
+      if (medianDays <= 9) return { label: 'Weekly', days: 7 }
+      if (medianDays <= 17) return { label: 'Biweekly', days: 14 }
+      if (medianDays <= 45) return { label: 'Monthly', days: 30 }
+      if (medianDays <= 110) return { label: 'Quarterly', days: 90 }
+      if (medianDays <= 370) return { label: 'Yearly', days: 365 }
+      return { label: 'Recurring', days: Math.round(medianDays) }
+    }
+
+    const recurringMap = new Map<string, { dates: Date[]; amounts: number[] }>()
+
+    recurringWindow.forEach((transaction) => {
+      const recipientName = normalizeDonationRecipient(transaction.description)
+      const existing = recurringMap.get(recipientName)
+      const transactionDate = new Date(transaction.date)
+
+      if (!existing) {
+        recurringMap.set(recipientName, {
+          dates: [transactionDate],
+          amounts: [Math.abs(transaction.amount)],
+        })
+        return
+      }
+
+      existing.dates.push(transactionDate)
+      existing.amounts.push(Math.abs(transaction.amount))
+      recurringMap.set(recipientName, existing)
+    })
+
+    const recurring = Array.from(recurringMap.entries())
+      .map(([name, data]) => {
+        if (data.dates.length < 2) return null
+        const sortedDates = [...data.dates].sort(
+          (a, b) => a.getTime() - b.getTime()
+        )
+        const intervals = sortedDates
+          .slice(1)
+          .map((date, index) => {
+            const prevDate = sortedDates[index]
+            return Math.round(
+              (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
+            )
+          })
+          .filter((interval) => interval > 0)
+
+        if (intervals.length === 0) return null
+
+        const medianInterval = getMedian(intervals)
+        const cadence = cadenceFromMedian(medianInterval)
+        const lastDate = sortedDates[sortedDates.length - 1]
+        const nextDate = new Date(lastDate)
+        nextDate.setDate(nextDate.getDate() + cadence.days)
+        const average =
+          data.amounts.reduce((sum, value) => sum + value, 0) /
+          data.amounts.length
+
+        return {
+          name,
+          average,
+          cadence: cadence.label,
+          lastDate: lastDate.toLocaleDateString('en-US'),
+          nextDate: nextDate.toLocaleDateString('en-US'),
+        }
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+      .sort((a, b) => b.average - a.average)
+      .slice(0, 3)
+
     return {
       entries,
+      causes,
+      recurring,
       total,
-      hasData: donationTransactions.length > 0,
+      hasData: recentDonations.length > 0,
     }
-  }, [normalizeDonationRecipient, transformedTransactions])
+  }, [inferDonationCause, normalizeDonationRecipient, transformedTransactions])
 
   const recentTransactions = useMemo(
     () =>
@@ -1198,6 +1362,8 @@ export default function DashboardPage() {
               <div data-demo-step="demo-donations" className="h-full">
                 <DonationsCard
                   entries={donationSummary.entries}
+                  causes={donationSummary.causes}
+                  recurring={donationSummary.recurring}
                   total={donationSummary.total}
                   hasData={donationSummary.hasData}
                   className="h-full"

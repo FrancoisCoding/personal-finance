@@ -865,40 +865,53 @@ export default function SubscriptionsPage() {
                   <div
                     key={subscription.id}
                     className={
-                      'flex items-center justify-between rounded-lg border ' +
-                      'border-border/60 bg-muted/20 p-3'
+                      'flex flex-col gap-3 rounded-xl border border-border/60 ' +
+                      'bg-muted/20 p-4 sm:flex-row sm:items-center ' +
+                      'sm:justify-between'
                     }
                   >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
+                    <div className="min-w-0 space-y-1">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {subscription.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatCurrency(subscription.amount)} -{' '}
+                        {formatCurrency(subscription.amount)} ·{' '}
                         {subscription.billingCycle.toLowerCase()}
                       </p>
                     </div>
-                    <div className="text-right text-xs">
-                      <p className="font-medium text-foreground">
-                        {daysUntilRenewal <= 1
-                          ? 'Soon'
-                          : `${daysUntilRenewal} days`}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {formatDate(subscription.nextBillingDate)}
-                      </p>
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                      <div className="text-right">
+                        <span
+                          className={
+                            'inline-flex items-center rounded-full border px-2 py-0.5 ' +
+                            'text-[11px] font-semibold ' +
+                            (daysUntilRenewal <= 1
+                              ? 'border-rose-500/40 bg-rose-500/10 text-rose-500'
+                              : daysUntilRenewal <= 7
+                                ? 'border-amber-500/40 bg-amber-500/10 text-amber-500'
+                                : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500')
+                          }
+                        >
+                          {daysUntilRenewal <= 1
+                            ? 'Renews soon'
+                            : `In ${daysUntilRenewal} days`}
+                        </span>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatDate(subscription.nextBillingDate)}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 w-9 rounded-full border border-border/60"
+                        onClick={() =>
+                          handleRenewalReminder(subscription, daysUntilRenewal)
+                        }
+                        aria-label={`Remind me about ${subscription.name}`}
+                      >
+                        <Bell className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-3"
-                      onClick={() =>
-                        handleRenewalReminder(subscription, daysUntilRenewal)
-                      }
-                    >
-                      <Bell className="mr-2 h-4 w-4" />
-                      Remind me
-                    </Button>
                   </div>
                 )
               })

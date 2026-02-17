@@ -21,6 +21,14 @@ import {
 import { formatCurrency } from '@/lib/utils'
 
 type TForecastStatus = 'healthy' | 'warning' | 'over'
+type TBudgetPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+
+const periodLabels: Record<TBudgetPeriod, string> = {
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly',
+  MONTHLY: 'Monthly',
+  YEARLY: 'Yearly',
+}
 
 export default function BudgetsPage() {
   const [isCreateBudgetModalOpen, setIsCreateBudgetModalOpen] = useState(false)
@@ -210,6 +218,8 @@ export default function BudgetsPage() {
         return {
           id: budget.id,
           name: budget.name,
+          period: budget.period ?? 'MONTHLY',
+          categoryName,
           amount: budget.amount,
           spentToDate,
           projectedSpend,
@@ -218,6 +228,11 @@ export default function BudgetsPage() {
           currentUtilization,
           status,
           daysUntilOverBudget,
+          daysRemainingInWindow,
+          recommendedDailyCap:
+            remainingAmount > 0 && daysRemainingInWindow > 0
+              ? remainingAmount / (daysRemainingInWindow + 1)
+              : 0,
           likelyOverrunDate,
         }
       })
@@ -255,6 +270,182 @@ export default function BudgetsPage() {
       ),
     }
   }, [budgetForecastItems, budgets])
+
+  const periodMix = useMemo(() => {
+    const totals: Record<TBudgetPeriod, { count: number; amount: number }> = {
+      DAILY: { count: 0, amount: 0 },
+      WEEKLY: { count: 0, amount: 0 },
+      MONTHLY: { count: 0, amount: 0 },
+      YEARLY: { count: 0, amount: 0 },
+    }
+
+    budgets.forEach((budget) => {
+      const period = budget.period ?? 'MONTHLY'
+      totals[period].count += 1
+      totals[period].amount += budget.amount
+    })
+
+    const maxAmount = Math.max(
+      1,
+      ...Object.values(totals).map((periodItem) => periodItem.amount)
+    )
+
+    return (Object.keys(totals) as TBudgetPeriod[]).map((period) => ({
+      period,
+      label: periodLabels[period],
+      count: totals[period].count,
+      amount: totals[period].amount,
+      utilization: (totals[period].amount / maxAmount) * 100,
+    }))
+  }, [budgets])
+
+  const coverageMetrics = useMemo(() => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const monthlyExpenses = transactionDateEntries.filter(
+      ({ transaction, transactionDate }) =>
+        transaction.type === 'EXPENSE' && transactionDate >= monthStart
+    )
+
+    const totalMonthlyExpenses = monthlyExpenses.reduce(
+      (sum, { transaction }) => sum + Math.abs(transaction.amount),
+      0
+    )
+
+    const uncategorizedMonthlyExpenses = monthlyExpenses
+      .filter(
+        ({ transaction }) =>
+          !transaction.categoryId &&
+          !transaction.categoryRelation?.name &&
+          (!transaction.category || transaction.category === 'Other')
+      )
+      .reduce((sum, { transaction }) => sum + Math.abs(transaction.amount), 0)
+
+    const budgetCategoryNames = new Set(
+      budgets
+        .map((budget) => {
+          if (budget.category?.name) return budget.category.name
+          if (budget.categoryId) return categoryLookup.get(budget.categoryId)
+          return null
+        })
+        .filter((name): name is string => Boolean(name))
+    )
+
+    const coveredMonthlyExpenses = monthlyExpenses
+      .filter(({ transaction }) => {
+        const transactionCategoryName =
+          transaction.categoryRelation?.name ||
+          categoryLookup.get(transaction.categoryId ?? '') ||
+          transaction.category
+        return (
+          typeof transactionCategoryName === 'string' &&
+          budgetCategoryNames.has(transactionCategoryName)
+        )
+      })
+      .reduce((sum, { transaction }) => sum + Math.abs(transaction.amount), 0)
+
+    const categoryScopedBudgetCount = budgets.filter(
+      (budget) => budget.categoryId || budget.category?.name
+    ).length
+
+    return {
+      totalMonthlyExpenses,
+      uncategorizedMonthlyExpenses,
+      coveredMonthlyExpenses,
+      coveragePercent:
+        totalMonthlyExpenses > 0
+          ? (coveredMonthlyExpenses / totalMonthlyExpenses) * 100
+          : 0,
+      categoryScopedBudgetCount,
+      unscopedBudgetCount: Math.max(
+        0,
+        budgets.length - categoryScopedBudgetCount
+      ),
+    }
+  }, [budgets, categoryLookup, transactionDateEntries])
+
+  const actionableInsights = useMemo(() => {
+    const insights: Array<{
+      id: string
+      tone: 'critical' | 'warning' | 'positive' | 'info'
+      title: string
+      detail: string
+    }> = []
+
+    const topRiskBudget = budgetForecastItems.find(
+      (item) => item.status === 'over'
+    )
+    if (topRiskBudget) {
+      insights.push({
+        id: 'top-risk-budget',
+        tone: 'critical',
+        title: `${topRiskBudget.name} is projected over budget`,
+        detail: `Projected overrun ${formatCurrency(
+          Math.max(0, topRiskBudget.projectedSpend - topRiskBudget.amount)
+        )}.`,
+      })
+    }
+
+    const topWarningBudget = budgetForecastItems.find(
+      (item) => item.status === 'warning'
+    )
+    if (topWarningBudget) {
+      insights.push({
+        id: 'top-warning-budget',
+        tone: 'warning',
+        title: `${topWarningBudget.name} is nearing its limit`,
+        detail: `Recommended daily cap: ${formatCurrency(
+          topWarningBudget.recommendedDailyCap
+        )}.`,
+      })
+    }
+
+    if (coverageMetrics.uncategorizedMonthlyExpenses > 0) {
+      insights.push({
+        id: 'uncategorized-expenses',
+        tone: 'warning',
+        title: 'Uncategorized expenses are reducing forecast accuracy',
+        detail: `${formatCurrency(
+          coverageMetrics.uncategorizedMonthlyExpenses
+        )} is uncategorized this month.`,
+      })
+    }
+
+    if (coverageMetrics.unscopedBudgetCount > 0) {
+      insights.push({
+        id: 'unscoped-budgets',
+        tone: 'info',
+        title: 'Some budgets are not category-scoped',
+        detail: `${coverageMetrics.unscopedBudgetCount} budget(s) apply broadly and can overlap reporting.`,
+      })
+    }
+
+    if (
+      !topRiskBudget &&
+      !topWarningBudget &&
+      budgetForecastItems.length > 0 &&
+      budgetSummary.projectedOverrun <= 0
+    ) {
+      insights.push({
+        id: 'healthy-outlook',
+        tone: 'positive',
+        title: 'Budgets are currently on track',
+        detail: 'No projected overruns across active budget windows.',
+      })
+    }
+
+    if (budgetForecastItems.length === 0) {
+      insights.push({
+        id: 'no-budgets',
+        tone: 'info',
+        title: 'Create your first budget to unlock forecasting',
+        detail: 'Add category-scoped budgets for the clearest insights.',
+      })
+    }
+
+    return insights.slice(0, 4)
+  }, [budgetForecastItems, budgetSummary.projectedOverrun, coverageMetrics])
 
   return (
     <div className="space-y-6">
@@ -313,6 +504,75 @@ export default function BudgetsPage() {
             <p className="mt-1 text-2xl font-semibold text-rose-600 dark:text-rose-300">
               {budgetSummary.overCount + budgetSummary.warningCount}
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Projected overrun {formatCurrency(budgetSummary.projectedOverrun)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="border-border/70 bg-card/90 shadow-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Actionable Insights</CardTitle>
+            <CardDescription>
+              Highest-impact adjustments based on current budget behavior.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {actionableInsights.map((insight) => (
+              <div
+                key={insight.id}
+                className="rounded-xl border border-border/60 bg-muted/10 p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    {insight.title}
+                  </p>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      insight.tone === 'critical'
+                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                        : insight.tone === 'warning'
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                          : insight.tone === 'positive'
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-sky-500/10 text-sky-700 dark:text-sky-300'
+                    }`}
+                  >
+                    {insight.tone}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {insight.detail}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/90 shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Period Mix</CardTitle>
+            <CardDescription>
+              Allocation across budget cadences.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {periodMix.map((periodItem) => (
+              <div key={periodItem.period} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <p className="font-medium text-foreground">
+                    {periodItem.label}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {periodItem.count} budgets ·{' '}
+                    {formatCurrency(periodItem.amount)}
+                  </p>
+                </div>
+                <Progress value={periodItem.utilization} className="h-1.5" />
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -418,6 +678,102 @@ export default function BudgetsPage() {
             ) : (
               <p className="text-sm text-muted-foreground">No budgets yet.</p>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="border-border/70 bg-card/90 shadow-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Runway Guidance</CardTitle>
+            <CardDescription>
+              Daily caps to prevent overruns before the budget window closes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {budgetForecastItems.length > 0 ? (
+              budgetForecastItems.slice(0, 6).map((forecast) => (
+                <div
+                  key={`runway-${forecast.id}`}
+                  className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {forecast.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {periodLabels[forecast.period]}
+                    </p>
+                  </div>
+                  <div className="mt-2 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                    <p>
+                      Remaining:{' '}
+                      {formatCurrency(Math.max(0, forecast.remainingAmount))}
+                    </p>
+                    <p>Days left: {forecast.daysRemainingInWindow}</p>
+                    <p>
+                      Daily cap:{' '}
+                      {formatCurrency(
+                        Math.max(0, forecast.recommendedDailyCap)
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Add budgets to calculate runway guidance.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/90 shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Coverage Quality</CardTitle>
+            <CardDescription>
+              How much this month&apos;s spend is represented by active budgets.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div>
+              <div className="flex items-center justify-between text-xs">
+                <p className="font-medium text-foreground">Coverage</p>
+                <p className="text-muted-foreground">
+                  {coverageMetrics.coveragePercent.toFixed(0)}%
+                </p>
+              </div>
+              <Progress
+                value={coverageMetrics.coveragePercent}
+                className="mt-2 h-2"
+              />
+            </div>
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <p>
+                Covered expenses:{' '}
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(coverageMetrics.coveredMonthlyExpenses)}
+                </span>
+              </p>
+              <p>
+                Uncategorized expenses:{' '}
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(coverageMetrics.uncategorizedMonthlyExpenses)}
+                </span>
+              </p>
+              <p>
+                Category-scoped budgets:{' '}
+                <span className="font-semibold text-foreground">
+                  {coverageMetrics.categoryScopedBudgetCount}
+                </span>
+              </p>
+              <p>
+                Unscoped budgets:{' '}
+                <span className="font-semibold text-foreground">
+                  {coverageMetrics.unscopedBudgetCount}
+                </span>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

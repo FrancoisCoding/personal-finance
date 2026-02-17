@@ -46,6 +46,7 @@ import {
   useCreditCardUtilization,
   useSeedCategories,
   useCreditCards,
+  useSubscriptions,
   queryKeys,
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
@@ -221,6 +222,8 @@ export default function DashboardPage() {
     useCategories()
   const { data: creditCards = [], isLoading: isCreditCardsLoading } =
     useCreditCards()
+  const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
+    useSubscriptions()
   const seedCategoriesMutation = useSeedCategories()
   const isLoading =
     isAccountsLoading ||
@@ -466,6 +469,471 @@ export default function DashboardPage() {
       ? (sorted[mid - 1] + sorted[mid]) / 2
       : sorted[mid]
   }, [])
+
+  const liquidCashBalance = useMemo(() => {
+    const liquidAccounts = accounts.filter(
+      (account) => account.type === 'CHECKING' || account.type === 'SAVINGS'
+    )
+    if (liquidAccounts.length === 0) {
+      return totalBalance
+    }
+    return liquidAccounts.reduce((sum, account) => sum + account.balance, 0)
+  }, [accounts, totalBalance])
+
+  const budgetForecastItems = useMemo(() => {
+    const now = new Date()
+    const startOfToday = new Date(now)
+    startOfToday.setHours(0, 0, 0, 0)
+    const millisecondsPerDay = 24 * 60 * 60 * 1000
+
+    const getBudgetWindow = (budget: (typeof budgets)[number]) => {
+      const { period, isRecurring } = budget
+      if (!isRecurring) {
+        const windowStart = budget.startDate
+          ? new Date(budget.startDate)
+          : new Date(startOfToday)
+        windowStart.setHours(0, 0, 0, 0)
+        const windowEnd = budget.endDate
+          ? new Date(budget.endDate)
+          : new Date(windowStart)
+        windowEnd.setHours(23, 59, 59, 999)
+        return { windowStart, windowEnd }
+      }
+
+      if (period === 'WEEKLY') {
+        const start = new Date(startOfToday)
+        const dayOfWeek = start.getDay()
+        const offsetToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+        start.setDate(start.getDate() - offsetToMonday)
+        const end = new Date(start)
+        end.setDate(end.getDate() + 6)
+        end.setHours(23, 59, 59, 999)
+        return { windowStart: start, windowEnd: end }
+      }
+
+      if (period === 'YEARLY') {
+        const start = new Date(startOfToday.getFullYear(), 0, 1)
+        const end = new Date(
+          startOfToday.getFullYear(),
+          11,
+          31,
+          23,
+          59,
+          59,
+          999
+        )
+        return { windowStart: start, windowEnd: end }
+      }
+
+      if (period === 'DAILY') {
+        const end = new Date(startOfToday)
+        end.setHours(23, 59, 59, 999)
+        return { windowStart: startOfToday, windowEnd: end }
+      }
+
+      const start = new Date(
+        startOfToday.getFullYear(),
+        startOfToday.getMonth(),
+        1
+      )
+      const end = new Date(
+        startOfToday.getFullYear(),
+        startOfToday.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      )
+      return { windowStart: start, windowEnd: end }
+    }
+
+    const getStatusRank = (status: 'healthy' | 'warning' | 'over') => {
+      if (status === 'over') return 3
+      if (status === 'warning') return 2
+      return 1
+    }
+
+    return budgets
+      .map((budget) => {
+        const categoryName =
+          typeof budget.category === 'string'
+            ? budget.category
+            : budget.category?.name
+        const { windowStart, windowEnd } = getBudgetWindow(budget)
+        const effectiveEndTime = Math.min(
+          startOfToday.getTime(),
+          windowEnd.getTime()
+        )
+        const daysElapsed = Math.max(
+          1,
+          Math.floor(
+            (effectiveEndTime - windowStart.getTime()) / millisecondsPerDay
+          ) + 1
+        )
+        const daysInWindow = Math.max(
+          1,
+          Math.floor(
+            (windowEnd.getTime() - windowStart.getTime()) / millisecondsPerDay
+          ) + 1
+        )
+
+        const matchesBudgetCategory = (
+          transaction: (typeof transactions)[number]
+        ) => {
+          if (budget.categoryId) {
+            return transaction.categoryId === budget.categoryId
+          }
+
+          if (categoryName) {
+            const transactionCategoryName =
+              transaction.categoryRelation?.name ||
+              categoryLookup.get(transaction.categoryId ?? '') ||
+              transaction.category
+            return transactionCategoryName === categoryName
+          }
+
+          return true
+        }
+
+        const spentToDate = transactionDateEntries
+          .filter(
+            ({ transaction, transactionDate }) =>
+              transaction.type === 'EXPENSE' &&
+              transactionDate >= windowStart &&
+              transactionDate.getTime() <= effectiveEndTime &&
+              matchesBudgetCategory(transaction)
+          )
+          .reduce(
+            (sum, { transaction }) => sum + Math.abs(transaction.amount),
+            0
+          )
+
+        const projectedSpend = (spentToDate / daysElapsed) * daysInWindow
+        const remainingAmount = budget.amount - spentToDate
+        const averageDailySpend = spentToDate / daysElapsed
+        const projectedUtilization =
+          budget.amount > 0 ? (projectedSpend / budget.amount) * 100 : 0
+        const currentUtilization =
+          budget.amount > 0 ? (spentToDate / budget.amount) * 100 : 0
+
+        let status: 'healthy' | 'warning' | 'over' = 'healthy'
+        if (projectedUtilization >= 100 || currentUtilization >= 100) {
+          status = 'over'
+        } else if (projectedUtilization >= 85 || currentUtilization >= 80) {
+          status = 'warning'
+        }
+
+        const daysUntilOverBudget =
+          averageDailySpend > 0 && remainingAmount > 0
+            ? Math.ceil(remainingAmount / averageDailySpend)
+            : remainingAmount <= 0
+              ? 0
+              : null
+
+        const daysRemainingInWindow = Math.max(
+          0,
+          Math.floor(
+            (windowEnd.getTime() - startOfToday.getTime()) / millisecondsPerDay
+          )
+        )
+        const likelyOverrunDate =
+          daysUntilOverBudget !== null &&
+          daysUntilOverBudget > 0 &&
+          daysUntilOverBudget <= daysRemainingInWindow
+            ? new Date(
+                startOfToday.getTime() +
+                  Math.max(0, daysUntilOverBudget - 1) * millisecondsPerDay
+              )
+            : null
+
+        return {
+          id: budget.id,
+          name: budget.name,
+          amount: budget.amount,
+          spentToDate,
+          projectedSpend,
+          remainingAmount,
+          projectedUtilization,
+          currentUtilization,
+          status,
+          daysUntilOverBudget,
+          likelyOverrunDate,
+        }
+      })
+      .sort(
+        (a, b) =>
+          getStatusRank(b.status) - getStatusRank(a.status) ||
+          b.projectedUtilization - a.projectedUtilization
+      )
+      .slice(0, 4)
+  }, [budgets, categoryLookup, transactionDateEntries])
+
+  const cashFlowPlanningSnapshot = useMemo(() => {
+    type TCashEvent = {
+      id: string
+      title: string
+      date: Date
+      amount: number
+      kind: 'income' | 'expense'
+      source: 'subscription' | 'pattern'
+    }
+
+    const now = new Date()
+    const startOfToday = new Date(now)
+    startOfToday.setHours(0, 0, 0, 0)
+    const horizonDays = 30
+    const day14 = new Date(startOfToday)
+    day14.setDate(day14.getDate() + 14)
+    const horizonEnd = new Date(startOfToday)
+    horizonEnd.setDate(horizonEnd.getDate() + horizonDays)
+    const millisecondsPerDay = 24 * 60 * 60 * 1000
+
+    const events: TCashEvent[] = []
+    const addBillingCycle = (
+      date: Date,
+      billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'WEEKLY' | 'CUSTOM'
+    ) => {
+      const next = new Date(date)
+      if (billingCycle === 'WEEKLY') {
+        next.setDate(next.getDate() + 7)
+        return next
+      }
+      if (billingCycle === 'QUARTERLY') {
+        next.setMonth(next.getMonth() + 3)
+        return next
+      }
+      if (billingCycle === 'YEARLY') {
+        next.setFullYear(next.getFullYear() + 1)
+        return next
+      }
+      if (billingCycle === 'MONTHLY') {
+        next.setMonth(next.getMonth() + 1)
+        return next
+      }
+      return next
+    }
+
+    subscriptions.forEach((subscription) => {
+      if (!subscription.isActive) {
+        return
+      }
+
+      const billingCycle = subscription.billingCycle
+      let nextDate = new Date(subscription.nextBillingDate)
+      nextDate.setHours(0, 0, 0, 0)
+      let guard = 0
+
+      while (nextDate <= horizonEnd && guard < 18) {
+        if (nextDate >= startOfToday) {
+          events.push({
+            id: `subscription-${subscription.id}-${nextDate.toISOString().slice(0, 10)}`,
+            title: subscription.name,
+            date: new Date(nextDate),
+            amount: Math.abs(subscription.amount),
+            kind: 'expense',
+            source: 'subscription',
+          })
+        }
+
+        if (billingCycle === 'CUSTOM') {
+          break
+        }
+
+        nextDate = addBillingCycle(nextDate, billingCycle)
+        guard += 1
+      }
+    })
+
+    const historyStart = new Date(startOfToday)
+    historyStart.setDate(historyStart.getDate() - 120)
+    const groupedPatterns = new Map<
+      string,
+      {
+        type: 'INCOME' | 'EXPENSE'
+        description: string
+        dates: Date[]
+        amounts: number[]
+        isRecurring: boolean
+      }
+    >()
+
+    transactionDateEntries.forEach(({ transaction, transactionDate }) => {
+      if (transactionDate < historyStart || transaction.type === 'TRANSFER') {
+        return
+      }
+      const normalizedDescription = transaction.description
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+      const patternKey = `${transaction.type}|${normalizedDescription}`
+      const existing = groupedPatterns.get(patternKey)
+      if (!existing) {
+        groupedPatterns.set(patternKey, {
+          type: transaction.type,
+          description: transaction.description.trim(),
+          dates: [transactionDate],
+          amounts: [Math.abs(transaction.amount)],
+          isRecurring: transaction.isRecurring,
+        })
+        return
+      }
+
+      existing.dates.push(transactionDate)
+      existing.amounts.push(Math.abs(transaction.amount))
+      existing.isRecurring = existing.isRecurring || transaction.isRecurring
+      groupedPatterns.set(patternKey, existing)
+    })
+
+    groupedPatterns.forEach((pattern, patternKey) => {
+      if (pattern.dates.length < 2) {
+        return
+      }
+
+      const sortedDates = [...pattern.dates].sort(
+        (a, b) => a.getTime() - b.getTime()
+      )
+      const intervals = sortedDates
+        .slice(1)
+        .map((date, index) =>
+          Math.round(
+            (date.getTime() - sortedDates[index].getTime()) / millisecondsPerDay
+          )
+        )
+        .filter((value) => value > 0)
+
+      if (intervals.length === 0) {
+        return
+      }
+
+      const medianInterval = getMedian(intervals)
+      if (medianInterval < 10 || medianInterval > 45) {
+        return
+      }
+
+      if (
+        !pattern.isRecurring &&
+        pattern.type === 'EXPENSE' &&
+        pattern.dates.length < 3
+      ) {
+        return
+      }
+
+      const averageAmount =
+        pattern.amounts.reduce((sum, amount) => sum + amount, 0) /
+        pattern.amounts.length
+      const minAmount = Math.min(...pattern.amounts)
+      const maxAmount = Math.max(...pattern.amounts)
+      if (
+        averageAmount <= 0 ||
+        (maxAmount - minAmount) / averageAmount > 0.45
+      ) {
+        return
+      }
+
+      let nextDate = new Date(sortedDates[sortedDates.length - 1])
+      let guard = 0
+      while (nextDate <= horizonEnd && guard < 6) {
+        nextDate = new Date(
+          nextDate.getTime() + Math.round(medianInterval) * millisecondsPerDay
+        )
+        if (nextDate > horizonEnd) {
+          break
+        }
+        if (nextDate < startOfToday) {
+          guard += 1
+          continue
+        }
+
+        const title =
+          pattern.description.length > 36
+            ? `${pattern.description.slice(0, 36).trimEnd()}...`
+            : pattern.description
+        events.push({
+          id: `pattern-${patternKey}-${nextDate.toISOString().slice(0, 10)}-${guard}`,
+          title,
+          date: new Date(nextDate),
+          amount: averageAmount,
+          kind: pattern.type === 'INCOME' ? 'income' : 'expense',
+          source: 'pattern',
+        })
+        guard += 1
+      }
+    })
+
+    const sortedEvents = events.sort(
+      (a, b) =>
+        a.date.getTime() - b.date.getTime() || a.title.localeCompare(b.title)
+    )
+    const eventsIn14 = sortedEvents.filter((event) => event.date <= day14)
+    const income14 = eventsIn14
+      .filter((event) => event.kind === 'income')
+      .reduce((sum, event) => sum + event.amount, 0)
+    const expenses14 = eventsIn14
+      .filter((event) => event.kind === 'expense')
+      .reduce((sum, event) => sum + event.amount, 0)
+    const income30 = sortedEvents
+      .filter((event) => event.kind === 'income')
+      .reduce((sum, event) => sum + event.amount, 0)
+    const expenses30 = sortedEvents
+      .filter((event) => event.kind === 'expense')
+      .reduce((sum, event) => sum + event.amount, 0)
+
+    const dailyBuckets = new Map<string, { income: number; expenses: number }>()
+    Array.from({ length: horizonDays }, (_, dayOffset) => {
+      const day = new Date(startOfToday)
+      day.setDate(day.getDate() + dayOffset)
+      dailyBuckets.set(day.toISOString().slice(0, 10), {
+        income: 0,
+        expenses: 0,
+      })
+    })
+
+    sortedEvents.forEach((event) => {
+      const dayKey = event.date.toISOString().slice(0, 10)
+      const bucket = dailyBuckets.get(dayKey)
+      if (!bucket) {
+        return
+      }
+      if (event.kind === 'income') {
+        bucket.income += event.amount
+      } else {
+        bucket.expenses += event.amount
+      }
+      dailyBuckets.set(dayKey, bucket)
+    })
+
+    const lowCashThreshold = Math.max(250, liquidCashBalance * 0.15)
+    let projectedBalance = liquidCashBalance
+    const timeline = Array.from({ length: horizonDays }, (_, dayOffset) => {
+      const day = new Date(startOfToday)
+      day.setDate(day.getDate() + dayOffset)
+      const dayKey = day.toISOString().slice(0, 10)
+      const bucket = dailyBuckets.get(dayKey) ?? { income: 0, expenses: 0 }
+      const delta = bucket.income - bucket.expenses
+      projectedBalance += delta
+      return {
+        day,
+        dayKey,
+        delta,
+        endingBalance: projectedBalance,
+        isLowCashDay: projectedBalance < lowCashThreshold,
+      }
+    })
+
+    return {
+      income14,
+      expenses14,
+      net14: income14 - expenses14,
+      income30,
+      expenses30,
+      net30: income30 - expenses30,
+      lowCashDays: timeline.filter((day) => day.isLowCashDay).length,
+      timeline,
+      upcomingEvents: sortedEvents.slice(0, 8),
+      lowCashThreshold,
+    }
+  }, [getMedian, liquidCashBalance, subscriptions, transactionDateEntries])
 
   const inferDonationCause = useCallback(
     (category: string | undefined, description: string) => {
@@ -1205,6 +1673,249 @@ export default function DashboardPage() {
               netIncome={netIncome}
               creditCardUtilization={creditCardUtilization}
             />
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={0.12}>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <Card
+              className="border-border/70 bg-card/90 shadow-sm xl:col-span-2"
+              data-demo-step="demo-cashflow-planning-strip"
+            >
+              <CardHeader className="border-b border-border/60 pb-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle>Cash Flow Planning Strip</CardTitle>
+                    <CardDescription>
+                      Projected income and outflows over the next 14 and 30
+                      days.
+                    </CardDescription>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Low-cash threshold:{' '}
+                    {formatCurrency(cashFlowPlanningSnapshot.lowCashThreshold)}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Next 14 days
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(cashFlowPlanningSnapshot.net14)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatCurrency(cashFlowPlanningSnapshot.income14)} in ·{' '}
+                      {formatCurrency(cashFlowPlanningSnapshot.expenses14)} out
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Next 30 days
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(cashFlowPlanningSnapshot.net30)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatCurrency(cashFlowPlanningSnapshot.income30)} in ·{' '}
+                      {formatCurrency(cashFlowPlanningSnapshot.expenses30)} out
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Low-cash days
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {cashFlowPlanningSnapshot.lowCashDays}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Within projected 30-day balance run.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      Starting cash
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(liquidCashBalance)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Checking + savings balance baseline.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="grid grid-cols-[repeat(30,minmax(0,1fr))] gap-1">
+                    {cashFlowPlanningSnapshot.timeline.map((day) => (
+                      <div
+                        key={day.dayKey}
+                        className={`h-2 rounded-full ${
+                          day.isLowCashDay
+                            ? 'bg-rose-500/90'
+                            : day.delta > 0
+                              ? 'bg-emerald-500/80'
+                              : day.delta < 0
+                                ? 'bg-amber-500/80'
+                                : 'bg-muted'
+                        }`}
+                        title={`${day.day.toLocaleDateString('en-US')}: ${formatCurrency(
+                          day.endingBalance
+                        )}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Today</span>
+                    <span>Day 14</span>
+                    <span>Day 30</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Upcoming expected cash events
+                  </p>
+                  {cashFlowPlanningSnapshot.upcomingEvents.length > 0 ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {cashFlowPlanningSnapshot.upcomingEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/10 px-3 py-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {event.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {event.date.toLocaleDateString('en-US')} ·{' '}
+                              {event.source === 'subscription'
+                                ? 'subscription'
+                                : 'predicted pattern'}
+                            </p>
+                          </div>
+                          <p
+                            className={`text-sm font-semibold ${
+                              event.kind === 'income'
+                                ? 'text-emerald-600 dark:text-emerald-300'
+                                : 'text-rose-600 dark:text-rose-300'
+                            }`}
+                          >
+                            {event.kind === 'income' ? '+' : '-'}
+                            {formatCurrency(event.amount)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-5 text-center">
+                      <p className="text-sm font-medium text-foreground">
+                        Not enough recurring signal yet
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Add recurring transactions or subscriptions to generate
+                        forward cash planning.
+                      </p>
+                    </div>
+                  )}
+                  {isSubscriptionsLoading ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Refreshing subscription schedule...
+                    </p>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="border-border/70 bg-card/90 shadow-sm"
+              data-demo-step="demo-budget-forecast"
+            >
+              <CardHeader className="border-b border-border/60 pb-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <CardTitle>Budget Forecast</CardTitle>
+                    <CardDescription>
+                      Projected month-end utilization and overrun risk.
+                    </CardDescription>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/budgets">Open</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {budgetForecastItems.length > 0 ? (
+                  budgetForecastItems.map((forecast) => (
+                    <div
+                      key={forecast.id}
+                      className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {forecast.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatCurrency(forecast.spentToDate)} spent ·{' '}
+                            {formatCurrency(forecast.amount)} budget
+                          </p>
+                        </div>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                            forecast.status === 'over'
+                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                              : forecast.status === 'warning'
+                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          }`}
+                        >
+                          {forecast.status === 'over'
+                            ? 'Over risk'
+                            : forecast.status === 'warning'
+                              ? 'Watch'
+                              : 'On track'}
+                        </span>
+                      </div>
+                      <div className="mt-3 space-y-1.5">
+                        <Progress
+                          value={Math.min(100, forecast.projectedUtilization)}
+                          className="h-2"
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          Projected: {formatCurrency(forecast.projectedSpend)} (
+                          {forecast.projectedUtilization.toFixed(0)}%)
+                        </p>
+                      </div>
+                      <p className="mt-2 text-[11px] text-muted-foreground">
+                        {forecast.daysUntilOverBudget === 0
+                          ? `Already over by ${formatCurrency(
+                              Math.abs(forecast.remainingAmount)
+                            )}.`
+                          : forecast.likelyOverrunDate
+                            ? `Likely over around ${forecast.likelyOverrunDate.toLocaleDateString(
+                                'en-US'
+                              )}.`
+                            : `Remaining runway: ${formatCurrency(
+                                Math.max(0, forecast.remainingAmount)
+                              )}.`}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      No active budgets yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Create budgets to unlock spend forecasting.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </FadeIn>
 

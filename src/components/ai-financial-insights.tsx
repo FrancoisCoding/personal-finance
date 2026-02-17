@@ -301,10 +301,10 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
   }, [budgets, goals, transactions])
 
   useEffect(() => {
-    if (transactions.length > 0 && budgets.length > 0 && goals.length > 0) {
+    if (transactions.length > 0) {
       generateInsights()
     }
-  }, [generateInsights, transactions.length, budgets.length, goals.length])
+  }, [generateInsights, transactions.length])
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {

@@ -32,6 +32,10 @@ const periodLabels: Record<TBudgetPeriod, string> = {
 
 export default function BudgetsPage() {
   const [isCreateBudgetModalOpen, setIsCreateBudgetModalOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'all' | TForecastStatus>(
+    'all'
+  )
+  const [periodFilter, setPeriodFilter] = useState<'all' | TBudgetPeriod>('all')
   const { data: budgets = [] } = useBudgets()
   const { data: categories = [] } = useCategories()
   const { data: transactions = [] } = useTransactions()
@@ -271,6 +275,29 @@ export default function BudgetsPage() {
     }
   }, [budgetForecastItems, budgets])
 
+  const statusCounts = useMemo(
+    () => ({
+      healthy: budgetForecastItems.filter((item) => item.status === 'healthy')
+        .length,
+      warning: budgetForecastItems.filter((item) => item.status === 'warning')
+        .length,
+      over: budgetForecastItems.filter((item) => item.status === 'over').length,
+    }),
+    [budgetForecastItems]
+  )
+
+  const filteredBudgetForecastItems = useMemo(
+    () =>
+      budgetForecastItems.filter((item) => {
+        const matchesStatus =
+          statusFilter === 'all' ? true : item.status === statusFilter
+        const matchesPeriod =
+          periodFilter === 'all' ? true : item.period === periodFilter
+        return matchesStatus && matchesPeriod
+      }),
+    [budgetForecastItems, periodFilter, statusFilter]
+  )
+
   const periodMix = useMemo(() => {
     const totals: Record<TBudgetPeriod, { count: number; amount: number }> = {
       DAILY: { count: 0, amount: 0 },
@@ -363,6 +390,75 @@ export default function BudgetsPage() {
         budgets.length - categoryScopedBudgetCount
       ),
     }
+  }, [budgets, categoryLookup, transactionDateEntries])
+
+  const overrunTimeline = useMemo(
+    () =>
+      filteredBudgetForecastItems
+        .filter((item) => item.status === 'over' || item.likelyOverrunDate)
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          status: item.status,
+          date: item.likelyOverrunDate,
+          overrunAmount: Math.max(0, item.projectedSpend - item.amount),
+        }))
+        .sort((a, b) => {
+          if (!a.date && !b.date) return b.overrunAmount - a.overrunAmount
+          if (!a.date) return 1
+          if (!b.date) return -1
+          return a.date.getTime() - b.date.getTime()
+        })
+        .slice(0, 5),
+    [filteredBudgetForecastItems]
+  )
+
+  const uncoveredSpendOpportunities = useMemo(() => {
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const budgetCategoryNames = new Set(
+      budgets
+        .map((budget) => {
+          if (budget.category?.name) return budget.category.name
+          if (budget.categoryId) return categoryLookup.get(budget.categoryId)
+          return null
+        })
+        .filter((name): name is string => Boolean(name))
+    )
+
+    const totalsByCategory = new Map<string, number>()
+
+    transactionDateEntries.forEach(({ transaction, transactionDate }) => {
+      if (transaction.type !== 'EXPENSE' || transactionDate < monthStart) {
+        return
+      }
+
+      const categoryName =
+        transaction.categoryRelation?.name ||
+        categoryLookup.get(transaction.categoryId ?? '') ||
+        transaction.category ||
+        'Uncategorized'
+
+      totalsByCategory.set(
+        categoryName,
+        (totalsByCategory.get(categoryName) ?? 0) + Math.abs(transaction.amount)
+      )
+    })
+
+    const totalUncovered = Array.from(totalsByCategory.entries())
+      .filter(([categoryName]) => !budgetCategoryNames.has(categoryName))
+      .reduce((sum, [, amount]) => sum + amount, 0)
+
+    return Array.from(totalsByCategory.entries())
+      .filter(([categoryName]) => !budgetCategoryNames.has(categoryName))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([categoryName, amount]) => ({
+        categoryName,
+        amount,
+        share: totalUncovered > 0 ? (amount / totalUncovered) * 100 : 0,
+      }))
   }, [budgets, categoryLookup, transactionDateEntries])
 
   const actionableInsights = useMemo(() => {
@@ -514,6 +610,212 @@ export default function BudgetsPage() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="border-border/70 bg-card/90 shadow-sm xl:col-span-2">
           <CardHeader className="border-b border-border/60 pb-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle>Budget Command Center</CardTitle>
+                <CardDescription>
+                  Filter the workspace and prioritize highest-risk budgets.
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStatusFilter('all')
+                  setPeriodFilter('all')
+                }}
+              >
+                Reset filters
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="flex flex-wrap gap-2">
+              {(['all', 'over', 'warning', 'healthy'] as const).map((value) => (
+                <Button
+                  key={value}
+                  size="sm"
+                  variant={statusFilter === value ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter(value)}
+                >
+                  {value === 'all'
+                    ? 'All status'
+                    : value === 'over'
+                      ? `Over (${statusCounts.over})`
+                      : value === 'warning'
+                        ? `Warning (${statusCounts.warning})`
+                        : `Healthy (${statusCounts.healthy})`}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(['all', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const).map(
+                (value) => (
+                  <Button
+                    key={value}
+                    size="sm"
+                    variant={periodFilter === value ? 'default' : 'outline'}
+                    onClick={() => setPeriodFilter(value)}
+                  >
+                    {value === 'all' ? 'All periods' : periodLabels[value]}
+                  </Button>
+                )
+              )}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Healthy
+                </p>
+                <p className="mt-1 text-xl font-semibold text-emerald-600 dark:text-emerald-300">
+                  {statusCounts.healthy}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Warning
+                </p>
+                <p className="mt-1 text-xl font-semibold text-amber-700 dark:text-amber-300">
+                  {statusCounts.warning}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Over risk
+                </p>
+                <p className="mt-1 text-xl font-semibold text-rose-600 dark:text-rose-300">
+                  {statusCounts.over}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/90 shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Coverage Opportunities</CardTitle>
+            <CardDescription>
+              High-spend categories without a matching budget this month.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {uncoveredSpendOpportunities.length > 0 ? (
+              uncoveredSpendOpportunities.map((item) => (
+                <div
+                  key={item.categoryName}
+                  className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {item.categoryName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.share.toFixed(0)}%
+                    </p>
+                  </div>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    {formatCurrency(item.amount)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No uncovered category spend detected this month.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="border-border/70 bg-card/90 shadow-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Risk Timeline</CardTitle>
+            <CardDescription>
+              Expected overrun sequence based on current spending pace.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {overrunTimeline.length > 0 ? (
+              overrunTimeline.map((item) => (
+                <div
+                  key={`timeline-${item.id}`}
+                  className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {item.name}
+                    </p>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                        item.status === 'over'
+                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                          : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                      }`}
+                    >
+                      {item.status === 'over'
+                        ? 'Already over'
+                        : 'Projected risk'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.date
+                      ? `Estimated overrun date: ${item.date.toLocaleDateString('en-US')}`
+                      : 'Overrun already reached in this window.'}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Projected overrun: {formatCurrency(item.overrunAmount)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No near-term overruns detected with current filters.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/90 shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-3">
+            <CardTitle>Quick Notes</CardTitle>
+            <CardDescription>
+              Fast interpretation of the current budget posture.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4 text-xs text-muted-foreground">
+            <p>
+              Active filter result:{' '}
+              <span className="font-semibold text-foreground">
+                {filteredBudgetForecastItems.length}
+              </span>{' '}
+              budgets.
+            </p>
+            <p>
+              Current filter status:{' '}
+              <span className="font-semibold text-foreground">
+                {statusFilter}
+              </span>
+              .
+            </p>
+            <p>
+              Current filter period:{' '}
+              <span className="font-semibold text-foreground">
+                {periodFilter === 'all' ? 'all' : periodLabels[periodFilter]}
+              </span>
+              .
+            </p>
+            <p>
+              Use filters to isolate risk clusters, then adjust budget amounts
+              or category scope.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="border-border/70 bg-card/90 shadow-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/60 pb-3">
             <CardTitle>Actionable Insights</CardTitle>
             <CardDescription>
               Highest-impact adjustments based on current budget behavior.
@@ -586,8 +888,8 @@ export default function BudgetsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
-            {budgetForecastItems.length > 0 ? (
-              budgetForecastItems.map((forecast) => (
+            {filteredBudgetForecastItems.length > 0 ? (
+              filteredBudgetForecastItems.map((forecast) => (
                 <div
                   key={forecast.id}
                   className="rounded-xl border border-border/60 bg-muted/10 p-3"
@@ -646,17 +948,20 @@ export default function BudgetsPage() {
             ) : (
               <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-center">
                 <p className="text-sm font-medium text-foreground">
-                  No active budgets yet
+                  No budgets match the current filters
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Create your first budget to unlock forecasting.
+                  Adjust status or period filters to view more forecasts.
                 </p>
                 <Button
                   className="mt-4"
                   variant="outline"
-                  onClick={() => setIsCreateBudgetModalOpen(true)}
+                  onClick={() => {
+                    setStatusFilter('all')
+                    setPeriodFilter('all')
+                  }}
                 >
-                  Create budget
+                  Reset filters
                 </Button>
               </div>
             )}
@@ -691,8 +996,8 @@ export default function BudgetsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
-            {budgetForecastItems.length > 0 ? (
-              budgetForecastItems.slice(0, 6).map((forecast) => (
+            {filteredBudgetForecastItems.length > 0 ? (
+              filteredBudgetForecastItems.slice(0, 6).map((forecast) => (
                 <div
                   key={`runway-${forecast.id}`}
                   className="rounded-xl border border-border/60 bg-muted/10 p-3"
@@ -722,7 +1027,7 @@ export default function BudgetsPage() {
               ))
             ) : (
               <p className="text-sm text-muted-foreground">
-                Add budgets to calculate runway guidance.
+                No runway guidance available for current filters.
               </p>
             )}
           </CardContent>

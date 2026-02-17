@@ -850,6 +850,38 @@ export function useUpdateReminder() {
   })
 }
 
+export function useClearCompletedReminders() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/reminders?completed=true', {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Failed to clear completed reminders')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
+      toast({
+        title: 'Completed reminders cleared',
+        description: 'All completed reminders were removed.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to clear completed reminders',
+        variant: 'destructive',
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
+    },
+  })
+}
+
 export function useCreateSubscription() {
   const queryClient = useQueryClient()
   const { data: session } = useSession()

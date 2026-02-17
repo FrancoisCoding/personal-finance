@@ -143,3 +143,41 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const completedOnly =
+      request.nextUrl.searchParams.get('completed') === 'true'
+
+    if (!completedOnly) {
+      return NextResponse.json(
+        { error: 'Missing required completed=true query parameter' },
+        { status: 400 }
+      )
+    }
+
+    if (isDemoModeRequest(request)) {
+      return NextResponse.json({ deletedCount: 0 })
+    }
+
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const result = await prisma.reminder.deleteMany({
+      where: {
+        userId: session.user.id,
+        isCompleted: true,
+      },
+    })
+
+    return NextResponse.json({ deletedCount: result.count })
+  } catch (error) {
+    console.error('Error clearing completed reminders:', error)
+    return NextResponse.json(
+      { error: 'Failed to clear completed reminders' },
+      { status: 500 }
+    )
+  }
+}

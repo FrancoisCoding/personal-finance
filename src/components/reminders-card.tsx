@@ -20,6 +20,8 @@ interface RemindersCardProps {
   reminders: Reminder[]
   action?: ReactNode
   onToggleReminder?: (id: string) => void
+  onClearCompletedReminders?: () => void
+  isClearingCompleted?: boolean
   className?: string
 }
 
@@ -27,6 +29,8 @@ export function RemindersCard({
   reminders,
   action,
   onToggleReminder,
+  onClearCompletedReminders,
+  isClearingCompleted = false,
   className = '',
 }: RemindersCardProps) {
   const { addNotification } = useNotifications()
@@ -221,9 +225,26 @@ export function RemindersCard({
         {/* Completed Reminders */}
         {completedReminders.length > 0 && (
           <div className="space-y-3 pt-4 border-t border-border/60">
-            <h4 className="text-sm font-semibold text-foreground/90">
-              Completed
-            </h4>
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold text-foreground/90">
+                Completed
+              </h4>
+              {onClearCompletedReminders ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearCompletedReminders}
+                  disabled={isClearingCompleted}
+                  className={
+                    'h-7 px-2.5 text-xs font-semibold text-rose-700 ' +
+                    'hover:bg-rose-50/70 dark:text-rose-300 ' +
+                    'dark:hover:bg-rose-500/10'
+                  }
+                >
+                  {isClearingCompleted ? 'Clearing...' : 'Clear completed'}
+                </Button>
+              ) : null}
+            </div>
             {completedReminders.map((reminder) => (
               <div
                 key={reminder.id}

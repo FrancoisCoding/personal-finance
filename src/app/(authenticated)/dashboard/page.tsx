@@ -51,6 +51,7 @@ import {
   useReminders,
   useCreateReminder,
   useUpdateReminder,
+  useClearCompletedReminders,
   queryKeys,
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
@@ -205,6 +206,7 @@ export default function DashboardPage() {
   const seedCategoriesMutation = useSeedCategories()
   const createReminderMutation = useCreateReminder()
   const updateReminderMutation = useUpdateReminder()
+  const clearCompletedRemindersMutation = useClearCompletedReminders()
   const isLoading =
     isAccountsLoading ||
     isTransactionsLoading ||
@@ -1950,6 +1952,10 @@ export default function DashboardPage() {
                     updates: { completed: true },
                   })
                 }}
+                onClearCompletedReminders={() => {
+                  clearCompletedRemindersMutation.mutate()
+                }}
+                isClearingCompleted={clearCompletedRemindersMutation.isPending}
                 className="h-full"
               />
             </div>

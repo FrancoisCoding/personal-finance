@@ -121,11 +121,23 @@ export default function FinancialAssistantPage() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesScrollContainerRef = useRef<HTMLDivElement>(null)
   const lastQuestionRef = useRef<string | null>(null)
+  const hasMountedMessagesRef = useRef(false)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesScrollContainerRef.current
+    if (!container) return
+
+    const behavior: ScrollBehavior = hasMountedMessagesRef.current
+      ? 'smooth'
+      : 'auto'
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior,
+    })
+    hasMountedMessagesRef.current = true
   }, [messages, isLoading])
 
   useEffect(() => {
@@ -436,6 +448,7 @@ export default function FinancialAssistantPage() {
           <CardContent className="flex min-h-[360px] flex-col gap-4 pt-4">
             <div className="flex-1 rounded-2xl border border-border/60 bg-muted/15 p-4">
               <div
+                ref={messagesScrollContainerRef}
                 className={
                   'flex min-h-[200px] max-h-[260px] flex-col gap-5 ' +
                   'overflow-y-auto pr-2 sm:max-h-[320px]'
@@ -531,7 +544,6 @@ export default function FinancialAssistantPage() {
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
             </div>
 

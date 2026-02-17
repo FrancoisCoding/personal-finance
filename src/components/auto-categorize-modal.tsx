@@ -399,33 +399,24 @@ export function AutoCategorizeModal() {
 
         {hasReview && !isPending && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Review suggestions
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {reviewResults.length} transaction
-                  {reviewResults.length === 1 ? '' : 's'} need confirmation.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleApplyReview}
-                disabled={isApplyingReview}
-              >
-                {isApplyingReview ? 'Applying...' : 'Apply all'}
-              </Button>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Review suggestions
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {reviewResults.length} transaction
+                {reviewResults.length === 1 ? '' : 's'} need confirmation.
+              </p>
             </div>
-            <div className="max-h-64 space-y-3 overflow-y-auto pr-2">
+            <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
               {reviewItems.map(({ result, transaction }) => (
                 <div
                   key={result.transactionId}
-                  className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                  className="rounded-xl border border-border/70 bg-card/70 p-4"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 space-y-1">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-medium text-foreground break-words">
                         {transaction?.description ?? 'Transaction'}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -436,11 +427,11 @@ export function AutoCategorizeModal() {
                           : 'Unknown date'}{' '}
                         · {formatCurrency(Math.abs(transaction?.amount ?? 0))}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] font-medium text-muted-foreground">
                         {Math.round(result.confidence * 100)}% confidence
                       </p>
                     </div>
-                    <div className="w-44">
+                    <div className="sm:w-48">
                       <Select
                         value={reviewSelections[result.transactionId]}
                         onValueChange={(value) =>
@@ -450,7 +441,7 @@ export function AutoCategorizeModal() {
                           }))
                         }
                       >
-                        <SelectTrigger className="h-8">
+                        <SelectTrigger className="h-9 w-full bg-background/80">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -466,7 +457,7 @@ export function AutoCategorizeModal() {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-1">
               <Button
                 variant="ghost"
                 size="sm"
@@ -479,12 +470,12 @@ export function AutoCategorizeModal() {
                 Review later
               </Button>
               <Button
-                variant="outline"
                 size="sm"
+                className="min-w-32"
                 onClick={handleApplyReview}
                 disabled={isApplyingReview}
               >
-                Apply suggestions
+                {isApplyingReview ? 'Applying...' : 'Apply suggestions'}
               </Button>
             </div>
           </div>

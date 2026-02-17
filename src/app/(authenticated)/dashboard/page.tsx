@@ -660,6 +660,26 @@ export default function DashboardPage() {
       .slice(0, 4)
   }, [budgets, categoryLookup, transactionDateEntries])
 
+  const budgetForecastSummary = useMemo(() => {
+    const warningCount = budgetForecastItems.filter(
+      (item) => item.status === 'warning'
+    ).length
+    const overCount = budgetForecastItems.filter(
+      (item) => item.status === 'over'
+    ).length
+    const projectedOverrunTotal = budgetForecastItems.reduce(
+      (sum, item) => sum + Math.max(0, item.projectedSpend - item.amount),
+      0
+    )
+
+    return {
+      warningCount,
+      overCount,
+      projectedOverrunTotal,
+      previewItems: budgetForecastItems.slice(0, 2),
+    }
+  }, [budgetForecastItems])
+
   const cashFlowPlanningSnapshot = useMemo(() => {
     type TCashEvent = {
       id: string
@@ -1829,72 +1849,82 @@ export default function DashboardPage() {
                   <div>
                     <CardTitle>Budget Forecast</CardTitle>
                     <CardDescription>
-                      Projected month-end utilization and overrun risk.
+                      Snapshot only. Open budgets for full analysis.
                     </CardDescription>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="#budget-progress">Open</Link>
+                    <Link href="/budgets">Open</Link>
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 {budgetForecastItems.length > 0 ? (
-                  budgetForecastItems.map((forecast) => (
-                    <div
-                      key={forecast.id}
-                      className="rounded-xl border border-border/60 bg-muted/10 p-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {forecast.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatCurrency(forecast.spentToDate)} spent ·{' '}
-                            {formatCurrency(forecast.amount)} budget
-                          </p>
-                        </div>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                            forecast.status === 'over'
-                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300'
-                              : forecast.status === 'warning'
-                                ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
-                                : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                          }`}
-                        >
-                          {forecast.status === 'over'
-                            ? 'Over risk'
-                            : forecast.status === 'warning'
-                              ? 'Watch'
-                              : 'On track'}
-                        </span>
-                      </div>
-                      <div className="mt-3 space-y-1.5">
-                        <Progress
-                          value={Math.min(100, forecast.projectedUtilization)}
-                          className="h-2"
-                        />
-                        <p className="text-[11px] text-muted-foreground">
-                          Projected: {formatCurrency(forecast.projectedSpend)} (
-                          {forecast.projectedUtilization.toFixed(0)}%)
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Over risk
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-rose-600 dark:text-rose-300">
+                          {budgetForecastSummary.overCount}
                         </p>
                       </div>
-                      <p className="mt-2 text-[11px] text-muted-foreground">
-                        {forecast.daysUntilOverBudget === 0
-                          ? `Already over by ${formatCurrency(
-                              Math.abs(forecast.remainingAmount)
-                            )}.`
-                          : forecast.likelyOverrunDate
-                            ? `Likely over around ${forecast.likelyOverrunDate.toLocaleDateString(
-                                'en-US'
-                              )}.`
-                            : `Remaining runway: ${formatCurrency(
-                                Math.max(0, forecast.remainingAmount)
-                              )}.`}
-                      </p>
+                      <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Warning
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-300">
+                          {budgetForecastSummary.warningCount}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Projected overrun
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-foreground">
+                          {formatCurrency(
+                            budgetForecastSummary.projectedOverrunTotal
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  ))
+                    <div className="space-y-2">
+                      {budgetForecastSummary.previewItems.map((forecast) => (
+                        <div
+                          key={forecast.id}
+                          className="rounded-xl border border-border/60 bg-muted/10 p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {forecast.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Projected{' '}
+                                {forecast.projectedUtilization.toFixed(0)}% ·{' '}
+                                {formatCurrency(forecast.projectedSpend)}
+                              </p>
+                            </div>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                forecast.status === 'over'
+                                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300'
+                                  : forecast.status === 'warning'
+                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                    : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                              }`}
+                            >
+                              {forecast.status === 'over'
+                                ? 'Over risk'
+                                : forecast.status === 'warning'
+                                  ? 'Watch'
+                                  : 'On track'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center">
                     <p className="text-sm font-medium text-foreground">

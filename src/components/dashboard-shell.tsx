@@ -115,6 +115,13 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         description: 'Recurring charges, renewals, and subscriptions.',
         keywords: ['recurring', 'renewals', 'subscriptions', 'upcoming'],
       },
+      {
+        name: 'Budgets',
+        href: '/budgets',
+        icon: Wallet,
+        description: 'Budget performance, forecasts, and risk monitoring.',
+        keywords: ['budgets', 'forecast', 'limits', 'spending', 'overrun'],
+      },
       ...(isDemoMode || shouldShowSecurityNavigation
         ? [
             {

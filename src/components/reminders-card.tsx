@@ -9,10 +9,11 @@ import { useNotifications } from '@/components/notification-system'
 interface Reminder {
   id: string
   title: string
-  date: string
-  time: string
+  description?: string
+  dueAt: string
   completed: boolean
   type: 'budget' | 'bill' | 'goal' | 'custom'
+  priority: 'low' | 'medium' | 'high'
 }
 
 interface RemindersCardProps {
@@ -31,10 +32,57 @@ export function RemindersCard({
   const { addNotification } = useNotifications()
   const upcomingReminders = reminders
     .filter((reminder) => !reminder.completed)
+    .sort((firstReminder, secondReminder) => {
+      return (
+        new Date(firstReminder.dueAt).getTime() -
+        new Date(secondReminder.dueAt).getTime()
+      )
+    })
     .slice(0, 3)
   const completedReminders = reminders
     .filter((reminder) => reminder.completed)
+    .sort((firstReminder, secondReminder) => {
+      return (
+        new Date(secondReminder.dueAt).getTime() -
+        new Date(firstReminder.dueAt).getTime()
+      )
+    })
     .slice(0, 2)
+
+  const priorityStyles: Record<
+    Reminder['priority'],
+    { dotClassName: string; badgeClassName: string; label: string }
+  > = {
+    high: {
+      dotClassName: 'bg-rose-500',
+      badgeClassName:
+        'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300',
+      label: 'High',
+    },
+    medium: {
+      dotClassName: 'bg-amber-500',
+      badgeClassName:
+        'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      label: 'Medium',
+    },
+    low: {
+      dotClassName: 'bg-emerald-500',
+      badgeClassName:
+        'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+      label: 'Low',
+    },
+  }
+
+  const formatReminderDateTime = (value: string) => {
+    const parsedDate = new Date(value)
+    if (Number.isNaN(parsedDate.getTime())) return value
+    return parsedDate.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
 
   useEffect(() => {
     if (reminders.length === 0) return
@@ -44,10 +92,10 @@ export function RemindersCard({
     reminders
       .filter((reminder) => !reminder.completed)
       .forEach((reminder) => {
-        const reminderDateTime = new Date(`${reminder.date} ${reminder.time}`)
-        const reminderDate = Number.isNaN(reminderDateTime.getTime())
-          ? new Date(reminder.date)
-          : reminderDateTime
+        const reminderDate = new Date(reminder.dueAt)
+        if (Number.isNaN(reminderDate.getTime())) {
+          return
+        }
         const hoursUntil =
           (reminderDate.getTime() - currentDate.getTime()) / 3600000
 
@@ -58,7 +106,7 @@ export function RemindersCard({
             message: `${reminder.title} is due within 24 hours.`,
             category: 'reminder',
             showToast: false,
-            dedupeKey: `reminder-upcoming-${reminder.id}-${reminder.date}`,
+            dedupeKey: `reminder-upcoming-${reminder.id}-${reminder.dueAt}`,
             throttleMinutes: 360,
           })
         }
@@ -70,7 +118,7 @@ export function RemindersCard({
             message: `${reminder.title} is overdue.`,
             category: 'reminder',
             showToast: true,
-            dedupeKey: `reminder-overdue-${reminder.id}-${reminder.date}`,
+            dedupeKey: `reminder-overdue-${reminder.id}-${reminder.dueAt}`,
             throttleMinutes: 720,
           })
         }
@@ -110,14 +158,31 @@ export function RemindersCard({
                 }
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {reminder.title}
-                    </p>
+                  <div
+                    className={`h-2 w-2 rounded-full ${priorityStyles[reminder.priority].dotClassName}`}
+                  />
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {reminder.title}
+                      </p>
+                      <span
+                        className={
+                          'rounded-full border px-2 py-0.5 text-[10px] ' +
+                          `font-semibold uppercase tracking-[0.14em] ${priorityStyles[reminder.priority].badgeClassName}`
+                        }
+                      >
+                        {priorityStyles[reminder.priority].label}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      {reminder.date} at {reminder.time}
+                      {formatReminderDateTime(reminder.dueAt)}
                     </p>
+                    {reminder.description ? (
+                      <p className="text-xs text-muted-foreground/90">
+                        {reminder.description}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 {onToggleReminder && (
@@ -174,7 +239,7 @@ export function RemindersCard({
                       {reminder.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {reminder.date} at {reminder.time}
+                      {formatReminderDateTime(reminder.dueAt)}
                     </p>
                   </div>
                 </div>

@@ -89,8 +89,8 @@ describe('utils', () => {
   })
 
   it('returns category icons with a fallback', () => {
-    expect(getCategoryIcon('Travel')).toBe('✈️')
-    expect(getCategoryIcon('Unknown Category')).toBe('📋')
+    expect(getCategoryIcon('Travel')).toBe('')
+    expect(getCategoryIcon('Unknown Category')).toBe('')
   })
 
   it('validates email addresses', () => {

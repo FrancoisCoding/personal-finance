@@ -122,22 +122,22 @@ export function getCategoryColor(category: string): string {
 
 export function getCategoryIcon(category: string): string {
   const icons = {
-    'Food & Dining': '🍽️',
-    Transportation: '🚗',
-    Shopping: '🛍️',
-    Entertainment: '🎬',
-    Healthcare: '🏥',
-    Utilities: '💡',
-    Housing: '🏠',
-    Education: '📚',
-    Travel: '✈️',
-    Insurance: '🛡️',
-    Investment: '📈',
-    Salary: '💰',
-    Freelance: '💼',
-    Gifts: '🎁',
-    Subscriptions: '🔄',
-    Other: '📋',
+    'Food & Dining': '',
+    Transportation: '',
+    Shopping: '',
+    Entertainment: '',
+    Healthcare: '',
+    Utilities: '',
+    Housing: '',
+    Education: '',
+    Travel: '',
+    Insurance: '',
+    Investment: '',
+    Salary: '',
+    Freelance: '',
+    Gifts: '',
+    Subscriptions: '',
+    Other: '',
   }
-  return icons[category as keyof typeof icons] || '📋'
+  return icons[category as keyof typeof icons] || ''
 }

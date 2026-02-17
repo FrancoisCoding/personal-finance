@@ -12,6 +12,7 @@ import DemoWalkthrough from '@/components/demo-walkthrough'
 import { demoSession } from '@/lib/demo-mode'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
+import { registerAccessSessionHeartbeat } from '@/lib/access-session-client'
 
 export default function AuthenticatedLayout({
   children,
@@ -49,6 +50,23 @@ export default function AuthenticatedLayout({
       queryClient.clear()
     }
   }, [isDemoReady, queryClient, isClientReady])
+
+  useEffect(() => {
+    if (!isClientReady || isDemoReady || !session?.user?.id) return
+
+    const syncAccessSession = async () => {
+      try {
+        await registerAccessSessionHeartbeat()
+      } catch (error) {
+        console.warn('Failed to sync access session', error)
+      }
+    }
+
+    syncAccessSession()
+    const interval = window.setInterval(syncAccessSession, 5 * 60 * 1000)
+
+    return () => window.clearInterval(interval)
+  }, [isClientReady, isDemoReady, session?.user?.id])
 
   useEffect(() => {
     if (!isClientReady) return

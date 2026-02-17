@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CalendarClock } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,14 +26,22 @@ import { useToast } from '@/hooks/use-toast'
 
 interface AddReminderModalProps {
   onReminderAdded?: (reminder: {
-    id: string
     title: string
-    date: Date
-    completed: boolean
-  }) => void
+    description?: string
+    dueAt: string
+    type: 'budget' | 'bill' | 'goal' | 'custom'
+    priority: 'low' | 'medium' | 'high'
+  }) => Promise<void> | void
   buttonLabel?: string
   buttonVariant?: ButtonProps['variant']
   className?: string
+}
+
+const getDefaultDueAtValue = () => {
+  const date = new Date()
+  const timezoneOffset = date.getTimezoneOffset()
+  const localTime = new Date(date.getTime() - timezoneOffset * 60 * 1000)
+  return localTime.toISOString().slice(0, 16)
 }
 
 export function AddReminderModal({
@@ -48,45 +57,57 @@ export function AddReminderModal({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
-    time: '',
-    type: 'custom',
-    priority: 'medium',
+    dueAt: getDefaultDueAtValue(),
+    type: 'custom' as 'budget' | 'bill' | 'goal' | 'custom',
+    priority: 'medium' as 'low' | 'medium' | 'high',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.title.trim()) {
+      toast({
+        title: 'Missing title',
+        description: 'Please enter a reminder title.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const dueAt = new Date(formData.dueAt)
+    if (Number.isNaN(dueAt.getTime())) {
+      toast({
+        title: 'Invalid date',
+        description: 'Please choose a valid reminder date and time.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setLoading(true)
 
     try {
-      // In a real app, you'd save to your database
-      const newReminder = {
-        id: Date.now().toString(),
-        title: formData.title,
-        date: new Date(formData.date + 'T' + formData.time),
-        completed: false,
-      }
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      onReminderAdded?.(newReminder)
+      await onReminderAdded?.({
+        title: formData.title.trim(),
+        description: formData.description.trim() || undefined,
+        dueAt: dueAt.toISOString(),
+        type: formData.type,
+        priority: formData.priority,
+      })
 
       toast({
         title: 'Reminder added',
-        description: `${newReminder.title} has been scheduled for ${newReminder.date}.`,
+        description: `${formData.title.trim()} has been scheduled.`,
       })
 
       setOpen(false)
       setFormData({
         title: '',
         description: '',
-        date: '',
-        time: '',
+        dueAt: getDefaultDueAtValue(),
         type: 'custom',
         priority: 'medium',
       })
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to add reminder. Please try again.',
@@ -97,7 +118,10 @@ export function AddReminderModal({
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = <TField extends keyof typeof formData>(
+    field: TField,
+    value: (typeof formData)[TField]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -142,24 +166,16 @@ export function AddReminderModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
+          <div className="space-y-2">
+            <Label htmlFor="dueAt">Date and time</Label>
+            <div className="relative">
+              <CalendarClock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="time">Time</Label>
-              <Input
-                id="time"
-                type="time"
-                value={formData.time}
-                onChange={(e) => handleInputChange('time', e.target.value)}
+                id="dueAt"
+                type="datetime-local"
+                value={formData.dueAt}
+                onChange={(e) => handleInputChange('dueAt', e.target.value)}
+                className="pl-9"
                 required
               />
             </div>
@@ -170,7 +186,9 @@ export function AddReminderModal({
               <Label htmlFor="type">Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => handleInputChange('type', value)}
+                onValueChange={(value) =>
+                  handleInputChange('type', value as typeof formData.type)
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -187,7 +205,12 @@ export function AddReminderModal({
               <Label htmlFor="priority">Priority</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value) => handleInputChange('priority', value)}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    'priority',
+                    value as typeof formData.priority
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue />

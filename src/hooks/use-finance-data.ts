@@ -105,6 +105,16 @@ export interface Subscription {
   category?: Category
 }
 
+export interface Reminder {
+  id: string
+  title: string
+  description?: string
+  dueAt: string
+  type: 'budget' | 'bill' | 'goal' | 'custom'
+  priority: 'low' | 'medium' | 'high'
+  completed: boolean
+}
+
 // Query Keys
 export const queryKeys = {
   accounts: ['accounts'] as const,
@@ -113,6 +123,7 @@ export const queryKeys = {
   goals: ['goals'] as const,
   categories: ['categories'] as const,
   subscriptions: ['subscriptions'] as const,
+  reminders: ['reminders'] as const,
   monthlyStats: ['monthlyStats'] as const,
 }
 
@@ -150,6 +161,12 @@ const fetchCategories = async (): Promise<Category[]> => {
 const fetchSubscriptions = async (): Promise<Subscription[]> => {
   const res = await fetch('/api/subscriptions')
   if (!res.ok) throw new Error('Failed to fetch subscriptions')
+  return res.json()
+}
+
+const fetchReminders = async (): Promise<Reminder[]> => {
+  const res = await fetch('/api/reminders')
+  if (!res.ok) throw new Error('Failed to fetch reminders')
   return res.json()
 }
 
@@ -223,6 +240,18 @@ export function useSubscriptions() {
     queryFn: fetchSubscriptions,
     enabled: !!session?.user?.id || isDemoMode,
     staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+}
+
+export function useReminders() {
+  const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
+
+  return useQuery({
+    queryKey: queryKeys.reminders,
+    queryFn: fetchReminders,
+    enabled: !!session?.user?.id || isDemoMode,
+    staleTime: 2 * 60 * 1000,
   })
 }
 
@@ -741,6 +770,82 @@ export function useCreateBudget() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
+    },
+  })
+}
+
+export function useCreateReminder() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (reminder: {
+      title: string
+      description?: string
+      dueAt: string
+      type: 'budget' | 'bill' | 'goal' | 'custom'
+      priority: 'low' | 'medium' | 'high'
+    }) => {
+      const res = await fetch('/api/reminders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reminder),
+      })
+      if (!res.ok) throw new Error('Failed to create reminder')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
+      toast({
+        title: 'Reminder added',
+        description: 'Your reminder was saved.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create reminder',
+        variant: 'destructive',
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
+    },
+  })
+}
+
+export function useUpdateReminder() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: string
+      updates: Partial<Reminder>
+    }) => {
+      const res = await fetch(`/api/reminders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      if (!res.ok) throw new Error('Failed to update reminder')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update reminder',
+        variant: 'destructive',
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.reminders })
     },
   })
 }

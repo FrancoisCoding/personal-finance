@@ -14,7 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { formatCurrency, getCategoryIcon, getCategoryColor } from '@/lib/utils'
+import { formatCurrency, getCategoryColor } from '@/lib/utils'
+import { getCategoryIconComponent } from '@/lib/category-icons'
 import { TellerLink } from '@/components/teller-link'
 import { AddTransactionDialog } from '@/components/add-transaction-dialog'
 import { BudgetProgressItem } from '@/components/budget-progress-item'
@@ -47,6 +48,9 @@ import {
   useSeedCategories,
   useCreditCards,
   useSubscriptions,
+  useReminders,
+  useCreateReminder,
+  useUpdateReminder,
   queryKeys,
 } from '@/hooks/use-finance-data'
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
@@ -165,33 +169,6 @@ const AnalyticsDashboard = dynamic(
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { isDemoMode } = useDemoMode()
-  const [reminders, setReminders] = useState<
-    Array<{
-      id: string
-      title: string
-      date: string
-      time: string
-      completed: boolean
-      type: 'budget' | 'bill' | 'goal' | 'custom'
-    }>
-  >([
-    {
-      id: '1',
-      title: 'Review monthly budget',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      completed: false,
-      type: 'budget' as const,
-    },
-    {
-      id: '2',
-      title: 'Pay credit card bill',
-      date: '2024-01-20',
-      time: '2:00 PM',
-      completed: false,
-      type: 'bill' as const,
-    },
-  ])
   const queryClient = useQueryClient()
   const [, setIsWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
@@ -224,14 +201,18 @@ export default function DashboardPage() {
     useCreditCards()
   const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
     useSubscriptions()
+  const { data: reminders = [], isLoading: isRemindersLoading } = useReminders()
   const seedCategoriesMutation = useSeedCategories()
+  const createReminderMutation = useCreateReminder()
+  const updateReminderMutation = useUpdateReminder()
   const isLoading =
     isAccountsLoading ||
     isTransactionsLoading ||
     isBudgetsLoading ||
     isGoalsLoading ||
     isCategoriesLoading ||
-    isCreditCardsLoading
+    isCreditCardsLoading ||
+    isRemindersLoading
 
   useEffect(() => {
     if (!isDemoMode) return
@@ -1842,7 +1823,7 @@ export default function DashboardPage() {
                     </CardDescription>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/budgets">Open</Link>
+                    <Link href="/dashboard#demo-budget-progress">Open</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -1951,22 +1932,8 @@ export default function DashboardPage() {
                 reminders={reminders}
                 action={
                   <AddReminderModal
-                    onReminderAdded={(reminder) => {
-                      const reminderDate = new Date(reminder.date)
-                      setReminders((prev) => [
-                        {
-                          id: reminder.id,
-                          title: reminder.title,
-                          date: reminderDate.toLocaleDateString('en-US'),
-                          time: reminderDate.toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          }),
-                          completed: false,
-                          type: 'custom',
-                        },
-                        ...prev,
-                      ])
+                    onReminderAdded={async (reminder) => {
+                      await createReminderMutation.mutateAsync(reminder)
                     }}
                     buttonLabel="Add"
                     buttonVariant="ghost"
@@ -1978,9 +1945,10 @@ export default function DashboardPage() {
                   />
                 }
                 onToggleReminder={(id) => {
-                  setReminders((prev) =>
-                    prev.filter((reminder) => reminder.id !== id)
-                  )
+                  updateReminderMutation.mutate({
+                    id,
+                    updates: { completed: true },
+                  })
                 }}
                 className="h-full"
               />
@@ -2061,6 +2029,7 @@ export default function DashboardPage() {
                       transaction.category ??
                       transaction.categoryRelation?.name ??
                       'Other'
+                    const CategoryIcon = getCategoryIconComponent(categoryName)
                     return (
                       <div
                         key={transaction.id}
@@ -2079,9 +2048,7 @@ export default function DashboardPage() {
                               backgroundColor: getCategoryColor(categoryName),
                             }}
                           >
-                            <span className="text-xl">
-                              {getCategoryIcon(categoryName)}
-                            </span>
+                            <CategoryIcon className="h-5 w-5" />
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-foreground truncate">

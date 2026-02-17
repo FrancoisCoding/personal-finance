@@ -24,6 +24,7 @@ import {
   Receipt,
   ShieldCheck,
   Sparkles,
+  UserCircle2,
   Wallet,
   X,
 } from 'lucide-react'
@@ -149,6 +150,57 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     ],
     [isDemoMode, shouldShowSecurityNavigation]
   )
+
+  const activePageMeta = useMemo(() => {
+    const currentNavigationItem = navigation.find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+    )
+
+    if (currentNavigationItem) {
+      return {
+        label: currentNavigationItem.name,
+        icon: currentNavigationItem.icon,
+      }
+    }
+
+    const firstSegment = pathname.split('/').filter(Boolean)[0]
+    if (!firstSegment) {
+      return { label: 'Overview', icon: LayoutGrid }
+    }
+
+    const fallbackLabels: Record<string, string> = {
+      dashboard: 'Overview',
+      accounts: 'Accounts',
+      transactions: 'Transactions',
+      subscriptions: 'Subscriptions',
+      security: 'Security & Privacy',
+      assistant: 'Financial Assistant',
+      budgets: 'Budgets',
+      profile: 'Profile',
+    }
+
+    const fallbackIcons: Record<string, typeof LayoutGrid> = {
+      dashboard: LayoutGrid,
+      accounts: Wallet,
+      transactions: Receipt,
+      subscriptions: CreditCard,
+      security: ShieldCheck,
+      assistant: Sparkles,
+      budgets: Wallet,
+      profile: UserCircle2,
+    }
+
+    const normalizedLabel =
+      fallbackLabels[firstSegment] ??
+      firstSegment
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase())
+
+    return {
+      label: normalizedLabel,
+      icon: fallbackIcons[firstSegment] ?? LayoutGrid,
+    }
+  }, [navigation, pathname])
 
   const closeSidebar = () => setIsSidebarOpen(false)
 
@@ -718,8 +770,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <LayoutGrid className="h-4 w-4 text-emerald-500" />
-                  Overview
+                  <activePageMeta.icon className="h-4 w-4 text-emerald-500" />
+                  {activePageMeta.label}
                   {isDemoReady ? (
                     <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
                       Demo

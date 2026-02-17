@@ -35,12 +35,8 @@ import {
   Loader2,
   Bell,
 } from 'lucide-react'
-import {
-  formatCurrency,
-  formatDate,
-  getCategoryColor,
-  getCategoryIcon,
-} from '@/lib/utils'
+import { formatCurrency, formatDate, getCategoryColor } from '@/lib/utils'
+import { getCategoryIconComponent } from '@/lib/category-icons'
 import {
   useSubscriptions,
   useCreateSubscription,
@@ -908,8 +904,8 @@ export default function SubscriptionsPage() {
                 const categoryColor = detected.categoryName
                   ? getCategoryColor(detected.categoryName)
                   : '#9CA3AF'
-                const categoryIcon = detected.categoryName
-                  ? getCategoryIcon(detected.categoryName)
+                const CategoryIcon = detected.categoryName
+                  ? getCategoryIconComponent(detected.categoryName)
                   : null
                 const isAdding = addingDetected.has(detected.id)
 
@@ -930,8 +926,8 @@ export default function SubscriptionsPage() {
                           borderColor: `${categoryColor}33`,
                         }}
                       >
-                        {categoryIcon ? (
-                          <span className="text-xl">{categoryIcon}</span>
+                        {CategoryIcon ? (
+                          <CategoryIcon className="h-5 w-5" />
                         ) : (
                           <CreditCard className="h-5 w-5" />
                         )}
@@ -1312,8 +1308,8 @@ export default function SubscriptionsPage() {
                 color,
                 bgColor,
               } = getSubscriptionStatus(subscription)
-              const categoryIcon = category
-                ? getCategoryIcon(category.name)
+              const CategoryIcon = category
+                ? getCategoryIconComponent(category.name)
                 : null
               const categoryColor = category
                 ? getCategoryColor(category.name)
@@ -1339,8 +1335,8 @@ export default function SubscriptionsPage() {
                         borderColor: `${categoryColor}33`,
                       }}
                     >
-                      {categoryIcon ? (
-                        <span className="text-xl">{categoryIcon}</span>
+                      {CategoryIcon ? (
+                        <CategoryIcon className="h-5 w-5" />
                       ) : (
                         <CreditCard className="w-5 h-5" />
                       )}

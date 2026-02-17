@@ -39,12 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  formatCurrency,
-  formatDate,
-  getCategoryColor,
-  getCategoryIcon,
-} from '@/lib/utils'
+import { formatCurrency, formatDate, getCategoryColor } from '@/lib/utils'
+import { getCategoryIconComponent } from '@/lib/category-icons'
 import { createTransactionColumns } from '@/tableColumnDefinitions/transactions'
 
 export default function TransactionsPage() {
@@ -95,7 +91,7 @@ export default function TransactionsPage() {
         transaction.category ??
         'Other'
       const categoryColor = getCategoryColor(categoryName)
-      const categoryIcon = getCategoryIcon(categoryName)
+      const categoryIcon = getCategoryIconComponent(categoryName)
       const accountName =
         transaction.account?.name ??
         accountMap.get(transaction.accountId)?.name ??

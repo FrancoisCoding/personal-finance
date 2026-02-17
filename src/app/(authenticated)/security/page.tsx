@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
@@ -36,6 +36,7 @@ import {
 } from '@/hooks/use-finance-data'
 import { useToast } from '@/hooks/use-toast'
 import { formatCurrency } from '@/lib/utils'
+import { getCurrentAccessSessionKey } from '@/lib/access-session-client'
 
 type TAuditCategory = 'access' | 'activity' | 'data' | 'alert'
 type TAuditSeverity = 'info' | 'success' | 'warning'
@@ -77,7 +78,6 @@ type TBooleanPreferenceKey = Exclude<
 
 const securityPreferencesStorageKey = 'financeflow.security-preferences'
 const securityAuditStorageKey = 'financeflow.security-audit'
-const securitySessionStorageKey = 'financeflow.security-sessions'
 const securityNavigationStorageKey = 'financeflow.show-security-nav'
 const securityNavigationEventName = 'financeflow:security-nav-visibility'
 
@@ -195,12 +195,14 @@ export default function SecurityAndPrivacyPage() {
     'all' | TAuditCategory
   >('all')
   const [isLocalStateReady, setIsLocalStateReady] = useState(false)
+  const [isAccessSessionsLoading, setIsAccessSessionsLoading] = useState(true)
 
   const isDataLoading =
     status === 'loading' ||
     isAccountsLoading ||
     isTransactionsLoading ||
-    isSubscriptionsLoading
+    isSubscriptionsLoading ||
+    isAccessSessionsLoading
 
   useEffect(() => {
     if (status === 'unauthenticated' && !isDemoMode) {
@@ -228,26 +230,14 @@ export default function SecurityAndPrivacyPage() {
         }
       }
 
-      const storedSessions = localStorage.getItem(securitySessionStorageKey)
-      if (storedSessions) {
-        const parsed = JSON.parse(storedSessions)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAccessSessions(parsed)
-        } else {
-          setAccessSessions(buildDefaultSessions())
-        }
-      } else {
-        setAccessSessions(buildDefaultSessions())
-      }
-
       const storedSecurityNavigationPreference = localStorage.getItem(
         securityNavigationStorageKey
       )
       setShouldShowSecurityNavigation(
         storedSecurityNavigationPreference === '1'
       )
-    } catch (error) {
-      setAccessSessions(buildDefaultSessions())
+    } catch {
+      setAccessSessions([])
     } finally {
       setIsLocalStateReady(true)
     }
@@ -272,14 +262,6 @@ export default function SecurityAndPrivacyPage() {
   useEffect(() => {
     if (!isLocalStateReady) return
     localStorage.setItem(
-      securitySessionStorageKey,
-      JSON.stringify(accessSessions)
-    )
-  }, [accessSessions, isLocalStateReady])
-
-  useEffect(() => {
-    if (!isLocalStateReady) return
-    localStorage.setItem(
       securityNavigationStorageKey,
       shouldShowSecurityNavigation ? '1' : '0'
     )
@@ -289,6 +271,45 @@ export default function SecurityAndPrivacyPage() {
       })
     )
   }, [isLocalStateReady, shouldShowSecurityNavigation])
+
+  const loadAccessSessions = useCallback(async () => {
+    if (!isDemoMode && !session?.user?.id) {
+      setIsAccessSessionsLoading(false)
+      return
+    }
+
+    const sessionKey = getCurrentAccessSessionKey()
+    try {
+      setIsAccessSessionsLoading(true)
+      const response = await fetch('/api/security/sessions', {
+        headers: sessionKey
+          ? {
+              'x-access-session-key': sessionKey,
+            }
+          : undefined,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch sessions')
+      }
+
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        setAccessSessions(data)
+      } else {
+        setAccessSessions([])
+      }
+    } catch {
+      setAccessSessions(buildDefaultSessions())
+    } finally {
+      setIsAccessSessionsLoading(false)
+    }
+  }, [isDemoMode, session?.user?.id])
+
+  useEffect(() => {
+    if (!isLocalStateReady) return
+    loadAccessSessions()
+  }, [isLocalStateReady, loadAccessSessions])
 
   const generatedAuditEvents = useMemo<IAuditEvent[]>(() => {
     const now = Date.now()
@@ -528,18 +549,29 @@ export default function SecurityAndPrivacyPage() {
     })
   }
 
-  const handleTrustSession = (sessionId: string) => {
+  const handleTrustSession = async (sessionId: string) => {
     const targetSession = accessSessions.find(
       (currentSession) => currentSession.id === sessionId
     )
     if (!targetSession || targetSession.isTrusted) return
-    setAccessSessions((prev) =>
-      prev.map((currentSession) =>
-        currentSession.id === sessionId
-          ? { ...currentSession, isTrusted: true }
-          : currentSession
-      )
-    )
+    try {
+      const response = await fetch(`/api/security/sessions/${sessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isTrusted: true }),
+      })
+      if (!response.ok) {
+        throw new Error('Failed to trust session')
+      }
+      await loadAccessSessions()
+    } catch (error) {
+      toast({
+        title: 'Unable to trust session',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
+      return
+    }
     addManualAuditEvent({
       title: 'Session trusted',
       description: `${targetSession.name} marked as trusted.`,
@@ -548,14 +580,27 @@ export default function SecurityAndPrivacyPage() {
     })
   }
 
-  const handleRevokeSession = (sessionId: string) => {
+  const handleRevokeSession = async (sessionId: string) => {
     const targetSession = accessSessions.find(
       (currentSession) => currentSession.id === sessionId
     )
     if (!targetSession || targetSession.isCurrent) return
-    setAccessSessions((prev) =>
-      prev.filter((currentSession) => currentSession.id !== sessionId)
-    )
+    try {
+      const response = await fetch(`/api/security/sessions/${sessionId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('Failed to revoke session')
+      }
+      await loadAccessSessions()
+    } catch (error) {
+      toast({
+        title: 'Unable to revoke session',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
+      return
+    }
     addManualAuditEvent({
       title: 'Session revoked',
       description: `${targetSession.name} from ${targetSession.location} was removed.`,

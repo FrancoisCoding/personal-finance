@@ -155,123 +155,7 @@ export function CreditUtilizationCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-7">
-        {/* Overall Utilization */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">
-              Overall Utilization
-            </span>
-            <span className={`text-lg font-bold ${utilizationStatus.color}`}>
-              {totalUtilization.toFixed(1)}%
-            </span>
-          </div>
-          <Progress
-            value={Math.min(totalUtilization, 100)}
-            className="h-2.5"
-            style={
-              {
-                '--progress-background': utilizationStatus.progressColor,
-              } as React.CSSProperties
-            }
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>0%</span>
-            <span>30%</span>
-            <span>50%</span>
-            <span>70%</span>
-            <span>100%</span>
-          </div>
-        </div>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">
-                Total Balance
-              </span>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {formatCurrency(totalBalance)}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Across {creditCards.length} cards
-            </div>
-          </div>
-          <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">
-                Available Credit
-              </span>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {formatCurrency(totalLimit - totalBalance)}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              of {formatCurrency(totalLimit)}
-            </div>
-          </div>
-        </div>
-
-        {/* Monthly Interest Cost */}
-        <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
-                Monthly Interest Cost
-              </div>
-              <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
-                Based on {averageAPR.toFixed(1)}% average APR
-              </div>
-            </div>
-            <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
-              {formatCurrency(monthlyInterestCost)}
-            </div>
-          </div>
-        </div>
-
-        {/* Individual Cards */}
-        {creditCards.length > 0 ? (
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-foreground/90">
-              Individual Cards
-            </h4>
-            {creditCards.map((card) => {
-              const cardUtilization = (card.balance / card.limit) * 100
-              const cardStatus = getUtilizationStatus(cardUtilization)
-
-              return (
-                <div
-                  key={card.id}
-                  className="p-3 rounded-xl border border-border/50 bg-card/70 shadow-sm"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">
-                      {card.name}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${cardStatus.color} ${cardStatus.bgColor} border-current`}
-                    >
-                      {cardUtilization.toFixed(1)}%
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {formatCurrency(card.balance)} /{' '}
-                      {formatCurrency(card.limit)}
-                    </span>
-                    <span>{card.apr.toFixed(1)}% APR</span>
-                  </div>
-                  <Progress
-                    value={Math.min(cardUtilization, 100)}
-                    className="h-2 mt-2"
-                  />
-                </div>
-              )
-            })}
-          </div>
-        ) : (
+        {creditCards.length === 0 ? (
           <div
             className={
               'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
@@ -286,35 +170,155 @@ export function CreditUtilizationCard({
             </p>
             <AddCreditCardModal />
           </div>
-        )}
-
-        {/* Recommendations */}
-        <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
-          <div className="mb-3">
-            <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
-              {recommendations.title}
-            </h4>
-            <p className="text-xs text-sky-600/90 dark:text-sky-200/80 mt-1">
-              {recommendations.description}
-            </p>
-          </div>
-          <div className="space-y-2">
-            {recommendations.actions.map((action, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-2 text-xs text-sky-700 dark:text-sky-100"
-              >
-                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                <span>{action}</span>
+        ) : (
+          <>
+            {/* Overall Utilization */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Overall Utilization
+                </span>
+                <span
+                  className={`text-lg font-bold ${utilizationStatus.color}`}
+                >
+                  {totalUtilization.toFixed(1)}%
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
+              <Progress
+                value={Math.min(totalUtilization, 100)}
+                className="h-2.5"
+                style={
+                  {
+                    '--progress-background': utilizationStatus.progressColor,
+                  } as React.CSSProperties
+                }
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0%</span>
+                <span>30%</span>
+                <span>50%</span>
+                <span>70%</span>
+                <span>100%</span>
+              </div>
+            </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1">
-          <AddCreditCardModal />
-        </div>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">
+                    Total Balance
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-foreground">
+                  {formatCurrency(totalBalance)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Across {creditCards.length} cards
+                </div>
+              </div>
+              <div className="p-4 rounded-xl border border-border/50 bg-card/70 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">
+                    Available Credit
+                  </span>
+                </div>
+                <div className="text-lg font-bold text-foreground">
+                  {formatCurrency(totalLimit - totalBalance)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  of {formatCurrency(totalLimit)}
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Interest Cost */}
+            <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
+                    Monthly Interest Cost
+                  </div>
+                  <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
+                    Based on {averageAPR.toFixed(1)}% average APR
+                  </div>
+                </div>
+                <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
+                  {formatCurrency(monthlyInterestCost)}
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Cards */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-foreground/90">
+                Individual Cards
+              </h4>
+              {creditCards.map((card) => {
+                const cardUtilization = (card.balance / card.limit) * 100
+                const cardStatus = getUtilizationStatus(cardUtilization)
+
+                return (
+                  <div
+                    key={card.id}
+                    className="p-3 rounded-xl border border-border/50 bg-card/70 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {card.name}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${cardStatus.color} ${cardStatus.bgColor} border-current`}
+                      >
+                        {cardUtilization.toFixed(1)}%
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        {formatCurrency(card.balance)} /{' '}
+                        {formatCurrency(card.limit)}
+                      </span>
+                      <span>{card.apr.toFixed(1)}% APR</span>
+                    </div>
+                    <Progress
+                      value={Math.min(cardUtilization, 100)}
+                      className="h-2 mt-2"
+                    />
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Recommendations */}
+            <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
+              <div className="mb-3">
+                <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
+                  {recommendations.title}
+                </h4>
+                <p className="text-xs text-sky-600/90 dark:text-sky-200/80 mt-1">
+                  {recommendations.description}
+                </p>
+              </div>
+              <div className="space-y-2">
+                {recommendations.actions.map((action, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center space-x-2 text-xs text-sky-700 dark:text-sky-100"
+                  >
+                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                    <span>{action}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1">
+              <AddCreditCardModal />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

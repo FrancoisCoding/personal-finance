@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { getRowValue, highlightText } from '@/lib/table'
 import type { ColumnDef } from '@tanstack/react-table'
+import type { LucideIcon } from 'lucide-react'
 
 export type TransactionTableRow = {
   id: string
@@ -8,7 +9,7 @@ export type TransactionTableRow = {
   dateLabel: string
   categoryName: string
   categoryColor: string
-  categoryIcon: string
+  categoryIcon: LucideIcon
   accountName: string
   amount: number
   amountLabel: string
@@ -74,7 +75,7 @@ export const createTransactionColumns = ({
             borderColor: `${row.original.categoryColor}33`,
           }}
         >
-          <span className="text-base">{row.original.categoryIcon}</span>
+          <row.original.categoryIcon className="h-3.5 w-3.5" />
           {highlightText(categoryName, globalFilter)}
         </span>
       )

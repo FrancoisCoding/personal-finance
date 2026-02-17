@@ -9,6 +9,8 @@ import {
 } from '@/lib/server-cache'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
+import { prisma } from '@/lib/prisma'
+import { AccountType } from '@prisma/client'
 
 const CREDIT_CARDS_CACHE_TTL_MS = 30_000
 
@@ -39,41 +41,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cachedCards)
     }
 
-    // For now, return mock data. In a real app, you'd fetch from your database
-    // You can create a CreditCard model in your Prisma schema if needed
-    const mockCreditCards = [
-      {
-        id: '1',
-        name: 'Chase Freedom Unlimited',
-        balance: 2500,
-        limit: 15000,
-        apr: 18.99,
-        dueDate: '2024-01-25',
-        lastStatement: '2024-01-01',
+    const creditCardAccounts = await prisma.financialAccount.findMany({
+      where: {
+        userId: session.user.id,
+        type: AccountType.CREDIT_CARD,
+        isActive: true,
       },
-      {
-        id: '2',
-        name: 'American Express Gold',
-        balance: 1800,
-        limit: 25000,
-        apr: 16.99,
-        dueDate: '2024-01-28',
-        lastStatement: '2024-01-05',
-      },
-      {
-        id: '3',
-        name: 'Discover It',
-        balance: 3200,
-        limit: 12000,
-        apr: 19.99,
-        dueDate: '2024-01-30',
-        lastStatement: '2024-01-03',
-      },
-    ]
+      orderBy: { createdAt: 'desc' },
+    })
 
-    setCachedValue(cacheKey, mockCreditCards, CREDIT_CARDS_CACHE_TTL_MS)
+    const mappedCreditCards: CreditCardSummary[] = creditCardAccounts.map(
+      (account) => ({
+        id: account.id,
+        name: account.name,
+        balance: Math.abs(account.balance),
+        limit: account.creditLimit ?? 0,
+        apr: 0,
+        dueDate: '',
+        lastStatement: '',
+      })
+    )
 
-    return NextResponse.json(mockCreditCards)
+    setCachedValue(cacheKey, mappedCreditCards, CREDIT_CARDS_CACHE_TTL_MS)
+
+    return NextResponse.json(mappedCreditCards)
   } catch (error) {
     console.error('Credit cards fetch error:', error)
     return NextResponse.json(
@@ -105,29 +96,39 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, balance, limit, apr, dueDate } = body
+    const { name, balance, limit } = body
 
     // Validate required fields
-    if (!name || balance === undefined || !limit || !apr) {
+    if (!name || balance === undefined || !limit) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // In a real app, you'd save to your database
-    // For now, return the created card
+    const createdAccount = await prisma.financialAccount.create({
+      data: {
+        userId: session.user.id,
+        name,
+        type: AccountType.CREDIT_CARD,
+        balance: parseFloat(balance),
+        creditLimit: parseFloat(limit),
+        currency: 'USD',
+      },
+    })
+
     const newCard = {
-      id: Date.now().toString(),
+      id: createdAccount.id,
       name,
-      balance: parseFloat(balance),
-      limit: parseFloat(limit),
-      apr: parseFloat(apr),
-      dueDate,
+      balance: Math.abs(createdAccount.balance),
+      limit: createdAccount.creditLimit ?? 0,
+      apr: 0,
+      dueDate: '',
       lastStatement: new Date().toISOString().split('T')[0],
     }
 
     invalidateCacheKey(getUserCacheKey('credit-cards', session.user.id))
+    invalidateCacheKey(getUserCacheKey('accounts', session.user.id))
 
     return NextResponse.json(newCard, { status: 201 })
   } catch (error) {

@@ -39,6 +39,10 @@ export function AutoCategorizeModal() {
     Record<string, string>
   >({})
   const [isApplyingReview, setIsApplyingReview] = useState(false)
+  const [suppressedReviewIds, setSuppressedReviewIds] = useState<string[]>([])
+  const [processedTransactionIds, setProcessedTransactionIds] = useState<
+    string[]
+  >([])
   const lastRunIdsRef = useRef<string | null>(null)
   const progressIntervalRef = useRef<number | null>(null)
 
@@ -53,6 +57,15 @@ export function AutoCategorizeModal() {
             transaction.category === 'Uncategorized')
       ),
     [transactions]
+  )
+  const eligibleTransactions = useMemo(
+    () =>
+      uncategorizedTransactions.filter(
+        (transaction) =>
+          !suppressedReviewIds.includes(transaction.id) &&
+          !processedTransactionIds.includes(transaction.id)
+      ),
+    [processedTransactionIds, suppressedReviewIds, uncategorizedTransactions]
   )
 
   const { mutate, isPending, isSuccess, isError } = useMutation<
@@ -91,6 +104,16 @@ export function AutoCategorizeModal() {
           return acc
         }, {})
       )
+      if (reviewItems.length > 0) {
+        setSuppressedReviewIds((previous) =>
+          Array.from(
+            new Set([
+              ...previous,
+              ...reviewItems.map((item) => item.transactionId),
+            ])
+          )
+        )
+      }
       toast({
         title: categorizedCount > 0 ? 'Categorization complete' : 'No updates',
         description:
@@ -131,15 +154,27 @@ export function AutoCategorizeModal() {
   })
 
   useEffect(() => {
+    const uncategorizedIds = new Set(
+      uncategorizedTransactions.map((transaction) => transaction.id)
+    )
+    setSuppressedReviewIds((previous) =>
+      previous.filter((id) => uncategorizedIds.has(id))
+    )
+    setProcessedTransactionIds((previous) =>
+      previous.filter((id) => uncategorizedIds.has(id))
+    )
+  }, [uncategorizedTransactions])
+
+  useEffect(() => {
     if (isLoading || isPending) {
       return
     }
 
-    if (uncategorizedTransactions.length === 0) {
+    if (eligibleTransactions.length === 0) {
       return
     }
 
-    const currentIds = uncategorizedTransactions
+    const currentIds = eligibleTransactions
       .map((transaction) => transaction.id)
       .sort()
       .join(',')
@@ -148,13 +183,19 @@ export function AutoCategorizeModal() {
       return
     }
 
+    const transactionIds = eligibleTransactions.map(
+      (transaction) => transaction.id
+    )
     lastRunIdsRef.current = currentIds
+    setProcessedTransactionIds((previous) =>
+      Array.from(new Set([...previous, ...transactionIds]))
+    )
     setOpen(true)
     setProgress(8)
     mutate({
-      transactionIds: uncategorizedTransactions.map((t) => t.id),
+      transactionIds,
     })
-  }, [isLoading, isPending, mutate, uncategorizedTransactions])
+  }, [eligibleTransactions, isLoading, isPending, mutate])
 
   useEffect(() => {
     if (!open || !isPending) {
@@ -239,6 +280,11 @@ export function AutoCategorizeModal() {
         title: 'Review applied',
         description: 'Low-confidence suggestions were applied.',
       })
+      setSuppressedReviewIds((previous) =>
+        previous.filter(
+          (id) => !reviewResults.some((result) => result.transactionId === id)
+        )
+      )
       setOpen(false)
       setProgress(0)
       setReviewResults([])
@@ -263,6 +309,10 @@ export function AutoCategorizeModal() {
         : isError
           ? 'Categorization failed'
           : 'Preparing categorization'
+  const displayedUncategorizedCount = Math.max(
+    eligibleTransactions.length,
+    reviewResults.length
+  )
 
   if (!open) {
     return null
@@ -274,10 +324,8 @@ export function AutoCategorizeModal() {
         <DialogHeader>
           <DialogTitle>Auto-categorizing transactions</DialogTitle>
           <DialogDescription>
-            We found {uncategorizedTransactions.length} uncategorized{' '}
-            {uncategorizedTransactions.length === 1
-              ? 'transaction'
-              : 'transactions'}
+            We found {displayedUncategorizedCount} uncategorized{' '}
+            {displayedUncategorizedCount === 1 ? 'transaction' : 'transactions'}
             . This will run automatically in the background.
           </DialogDescription>
         </DialogHeader>

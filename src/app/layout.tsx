@@ -23,7 +23,7 @@ const displayFont = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'Finance App - AI-Powered Personal Finance Management',
   description:
-    'Modern personal finance app with AI-powered insights, smart categorization, and subscription tracking.',
+    'Modern personal finance app with AI-powered insights, smart categorization, budgeting, and progress tracking.',
   keywords: [
     'finance',
     'budgeting',

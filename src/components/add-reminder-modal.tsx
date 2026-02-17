@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, Clock3 } from 'lucide-react'
+import { format } from 'date-fns'
+import { CalendarIcon, Clock3 } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,6 +15,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -23,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 interface AddReminderModalProps {
   onReminderAdded?: (reminder: {
@@ -63,6 +71,11 @@ const getDefaultDueAtValue = () => {
   }
 }
 
+const formatDateForInput = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate()
+  ).padStart(2, '0')}`
+
 export function AddReminderModal({
   onReminderAdded,
   buttonLabel = 'Add Reminder',
@@ -91,6 +104,7 @@ export function AddReminderModal({
   const minuteOptions = Array.from({ length: 12 }, (_, index) =>
     String(index * 5).padStart(2, '0')
   )
+  const selectedDueDate = formData.dueDate ? new Date(formData.dueDate) : null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -233,19 +247,39 @@ export function AddReminderModal({
                 Schedule
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_0.8fr]">
-                <div className="relative">
-                  <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="dueDate"
-                    type="date"
-                    value={formData.dueDate}
-                    onChange={(e) =>
-                      handleInputChange('dueDate', e.target.value)
-                    }
-                    className="pl-9"
-                    required
-                  />
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="dueDate"
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !formData.dueDate && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDueDate ? (
+                        format(selectedDueDate, 'PPP')
+                      ) : (
+                        <span>Select date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDueDate ?? undefined}
+                      onSelect={(date) => {
+                        handleInputChange(
+                          'dueDate',
+                          date ? formatDateForInput(date) : ''
+                        )
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <div className="grid grid-cols-3 gap-2">
                   <Select
                     value={formData.dueHour}

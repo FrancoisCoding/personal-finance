@@ -27,6 +27,8 @@ import {
   CategorizationResult,
 } from '@/types/api'
 
+const MIN_AUTOCATEGORIZE_PROGRESS_MS = 900
+
 export function AutoCategorizeModal() {
   const { data: transactions = [], isLoading } = useTransactions()
   const { data: categories = [] } = useCategories()
@@ -45,6 +47,8 @@ export function AutoCategorizeModal() {
   >([])
   const lastRunIdsRef = useRef<string | null>(null)
   const progressIntervalRef = useRef<number | null>(null)
+  const finalizeTimeoutRef = useRef<number | null>(null)
+  const runStartedAtRef = useRef<number | null>(null)
 
   const uncategorizedTransactions = useMemo(
     () =>
@@ -89,67 +93,108 @@ export function AutoCategorizeModal() {
       return response.json()
     },
     onSuccess: (data) => {
-      const categorizedCount = data?.appliedCount ?? 0
-      const reviewItems = data?.review ?? []
-      if (progressIntervalRef.current !== null) {
-        window.clearInterval(progressIntervalRef.current)
-        progressIntervalRef.current = null
-      }
-      setProgress(100)
-      queryClient.invalidateQueries({ queryKey: ['transactions'] })
-      setReviewResults(reviewItems)
-      setReviewSelections(
-        reviewItems.reduce<Record<string, string>>((acc, item) => {
-          acc[item.transactionId] = item.suggestedCategory
-          return acc
-        }, {})
-      )
-      if (reviewItems.length > 0) {
-        setSuppressedReviewIds((previous) =>
-          Array.from(
-            new Set([
-              ...previous,
-              ...reviewItems.map((item) => item.transactionId),
-            ])
-          )
+      const finalize = () => {
+        const categorizedCount = data?.appliedCount ?? 0
+        const reviewItems = data?.review ?? []
+        if (progressIntervalRef.current !== null) {
+          window.clearInterval(progressIntervalRef.current)
+          progressIntervalRef.current = null
+        }
+        setProgress(100)
+        queryClient.invalidateQueries({ queryKey: ['transactions'] })
+        setReviewResults(reviewItems)
+        setReviewSelections(
+          reviewItems.reduce<Record<string, string>>((acc, item) => {
+            acc[item.transactionId] = item.suggestedCategory
+            return acc
+          }, {})
         )
-      }
-      toast({
-        title: categorizedCount > 0 ? 'Categorization complete' : 'No updates',
-        description:
-          categorizedCount > 0 || reviewItems.length > 0
-            ? `Categorized ${categorizedCount} transactions${
-                reviewItems.length > 0
-                  ? ` · ${reviewItems.length} need review`
-                  : ''
-              }.`
-            : 'No uncategorized transactions were found.',
-      })
+        if (reviewItems.length > 0) {
+          setSuppressedReviewIds((previous) =>
+            Array.from(
+              new Set([
+                ...previous,
+                ...reviewItems.map((item) => item.transactionId),
+              ])
+            )
+          )
+        }
+        toast({
+          title:
+            categorizedCount > 0
+              ? 'Categorization complete'
+              : reviewItems.length > 0
+                ? 'Review needed'
+                : 'No updates',
+          description:
+            categorizedCount > 0
+              ? `Categorized ${categorizedCount} transactions${
+                  reviewItems.length > 0
+                    ? ` · ${reviewItems.length} need review`
+                    : ''
+                }.`
+              : reviewItems.length > 0
+                ? `${reviewItems.length} suggestions need confirmation.`
+                : 'No uncategorized transactions were found.',
+        })
+        runStartedAtRef.current = null
 
-      if (reviewItems.length === 0) {
+        if (reviewItems.length === 0) {
+          setTimeout(() => {
+            setOpen(false)
+            setProgress(0)
+          }, 900)
+        }
+      }
+
+      const startedAt = runStartedAtRef.current
+      const elapsed = startedAt ? Date.now() - startedAt : 0
+      const remainingDelay = Math.max(
+        0,
+        MIN_AUTOCATEGORIZE_PROGRESS_MS - elapsed
+      )
+      if (finalizeTimeoutRef.current !== null) {
+        window.clearTimeout(finalizeTimeoutRef.current)
+      }
+      finalizeTimeoutRef.current = window.setTimeout(() => {
+        finalizeTimeoutRef.current = null
+        finalize()
+      }, remainingDelay)
+    },
+    onError: (error) => {
+      console.error('Auto-categorization error:', error)
+      const finalize = () => {
+        if (progressIntervalRef.current !== null) {
+          window.clearInterval(progressIntervalRef.current)
+          progressIntervalRef.current = null
+        }
+        setReviewResults([])
+        toast({
+          title: 'Auto-categorization failed',
+          description: 'Unable to categorize transactions automatically.',
+          variant: 'destructive',
+        })
+        runStartedAtRef.current = null
+
         setTimeout(() => {
           setOpen(false)
           setProgress(0)
         }, 1200)
       }
-    },
-    onError: (error) => {
-      console.error('Auto-categorization error:', error)
-      if (progressIntervalRef.current !== null) {
-        window.clearInterval(progressIntervalRef.current)
-        progressIntervalRef.current = null
-      }
-      setReviewResults([])
-      toast({
-        title: 'Auto-categorization failed',
-        description: 'Unable to categorize transactions automatically.',
-        variant: 'destructive',
-      })
 
-      setTimeout(() => {
-        setOpen(false)
-        setProgress(0)
-      }, 1500)
+      const startedAt = runStartedAtRef.current
+      const elapsed = startedAt ? Date.now() - startedAt : 0
+      const remainingDelay = Math.max(
+        0,
+        MIN_AUTOCATEGORIZE_PROGRESS_MS - elapsed
+      )
+      if (finalizeTimeoutRef.current !== null) {
+        window.clearTimeout(finalizeTimeoutRef.current)
+      }
+      finalizeTimeoutRef.current = window.setTimeout(() => {
+        finalizeTimeoutRef.current = null
+        finalize()
+      }, remainingDelay)
     },
   })
 
@@ -190,6 +235,7 @@ export function AutoCategorizeModal() {
     setProcessedTransactionIds((previous) =>
       Array.from(new Set([...previous, ...transactionIds]))
     )
+    runStartedAtRef.current = Date.now()
     setOpen(true)
     setProgress(8)
     mutate({
@@ -234,6 +280,19 @@ export function AutoCategorizeModal() {
       }
     }
   }, [isPending, open])
+
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current !== null) {
+        window.clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
+      }
+      if (finalizeTimeoutRef.current !== null) {
+        window.clearTimeout(finalizeTimeoutRef.current)
+        finalizeTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   const hasReview = reviewResults.length > 0
   const transactionLookup = useMemo(

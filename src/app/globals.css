@@ -62,7 +62,17 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans text-[15px] leading-6;
+    font-feature-settings:
+      'ss01' 1,
+      'cv05' 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
   }
 
   html {

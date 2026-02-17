@@ -183,8 +183,10 @@ export default function DashboardPage() {
   const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false)
   const demoProgressIntervalRef = useRef<number | null>(null)
   const highContrastActionButtonClass =
-    'min-h-11 bg-primary text-primary-foreground hover:bg-primary/90 ' +
-    'focus-visible:ring-2 focus-visible:ring-primary/80'
+    'min-h-11 border border-primary/70 bg-primary text-primary-foreground ' +
+    'shadow-[0_0_0_1px_hsl(var(--primary)/0.45),0_10px_28px_hsl(var(--primary)/0.28)] ' +
+    'hover:brightness-110 focus-visible:ring-2 focus-visible:ring-primary ' +
+    'focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
   // Memoized callbacks
   const handleTellerSuccess = useCallback(() => {
@@ -1496,8 +1498,8 @@ export default function DashboardPage() {
                   variant="outline"
                   disabled
                   className={
-                    'min-h-11 border-primary/60 bg-primary/12 text-primary-foreground ' +
-                    'disabled:opacity-70'
+                    'min-h-11 border border-primary/55 bg-primary/18 text-primary-foreground ' +
+                    'shadow-[0_0_0_1px_hsl(var(--primary)/0.35)] disabled:opacity-75'
                   }
                 >
                   Connect Bank Account

@@ -5,10 +5,12 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useId,
 } from 'react'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import { Bell, CheckCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { cn, formatCurrency } from '@/lib/utils'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 
 // Utility function to safely extract category name
 function getCategoryName(category: unknown): string | null {
@@ -220,8 +223,8 @@ const defaultAlertRuleState = alertRules.reduce<Record<string, boolean>>(
   {}
 )
 
-const alertRulesStorageKey = 'financeflow.alert-rules'
-const notificationHistoryStorageKey = 'financeflow.notification-history'
+const alertRulesStorageKeyBase = 'financeflow.alert-rules'
+const notificationHistoryStorageKeyBase = 'financeflow.notification-history'
 const notificationHistoryLimit = 160
 
 // Notification interface
@@ -273,26 +276,110 @@ export function NotificationProvider({
 }: {
   children: React.ReactNode
 }) {
+  const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotificationCenter, setShowNotificationCenter] = useState(false)
   const [alertRuleState, setAlertRuleState] = useState<Record<string, boolean>>(
     () => ({ ...defaultAlertRuleState })
   )
   const dedupeCacheRef = useRef<Map<string, number>>(new Map())
+  const userId = session?.user?.id ?? null
+  const isServerPersistenceEnabled = Boolean(userId) && !isDemoMode
+  const alertRulesStorageKey = userId
+    ? `${alertRulesStorageKeyBase}.${userId}`
+    : alertRulesStorageKeyBase
+  const notificationHistoryStorageKey = userId
+    ? `${notificationHistoryStorageKeyBase}.${userId}`
+    : notificationHistoryStorageKeyBase
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  useEffect(() => {
+  const parseNotifications = useCallback((data: unknown) => {
+    if (!Array.isArray(data)) return []
+    return data
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => {
+        const rawNotification = item as Record<string, unknown>
+        const timestampValue =
+          typeof rawNotification.timestamp === 'string'
+            ? rawNotification.timestamp
+            : ''
+        const timestamp = new Date(timestampValue)
+        return {
+          ...(rawNotification as Omit<Notification, 'timestamp' | 'read'>),
+          timestamp,
+          read: Boolean(rawNotification.read),
+          showToast:
+            typeof rawNotification.showToast === 'boolean'
+              ? rawNotification.showToast
+              : true,
+        } as Notification
+      })
+      .filter((item) => !Number.isNaN(item.timestamp.getTime()))
+      .slice(0, notificationHistoryLimit)
+  }, [])
+
+  const hydrateFromLocalStorage = useCallback(() => {
+    setAlertRuleState({ ...defaultAlertRuleState })
     try {
       const stored = window.localStorage.getItem(alertRulesStorageKey)
-      if (!stored) return
-      const parsed = JSON.parse(stored)
-      if (!parsed || typeof parsed !== 'object') return
-      setAlertRuleState((prev) => ({ ...prev, ...parsed }))
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed && typeof parsed === 'object') {
+          setAlertRuleState({ ...defaultAlertRuleState, ...parsed })
+        }
+      }
     } catch (error) {
       console.warn('Failed to load alert rules', error)
     }
-  }, [])
+
+    try {
+      const stored = window.localStorage.getItem(notificationHistoryStorageKey)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const hydrated = parseNotifications(parsed)
+        setNotifications(hydrated)
+      } else {
+        setNotifications([])
+      }
+    } catch (error) {
+      console.warn('Failed to load notification history', error)
+    }
+  }, [alertRulesStorageKey, notificationHistoryStorageKey, parseNotifications])
+
+  const hydrateFromServer = useCallback(async () => {
+    try {
+      const response = await fetch('/api/alerts')
+      if (!response.ok) {
+        throw new Error('Failed to fetch alert persistence state')
+      }
+      const payload = await response.json()
+      const persistedNotifications = parseNotifications(payload?.notifications)
+      setNotifications(persistedNotifications)
+      if (payload?.ruleState && typeof payload.ruleState === 'object') {
+        setAlertRuleState({ ...defaultAlertRuleState, ...payload.ruleState })
+      } else {
+        setAlertRuleState({ ...defaultAlertRuleState })
+      }
+    } catch (error) {
+      console.warn('Failed to hydrate alerts from server', error)
+      hydrateFromLocalStorage()
+    }
+  }, [hydrateFromLocalStorage, parseNotifications])
+
+  useEffect(() => {
+    if (isServerPersistenceEnabled) {
+      void hydrateFromServer()
+      return
+    }
+    hydrateFromLocalStorage()
+  }, [
+    hydrateFromLocalStorage,
+    hydrateFromServer,
+    isServerPersistenceEnabled,
+    userId,
+  ])
 
   useEffect(() => {
     try {
@@ -303,41 +390,7 @@ export function NotificationProvider({
     } catch (error) {
       console.warn('Failed to persist alert rules', error)
     }
-  }, [alertRuleState])
-
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(notificationHistoryStorageKey)
-      if (!stored) return
-      const parsed = JSON.parse(stored)
-      if (!Array.isArray(parsed)) return
-      const hydrated = parsed
-        .filter((item) => item && typeof item === 'object')
-        .map((item) => {
-          const timestamp = new Date(item.timestamp)
-          return {
-            ...item,
-            timestamp,
-            read: Boolean(item.read),
-          } as Notification
-        })
-        .filter((item) => !Number.isNaN(item.timestamp.getTime()))
-      if (hydrated.length === 0) return
-      setNotifications((prev) => {
-        if (prev.length === 0) {
-          return hydrated.slice(0, notificationHistoryLimit)
-        }
-        const existingIds = new Set(prev.map((item) => item.id))
-        const merged = [
-          ...prev,
-          ...hydrated.filter((item) => !existingIds.has(item.id)),
-        ]
-        return merged.slice(0, notificationHistoryLimit)
-      })
-    } catch (error) {
-      console.warn('Failed to load notification history', error)
-    }
-  }, [])
+  }, [alertRuleState, alertRulesStorageKey])
 
   useEffect(() => {
     try {
@@ -358,7 +411,75 @@ export function NotificationProvider({
     } catch (error) {
       console.warn('Failed to persist notification history', error)
     }
-  }, [notifications])
+  }, [notificationHistoryStorageKey, notifications])
+
+  const persistAlertMutation = useCallback(
+    async (payload: Record<string, unknown>) => {
+      if (!isServerPersistenceEnabled) return
+      try {
+        await fetch('/api/alerts', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } catch (error) {
+        console.warn('Failed to persist alert mutation', error)
+      }
+    },
+    [isServerPersistenceEnabled]
+  )
+
+  const persistCreatedNotification = useCallback(
+    async (notification: Notification) => {
+      if (!isServerPersistenceEnabled) return
+      try {
+        const response = await fetch('/api/alerts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            timestamp: notification.timestamp.toISOString(),
+            read: notification.read,
+            showToast: notification.showToast ?? true,
+            dedupeKey: notification.dedupeKey,
+            throttleMinutes: notification.throttleMinutes,
+            ruleId: notification.ruleId,
+            category: notification.category,
+          }),
+        })
+        if (!response.ok) return
+        const persisted = await response.json()
+        if (typeof persisted?.id !== 'string') return
+        const timestamp = new Date(persisted.timestamp)
+        if (Number.isNaN(timestamp.getTime())) return
+
+        setNotifications((prev) => {
+          const withoutOptimistic = prev.filter(
+            (item) => item.id !== notification.id
+          )
+          const persistedNotification: Notification = {
+            ...notification,
+            id: persisted.id,
+            timestamp,
+            read: Boolean(persisted.read),
+            showToast: persisted.showToast ?? notification.showToast,
+          }
+          const deduped = withoutOptimistic.filter(
+            (item) => item.id !== persistedNotification.id
+          )
+          return [persistedNotification, ...deduped].slice(
+            0,
+            notificationHistoryLimit
+          )
+        })
+      } catch (error) {
+        console.warn('Failed to persist new notification', error)
+      }
+    },
+    [isServerPersistenceEnabled]
+  )
 
   const addNotification = (
     notification: Omit<Notification, 'id' | 'timestamp' | 'read'>
@@ -376,7 +497,9 @@ export function NotificationProvider({
 
       if (typeof window !== 'undefined') {
         try {
-          const storageKey = `financeflow.notification.${dedupeKey}`
+          const storageKey = userId
+            ? `financeflow.notification.${userId}.${dedupeKey}`
+            : `financeflow.notification.${dedupeKey}`
           const storedTimestamp = window.localStorage.getItem(storageKey)
           if (storedTimestamp && now - Number(storedTimestamp) < throttleMs) {
             dedupeCacheRef.current.set(dedupeKey, Number(storedTimestamp))
@@ -401,41 +524,51 @@ export function NotificationProvider({
     setNotifications((prev) =>
       [newNotification, ...prev].slice(0, notificationHistoryLimit)
     )
+    void persistCreatedNotification(newNotification)
   }
 
   const markAsRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     )
+    void persistAlertMutation({ action: 'mark-read', id })
   }
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    void persistAlertMutation({ action: 'mark-all-read' })
   }
 
   const clearRead = () => {
     setNotifications((prev) =>
       prev.filter((notification) => !notification.read)
     )
+    void persistAlertMutation({ action: 'clear-read' })
   }
 
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
+    void persistAlertMutation({ action: 'remove', id })
   }
 
   const clearAll = () => {
     setNotifications([])
+    void persistAlertMutation({ action: 'clear-all' })
   }
 
   const toggleAlertRule = (id: string) => {
-    setAlertRuleState((prev) => ({
-      ...prev,
-      [id]: !(prev[id] ?? true),
-    }))
+    const nextValue = !(alertRuleState[id] ?? true)
+    setAlertRuleState((prev) => ({ ...prev, [id]: nextValue }))
+    void persistAlertMutation({
+      action: 'set-rule',
+      ruleId: id,
+      enabled: nextValue,
+    })
   }
 
   const resetAlertRules = () => {
     setAlertRuleState({ ...defaultAlertRuleState })
+    void persistAlertMutation({ action: 'reset-rules' })
   }
 
   const isAlertRuleEnabled = (id: string) => alertRuleState[id] ?? true

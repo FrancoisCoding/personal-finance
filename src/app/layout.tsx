@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, Space_Grotesk } from 'next/font/google'
+import { Manrope, Sora } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth-provider'
@@ -10,12 +10,12 @@ import {
   ToastContainer,
 } from '@/components/notification-system'
 
-const bodyFont = DM_Sans({
+const bodyFont = Manrope({
   subsets: ['latin'],
   variable: '--font-body',
 })
 
-const displayFont = Space_Grotesk({
+const displayFont = Sora({
   subsets: ['latin'],
   variable: '--font-display',
 })

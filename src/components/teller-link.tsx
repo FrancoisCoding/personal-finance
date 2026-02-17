@@ -134,8 +134,10 @@ export const TellerLink = memo(function TellerLink({
         disabled={isLoading || !isScriptReady}
         className={
           buttonClassName ??
-          'min-h-11 bg-primary text-primary-foreground hover:bg-primary/90 ' +
-            'focus-visible:ring-2 focus-visible:ring-primary/80'
+          'min-h-11 border border-primary/70 bg-primary text-primary-foreground ' +
+            'shadow-[0_0_0_1px_hsl(var(--primary)/0.45),0_10px_28px_hsl(var(--primary)/0.28)] ' +
+            'hover:brightness-110 focus-visible:ring-2 focus-visible:ring-primary ' +
+            'focus-visible:ring-offset-2 focus-visible:ring-offset-background'
         }
       >
         {isLoading ? (

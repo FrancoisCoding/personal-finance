@@ -17,24 +17,58 @@ interface SpendingChartProps {
   className?: string
 }
 
+const normalizeHexColor = (color: string) => {
+  const normalized = color.trim().toLowerCase()
+  if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/.test(normalized)) {
+    return null
+  }
+  if (normalized.length === 4) {
+    const r = normalized[1]
+    const g = normalized[2]
+    const b = normalized[3]
+    return `#${r}${r}${g}${g}${b}${b}`
+  }
+  return normalized
+}
+
+const hexToRgb = (hexColor: string) => {
+  const normalized = normalizeHexColor(hexColor)
+  if (!normalized) return null
+  const red = parseInt(normalized.slice(1, 3), 16)
+  const green = parseInt(normalized.slice(3, 5), 16)
+  const blue = parseInt(normalized.slice(5, 7), 16)
+  return { red, green, blue }
+}
+
+const getColorDistance = (firstHex: string, secondHex: string) => {
+  const first = hexToRgb(firstHex)
+  const second = hexToRgb(secondHex)
+  if (!first || !second) return 0
+  const redDiff = first.red - second.red
+  const greenDiff = first.green - second.green
+  const blueDiff = first.blue - second.blue
+  return Math.sqrt(redDiff ** 2 + greenDiff ** 2 + blueDiff ** 2)
+}
+
 const SpendingChart = memo(function SpendingChart({
   data,
   totalSpending,
   previousMonthTotal,
   className = '',
 }: SpendingChartProps) {
-  const colorPalette = [
-    '#84CC16',
-    '#3B82F6',
-    '#F97316',
-    '#8B5CF6',
-    '#06B6D4',
-    '#EF4444',
-    '#F59E0B',
-    '#14B8A6',
-    '#EC4899',
-    '#6366F1',
+  const highContrastPalette = [
+    '#84cc16',
+    '#3b82f6',
+    '#f97316',
+    '#a855f7',
+    '#ef4444',
+    '#06b6d4',
+    '#eab308',
+    '#14b8a6',
+    '#f43f5e',
+    '#6366f1',
   ]
+  const minimumColorDistance = 90
 
   const sortedData = [...data].sort((a, b) => b.amount - a.amount)
   const topItems = sortedData.slice(0, 4)
@@ -60,25 +94,41 @@ const SpendingChart = memo(function SpendingChart({
     percentage: totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0,
   }))
 
-  const usedColors = new Set<string>()
+  const assignedColors: string[] = []
   let paletteIndex = 0
   const displayData = preliminaryData.map((item) => {
-    const normalizedIncomingColor = item.color.trim().toLowerCase()
-    if (
+    const normalizedIncomingColor = normalizeHexColor(item.color)
+    const isIncomingColorDistinct =
       normalizedIncomingColor &&
-      !usedColors.has(normalizedIncomingColor) &&
-      normalizedIncomingColor !== '#9ca3af'
-    ) {
-      usedColors.add(normalizedIncomingColor)
+      normalizedIncomingColor !== '#9ca3af' &&
+      assignedColors.every(
+        (existingColor) =>
+          getColorDistance(normalizedIncomingColor, existingColor) >=
+          minimumColorDistance
+      )
+
+    if (normalizedIncomingColor && isIncomingColorDistinct) {
+      assignedColors.push(normalizedIncomingColor)
       return { ...item, color: normalizedIncomingColor }
     }
 
-    while (usedColors.has(colorPalette[paletteIndex % colorPalette.length])) {
+    while (
+      assignedColors.length < highContrastPalette.length &&
+      assignedColors.some(
+        (existingColor) =>
+          getColorDistance(
+            highContrastPalette[paletteIndex % highContrastPalette.length],
+            existingColor
+          ) < minimumColorDistance
+      )
+    ) {
       paletteIndex += 1
     }
-    const uniqueColor = colorPalette[paletteIndex % colorPalette.length]
+
+    const uniqueColor =
+      highContrastPalette[paletteIndex % highContrastPalette.length]
     paletteIndex += 1
-    usedColors.add(uniqueColor)
+    assignedColors.push(uniqueColor)
     return { ...item, color: uniqueColor }
   })
 

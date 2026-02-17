@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarClock } from 'lucide-react'
+import { Calendar, Clock3 } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import {
   Dialog,
@@ -39,9 +39,28 @@ interface AddReminderModalProps {
 
 const getDefaultDueAtValue = () => {
   const date = new Date()
-  const timezoneOffset = date.getTimezoneOffset()
-  const localTime = new Date(date.getTime() - timezoneOffset * 60 * 1000)
-  return localTime.toISOString().slice(0, 16)
+  date.setSeconds(0, 0)
+  const roundedMinutes = Math.ceil(date.getMinutes() / 5) * 5
+  if (roundedMinutes === 60) {
+    date.setHours(date.getHours() + 1, 0, 0, 0)
+  } else {
+    date.setMinutes(roundedMinutes, 0, 0)
+  }
+
+  const dateValue = `${date.getFullYear()}-${String(
+    date.getMonth() + 1
+  ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+  const hour24 = date.getHours()
+  const meridiem = hour24 >= 12 ? 'PM' : 'AM'
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+
+  return {
+    dateValue,
+    hourValue: String(hour12).padStart(2, '0'),
+    minuteValue: String(date.getMinutes()).padStart(2, '0'),
+    meridiemValue: meridiem as 'AM' | 'PM',
+  }
 }
 
 export function AddReminderModal({
@@ -53,14 +72,25 @@ export function AddReminderModal({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
+  const defaultDueAtValues = getDefaultDueAtValue()
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    dueAt: getDefaultDueAtValue(),
+    dueDate: defaultDueAtValues.dateValue,
+    dueHour: defaultDueAtValues.hourValue,
+    dueMinute: defaultDueAtValues.minuteValue,
+    dueMeridiem: defaultDueAtValues.meridiemValue,
     type: 'custom' as 'budget' | 'bill' | 'goal' | 'custom',
     priority: 'medium' as 'low' | 'medium' | 'high',
   })
+
+  const hourOptions = Array.from({ length: 12 }, (_, index) =>
+    String(index + 1).padStart(2, '0')
+  )
+  const minuteOptions = Array.from({ length: 12 }, (_, index) =>
+    String(index * 5).padStart(2, '0')
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,7 +103,33 @@ export function AddReminderModal({
       return
     }
 
-    const dueAt = new Date(formData.dueAt)
+    const parsedHour = parseInt(formData.dueHour, 10)
+    if (
+      Number.isNaN(parsedHour) ||
+      parsedHour < 1 ||
+      parsedHour > 12 ||
+      !formData.dueDate
+    ) {
+      toast({
+        title: 'Invalid date',
+        description: 'Please choose a valid reminder date and time.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const hour24 =
+      formData.dueMeridiem === 'PM'
+        ? parsedHour === 12
+          ? 12
+          : parsedHour + 12
+        : parsedHour === 12
+          ? 0
+          : parsedHour
+
+    const dueAt = new Date(
+      `${formData.dueDate}T${String(hour24).padStart(2, '0')}:${formData.dueMinute}:00`
+    )
     if (Number.isNaN(dueAt.getTime())) {
       toast({
         title: 'Invalid date',
@@ -103,7 +159,10 @@ export function AddReminderModal({
       setFormData({
         title: '',
         description: '',
-        dueAt: getDefaultDueAtValue(),
+        dueDate: defaultDueAtValues.dateValue,
+        dueHour: defaultDueAtValues.hourValue,
+        dueMinute: defaultDueAtValues.minuteValue,
+        dueMeridiem: defaultDueAtValues.meridiemValue,
         type: 'custom',
         priority: 'medium',
       })
@@ -166,18 +225,78 @@ export function AddReminderModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="dueAt">Date and time</Label>
-            <div className="relative">
-              <CalendarClock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="dueAt"
-                type="datetime-local"
-                value={formData.dueAt}
-                onChange={(e) => handleInputChange('dueAt', e.target.value)}
-                className="pl-9"
-                required
-              />
+          <div className="space-y-3">
+            <Label htmlFor="dueDate">Date and time</Label>
+            <div className="relative rounded-xl border border-border/60 bg-muted/10 p-3">
+              <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                <Clock3 className="h-3.5 w-3.5" />
+                Schedule
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+                <div className="relative">
+                  <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) =>
+                      handleInputChange('dueDate', e.target.value)
+                    }
+                    className="pl-9"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Select
+                    value={formData.dueHour}
+                    onValueChange={(value) =>
+                      handleInputChange('dueHour', value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hourOptions.map((hour) => (
+                        <SelectItem key={hour} value={hour}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={formData.dueMinute}
+                    onValueChange={(value) =>
+                      handleInputChange('dueMinute', value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minuteOptions.map((minute) => (
+                        <SelectItem key={minute} value={minute}>
+                          {minute}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={formData.dueMeridiem}
+                    onValueChange={(value) =>
+                      handleInputChange('dueMeridiem', value as 'AM' | 'PM')
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AM">AM</SelectItem>
+                      <SelectItem value="PM">PM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
 

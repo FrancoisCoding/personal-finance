@@ -19,6 +19,7 @@ import {
   useTransactions,
 } from '@/hooks/use-finance-data'
 import { formatCurrency } from '@/lib/utils'
+import { calculateBudgetForecastItems } from '@/lib/budget-forecast'
 
 type TForecastStatus = 'healthy' | 'warning' | 'over'
 type TBudgetPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
@@ -65,187 +66,15 @@ export default function BudgetsPage() {
     [transactions]
   )
 
-  const budgetForecastItems = useMemo(() => {
-    const now = new Date()
-    const startOfToday = new Date(now)
-    startOfToday.setHours(0, 0, 0, 0)
-    const millisecondsPerDay = 24 * 60 * 60 * 1000
-
-    const getBudgetWindow = (budget: (typeof budgets)[number]) => {
-      const period = budget.period ?? 'MONTHLY'
-
-      if (period === 'WEEKLY') {
-        const start = new Date(startOfToday)
-        start.setDate(start.getDate() - start.getDay())
-        const end = new Date(start)
-        end.setDate(end.getDate() + 6)
-        end.setHours(23, 59, 59, 999)
-        return { windowStart: start, windowEnd: end }
-      }
-
-      if (period === 'YEARLY') {
-        const start = new Date(startOfToday.getFullYear(), 0, 1)
-        const end = new Date(
-          startOfToday.getFullYear(),
-          11,
-          31,
-          23,
-          59,
-          59,
-          999
-        )
-        return { windowStart: start, windowEnd: end }
-      }
-
-      if (period === 'DAILY') {
-        const end = new Date(startOfToday)
-        end.setHours(23, 59, 59, 999)
-        return { windowStart: startOfToday, windowEnd: end }
-      }
-
-      const start = new Date(
-        startOfToday.getFullYear(),
-        startOfToday.getMonth(),
-        1
-      )
-      const end = new Date(
-        startOfToday.getFullYear(),
-        startOfToday.getMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      )
-      return { windowStart: start, windowEnd: end }
-    }
-
-    const getStatusRank = (status: TForecastStatus) => {
-      if (status === 'over') return 3
-      if (status === 'warning') return 2
-      return 1
-    }
-
-    return budgets
-      .map((budget) => {
-        const categoryName =
-          typeof budget.category === 'string'
-            ? budget.category
-            : budget.category?.name
-        const { windowStart, windowEnd } = getBudgetWindow(budget)
-        const effectiveEndTime = Math.min(
-          startOfToday.getTime(),
-          windowEnd.getTime()
-        )
-        const daysElapsed = Math.max(
-          1,
-          Math.floor(
-            (effectiveEndTime - windowStart.getTime()) / millisecondsPerDay
-          ) + 1
-        )
-        const daysInWindow = Math.max(
-          1,
-          Math.floor(
-            (windowEnd.getTime() - windowStart.getTime()) / millisecondsPerDay
-          ) + 1
-        )
-
-        const matchesBudgetCategory = (
-          transaction: (typeof transactions)[number]
-        ) => {
-          if (budget.categoryId) {
-            return transaction.categoryId === budget.categoryId
-          }
-
-          if (categoryName) {
-            const transactionCategoryName =
-              transaction.categoryRelation?.name ||
-              categoryLookup.get(transaction.categoryId ?? '') ||
-              transaction.category
-            return transactionCategoryName === categoryName
-          }
-
-          return true
-        }
-
-        const spentToDate = transactionDateEntries
-          .filter(
-            ({ transaction, transactionDate }) =>
-              transaction.type === 'EXPENSE' &&
-              transactionDate >= windowStart &&
-              transactionDate.getTime() <= effectiveEndTime &&
-              matchesBudgetCategory(transaction)
-          )
-          .reduce(
-            (sum, { transaction }) => sum + Math.abs(transaction.amount),
-            0
-          )
-
-        const projectedSpend = (spentToDate / daysElapsed) * daysInWindow
-        const remainingAmount = budget.amount - spentToDate
-        const averageDailySpend = spentToDate / daysElapsed
-        const projectedUtilization =
-          budget.amount > 0 ? (projectedSpend / budget.amount) * 100 : 0
-        const currentUtilization =
-          budget.amount > 0 ? (spentToDate / budget.amount) * 100 : 0
-
-        let status: TForecastStatus = 'healthy'
-        if (projectedUtilization >= 100 || currentUtilization >= 100) {
-          status = 'over'
-        } else if (projectedUtilization >= 85 || currentUtilization >= 80) {
-          status = 'warning'
-        }
-
-        const daysUntilOverBudget =
-          averageDailySpend > 0 && remainingAmount > 0
-            ? Math.ceil(remainingAmount / averageDailySpend)
-            : remainingAmount <= 0
-              ? 0
-              : null
-
-        const daysRemainingInWindow = Math.max(
-          0,
-          Math.floor(
-            (windowEnd.getTime() - startOfToday.getTime()) / millisecondsPerDay
-          )
-        )
-        const likelyOverrunDate =
-          daysUntilOverBudget !== null &&
-          daysUntilOverBudget > 0 &&
-          daysUntilOverBudget <= daysRemainingInWindow
-            ? new Date(
-                startOfToday.getTime() +
-                  Math.max(0, daysUntilOverBudget - 1) * millisecondsPerDay
-              )
-            : null
-
-        return {
-          id: budget.id,
-          name: budget.name,
-          period: budget.period ?? 'MONTHLY',
-          categoryName,
-          amount: budget.amount,
-          spentToDate,
-          projectedSpend,
-          remainingAmount,
-          projectedUtilization,
-          currentUtilization,
-          status,
-          daysUntilOverBudget,
-          daysRemainingInWindow,
-          recommendedDailyCap:
-            remainingAmount > 0 && daysRemainingInWindow > 0
-              ? remainingAmount / (daysRemainingInWindow + 1)
-              : 0,
-          likelyOverrunDate,
-        }
-      })
-      .sort(
-        (a, b) =>
-          getStatusRank(b.status) - getStatusRank(a.status) ||
-          b.projectedUtilization - a.projectedUtilization
-      )
-  }, [budgets, categoryLookup, transactionDateEntries])
+  const budgetForecastItems = useMemo(
+    () =>
+      calculateBudgetForecastItems({
+        budgets,
+        transactions,
+        categoryLookup,
+      }),
+    [budgets, categoryLookup, transactions]
+  )
 
   const budgetSummary = useMemo(() => {
     const totalBudgeted = budgets.reduce(

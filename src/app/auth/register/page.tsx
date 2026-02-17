@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,9 +13,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Progress } from '@/components/ui/progress'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
-import { Github, Mail } from 'lucide-react'
+import { useDemoMode } from '@/hooks/use-demo-mode'
+import { Github, Mail, Sparkles } from 'lucide-react'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -23,8 +32,21 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isDemoLoading, setIsDemoLoading] = useState(false)
+  const [demoProgress, setDemoProgress] = useState(0)
+  const demoProgressIntervalRef = useRef<number | null>(null)
   const router = useRouter()
   const { toast } = useToast()
+  const { startDemoMode } = useDemoMode()
+
+  useEffect(() => {
+    return () => {
+      if (demoProgressIntervalRef.current !== null) {
+        window.clearInterval(demoProgressIntervalRef.current)
+        demoProgressIntervalRef.current = null
+      }
+    }
+  }, [])
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +95,37 @@ export default function RegisterPage() {
     }
   }
 
+  const handleDemoSignIn = () => {
+    if (isLoading) return
+    setIsDemoLoading(true)
+    setDemoProgress(12)
+    if (demoProgressIntervalRef.current !== null) {
+      window.clearInterval(demoProgressIntervalRef.current)
+    }
+    demoProgressIntervalRef.current = window.setInterval(() => {
+      setDemoProgress((current) => {
+        if (current >= 90) return current
+        const next =
+          current < 40 ? current + 8 : current < 70 ? current + 5 : current + 2
+        return Math.min(90, next)
+      })
+    }, 220)
+
+    try {
+      localStorage.removeItem('finance-demo-walkthrough')
+      localStorage.removeItem('finance-demo-loading')
+      localStorage.setItem('finance-demo-loading', '1')
+    } catch (error) {
+      void error
+    }
+
+    startDemoMode()
+    window.setTimeout(() => {
+      setDemoProgress(100)
+      router.push('/dashboard?demo=1')
+    }, 420)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -100,6 +153,34 @@ export default function RegisterPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                className={
+                  'w-full justify-between gap-3 border-emerald-500/30 bg-emerald-500/5 ' +
+                  'px-3 py-2 text-emerald-700 transition hover:border-emerald-500/50 ' +
+                  'hover:bg-emerald-500/10 disabled:opacity-60 dark:text-emerald-200'
+                }
+                onClick={handleDemoSignIn}
+                disabled={isLoading}
+              >
+                <span className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  <span className="text-left">
+                    <span className="block text-sm font-semibold">
+                      Try the live demo
+                    </span>
+                    <span className="block text-xs text-emerald-700/70 dark:text-emerald-200/70">
+                      Explore with sample data
+                    </span>
+                  </span>
+                </span>
+                <span className="text-xs text-emerald-700/70 dark:text-emerald-200/70">
+                  No signup
+                </span>
+              </Button>
+
               {/* OAuth Buttons */}
               <div className="space-y-3">
                 <Button
@@ -223,6 +304,24 @@ export default function RegisterPage() {
           </Card>
         </div>
       </main>
+
+      <Dialog open={isDemoLoading}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>Preparing demo workspace</DialogTitle>
+            <DialogDescription>
+              Loading curated data and analytics so you can explore instantly.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Initializing demo session</span>
+              <span>{demoProgress}%</span>
+            </div>
+            <Progress value={demoProgress} className="h-2" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

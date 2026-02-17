@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +28,7 @@ import { Mail, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const { status } = useSession()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -37,6 +38,17 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { startDemoMode } = useDemoMode()
+  const authError = searchParams.get('error')
+  const authErrorMessage =
+    authError === 'OAuthAccountNotLinked'
+      ? 'This email is linked to a different sign-in method.'
+      : authError === 'AccessDenied'
+        ? 'Access was denied. Please try another account.'
+        : authError === 'Configuration'
+          ? 'Authentication is misconfigured. Contact support.'
+          : authError
+            ? 'Sign in failed. Please try again.'
+            : null
 
   useEffect(() => {
     return () => {
@@ -156,6 +168,11 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {authErrorMessage ? (
+                <p className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-500">
+                  {authErrorMessage}
+                </p>
+              ) : null}
               <Button
                 variant="outline"
                 className={

@@ -17,6 +17,7 @@ declare module 'next-auth' {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -35,31 +36,6 @@ export const authOptions: NextAuthOptions = {
         token.sub = user.id
       }
       return token
-    },
-    redirect: async ({ url, baseUrl }) => {
-      if (url.startsWith('/')) {
-        if (url === '/auth/login' || url === '/auth/register') {
-          return `${baseUrl}/dashboard`
-        }
-        return `${baseUrl}${url}`
-      }
-
-      try {
-        const parsedUrl = new URL(url)
-        if (parsedUrl.origin === baseUrl) {
-          if (
-            parsedUrl.pathname === '/auth/login' ||
-            parsedUrl.pathname === '/auth/register'
-          ) {
-            return `${baseUrl}/dashboard`
-          }
-          return url
-        }
-      } catch (error) {
-        void error
-      }
-
-      return `${baseUrl}/dashboard`
     },
   },
   pages: {

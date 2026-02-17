@@ -2,6 +2,7 @@ describe('auth options', () => {
   it('builds providers and callbacks', async () => {
     process.env.GOOGLE_CLIENT_ID = 'google-id'
     process.env.GOOGLE_CLIENT_SECRET = 'google-secret'
+    process.env.NEXTAUTH_SECRET = 'nextauth-secret'
 
     vi.resetModules()
     const { authOptions } = await import('./auth')
@@ -56,25 +57,9 @@ describe('auth options', () => {
     })
     expect(jwtNoUser?.sub).toBe('keep')
 
-    const redirectRelative = await authOptions.callbacks?.redirect?.({
-      url: '/dashboard',
-      baseUrl: 'https://example.com',
-    })
-    expect(redirectRelative).toBe('https://example.com/dashboard')
-
-    const redirectSignIn = await authOptions.callbacks?.redirect?.({
-      url: '/auth/login',
-      baseUrl: 'https://example.com',
-    })
-    expect(redirectSignIn).toBe('https://example.com/dashboard')
-
-    const redirectExternal = await authOptions.callbacks?.redirect?.({
-      url: 'https://malicious.example/phish',
-      baseUrl: 'https://example.com',
-    })
-    expect(redirectExternal).toBe('https://example.com/dashboard')
-
     expect(authOptions.pages?.signIn).toBe('/auth/login')
     expect(authOptions.session?.strategy).toBe('jwt')
+    expect(authOptions.secret).toBe('nextauth-secret')
+    expect(authOptions.callbacks?.redirect).toBeUndefined()
   })
 })

@@ -1,106 +1,139 @@
-# Finance App
+# Personal Finance Intelligence Platform
 
-A comprehensive personal finance management application built with Next.js, featuring bank account integration, transaction tracking, budgeting, goal setting, and AI-powered insights.
+A production-style personal finance platform built with Next.js and TypeScript.
+It combines transaction automation, budgeting intelligence, subscription analytics,
+and an AI copilot into one cohesive dashboard experience.
 
-## Features
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)](https://www.prisma.io/)
+[![React Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?logo=reactquery)](https://tanstack.com/query/latest)
+[![OpenRouter](https://img.shields.io/badge/AI-OpenRouter-7C3AED)](https://openrouter.ai/)
 
-### Core Features
+## Visual Tour
 
-- **Bank Account Integration**: Connect multiple bank accounts via Teller
-- **Transaction Management**: Track income, expenses, and transfers
-- **Budget Planning**: Create and monitor spending budgets
-- **Financial Goals**: Set and track savings goals with milestones
-- **Subscription Tracking**: Monitor recurring payments and renewals
-- **Category Management**: Organize transactions with custom categories
+### Product walkthrough (GIF)
 
-### AI-Powered Features (Hosted)
+![Demo walkthrough](docs/assets/gifs/demo-walkthrough.gif)
 
-- **Transaction Categorization**: Automatically categorize transactions using hosted AI
-- **Bulk Categorization**: Categorize multiple transactions at once
-- **Financial Insights**: Get AI-generated insights about spending patterns
-- **AI Chat**: Chat with an AI assistant about your finances
+### Landing experience
 
-## Tech Stack
+![Landing page](docs/assets/images/landing-page.png)
 
-- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL
-- **Authentication**: NextAuth.js
-- **Bank Integration**: Teller API
-- **State Management**: TanStack Query (React Query)
-- **AI**: OpenRouter (Hosted AI models)
-- **UI Components**: Shadcn/ui
+### Dashboard command center
 
-## Getting Started
+![Dashboard overview](docs/assets/images/dashboard-overview.png)
 
-### Prerequisites
+### Subscription intelligence
 
-- Node.js 18+
-- PostgreSQL database
-- Teller developer account (for bank integration)
-- OpenRouter API key (for hosted AI features)
+![Subscriptions intelligence](docs/assets/images/subscriptions-intelligence.png)
 
-### Installation
+### AI assistant workspace
 
-1. **Clone the repository**
+![AI assistant](docs/assets/images/ai-assistant.png)
 
-```bash
-git clone <repository-url>
-cd finance-app
+## Why this project stands out
+
+- Full-stack architecture with real data modeling, API routes, and UI state orchestration.
+- AI features integrated into real workflows, not isolated demos.
+- High-signal dashboard UX with guided demo mode for instant product evaluation.
+- Automated test and lint pipeline designed for shipping quality.
+
+## Core capabilities
+
+- Secure authentication with NextAuth and OAuth providers.
+- Bank-ready data model for accounts, transactions, budgets, goals, and subscriptions.
+- Auto-categorization pipeline with confidence review and bulk apply actions.
+- AI financial insights panel and AI assistant with contextual finance prompts.
+- Budget forecasting and cashflow planning surfaces.
+- Subscription renewal intelligence with risk and price tracking.
+- Demo mode that enables full product exploration without external setup.
+
+## Tech stack
+
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, Radix UI
+- State and data: TanStack Query, Jotai
+- Backend: Next.js Route Handlers, Prisma ORM
+- Database: PostgreSQL
+- Auth: NextAuth
+- AI: OpenRouter
+- Testing: Vitest, Testing Library
+
+## Architecture snapshot
+
+```text
+src/
+  app/
+    (authenticated)/     # Main product surfaces (dashboard, assistant, subscriptions)
+    api/                 # Route handlers for finance + AI operations
+    auth/                # Login/register flows + demo mode entry
+  components/            # Reusable UI and feature modules
+  hooks/                 # Data hooks, demo mode hooks, UI behavior hooks
+  lib/                   # Core utilities, AI helpers, demo data/session logic
+  store/                 # Shared client state atoms
+prisma/                  # Data schema and database access
+tests/                   # Unit and integration test suites
+scripts/                 # Utility scripts (secret checks)
 ```
 
-2. **Install dependencies**
+## Quick start
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/FrancoisCoding/personal-finance.git
+cd personal-finance
 npm install
 ```
 
-3. **Set up environment variables**
-   Create a `.env.local` file with the following variables:
+### 2. Configure environment
 
-```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/finance_app"
+Copy `env.example` to `.env` and fill required values.
 
-# NextAuth
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Teller (for bank integration)
-NEXT_PUBLIC_TELLER_APPLICATION_ID="your-teller-application-id"
-NEXT_PUBLIC_TELLER_ENV="development"
-TELLER_ENV="development"
-TELLER_CERT_PATH="/path/to/teller-cert.pem"
-TELLER_KEY_PATH="/path/to/teller-key.pem"
-
-# OpenRouter (hosted AI)
-OPENROUTER_API_KEY="your-openrouter-api-key"
-OPENROUTER_MODEL="openrouter/free"
-OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
-```
-
-4. **Set up the database**
+### 3. Initialize database
 
 ```bash
-npx prisma generate
-npx prisma db push
+npm run db:generate
+npm run db:push
 ```
 
-5. **Configure OpenRouter** (for AI features)
-   Set `OPENROUTER_API_KEY` in `.env.local` and restart the dev server.
-
-6. **Run the development server**
+### 4. Run the app
 
 ```bash
 npm run dev
 ```
 
-7. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+Open `http://localhost:3000`.
 
-## Quality Checks
+## Environment variables
 
-Run these commands before opening a pull request:
+| Variable                            | Required            | Purpose                                    |
+| ----------------------------------- | ------------------- | ------------------------------------------ |
+| `DATABASE_URL`                      | Yes                 | PostgreSQL connection string               |
+| `NEXTAUTH_URL`                      | Yes                 | Auth callback base URL                     |
+| `NEXTAUTH_SECRET`                   | Yes                 | Session and JWT signing secret             |
+| `GOOGLE_CLIENT_ID`                  | Optional            | Google OAuth provider                      |
+| `GOOGLE_CLIENT_SECRET`              | Optional            | Google OAuth provider secret               |
+| `GITHUB_ID`                         | Optional            | GitHub OAuth provider                      |
+| `GITHUB_SECRET`                     | Optional            | GitHub OAuth provider secret               |
+| `OPENROUTER_API_KEY`                | Yes for AI features | Hosted AI access                           |
+| `OPENROUTER_MODEL`                  | Optional            | Override model ID                          |
+| `OPENROUTER_BASE_URL`               | Optional            | OpenRouter base URL                        |
+| `NEXT_PUBLIC_TELLER_APPLICATION_ID` | Optional            | Teller client application ID               |
+| `NEXT_PUBLIC_TELLER_ENV`            | Optional            | Teller environment (`sandbox` recommended) |
+| `TELLER_ENV`                        | Optional            | Teller server environment                  |
+| `TELLER_CERT_PATH`                  | Optional            | Teller client certificate path             |
+| `TELLER_KEY_PATH`                   | Optional            | Teller key path                            |
+
+## Demo mode
+
+You can evaluate the full product without creating external integrations:
+
+1. Go to `http://localhost:3000/auth/login`
+2. Click `Try the live demo`
+3. Explore dashboard, subscriptions, transactions, and AI assistant
+
+## Quality checks
 
 ```bash
 npm run lint
@@ -108,98 +141,12 @@ npm run format:check
 npm run test
 ```
 
-Husky runs `lint-staged` on pre-commit to enforce linting and formatting.
+## Deployment notes
 
-## AI Setup
+- Vercel-friendly Next.js architecture.
+- Prisma-based data layer compatible with managed Postgres providers.
+- Environment-driven configuration for auth, AI, and bank integrations.
 
-The app uses OpenRouter for hosted AI processing.
+## Repository
 
-### Quick Setup
-
-1. Create an API key in OpenRouter and add it to `OPENROUTER_API_KEY`.
-2. Optionally set `OPENROUTER_MODEL` (default `openrouter/free`) and `OPENROUTER_BASE_URL`.
-3. Restart the dev server. Auto-categorization will run after you sign in.
-
-### Available AI Features
-
-- **Transaction Categorization**: Automatically categorize transactions based on description
-- **Bulk Categorization**: Process multiple transactions at once
-- **Financial Insights**: Get personalized spending advice
-- **AI Chat**: Ask questions about your finances
-
-### Model Selection
-
-Set `OPENROUTER_MODEL` to any OpenRouter model ID. The default is `openrouter/free`.
-
-## Project Structure
-
-```
-src/
-├── app/                    # Next.js app router
-│   ├── (authenticated)/   # Protected routes
-│   ├── api/               # API routes
-│   └── auth/              # Authentication pages
-├── components/            # React components
-│   ├── ui/               # Shadcn/ui components
-│   └── ...               # Feature-specific components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility functions
-└── store/                # State management (legacy)
-```
-
-## Key Features
-
-### Bank Integration
-
-- Connect multiple bank accounts securely via Teller
-- Automatic transaction syncing
-- Real-time balance updates
-- Credit limit tracking
-
-### Transaction Management
-
-- Manual and automatic transaction entry
-- AI-powered categorization
-- Bulk operations
-- Search and filtering
-
-### Budgeting
-
-- Create budgets by category or period
-- Recurring budget support
-- Progress tracking
-- Spending alerts
-
-### Goals & Milestones
-
-- Set financial goals with target amounts
-- Track progress over time
-- Milestone achievements
-- Visual progress indicators
-
-### AI-Powered Insights
-
-- Hosted AI processing via OpenRouter
-- Transaction categorization
-- Spending pattern analysis
-- Personalized financial advice
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support and questions:
-
-- Check the [OLLAMA_SETUP.md](./OLLAMA_SETUP.md) for OpenRouter setup issues
-- Review the documentation in the `/docs` folder
-- Open an issue on GitHub # personal-finance
+- GitHub: https://github.com/FrancoisCoding/personal-finance

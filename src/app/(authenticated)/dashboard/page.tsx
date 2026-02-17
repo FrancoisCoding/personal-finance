@@ -18,7 +18,9 @@ import { formatCurrency, getCategoryColor } from '@/lib/utils'
 import { getCategoryIconComponent } from '@/lib/category-icons'
 import { TellerLink } from '@/components/teller-link'
 import { AddTransactionDialog } from '@/components/add-transaction-dialog'
+import { CreateBudgetModal } from '@/components/budgets/create-budget-modal'
 import { BudgetProgressItem } from '@/components/budget-progress-item'
+import { CreateGoalModal } from '@/components/goals/create-goal-modal'
 import { GoalProgressItem } from '@/components/goal-progress-item'
 import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
 import { RemindersCard } from '@/components/reminders-card'
@@ -49,6 +51,8 @@ import {
   useCreditCards,
   useSubscriptions,
   useReminders,
+  useCreateBudget,
+  useCreateGoal,
   useCreateReminder,
   useUpdateReminder,
   useClearCompletedReminders,
@@ -174,6 +178,8 @@ export default function DashboardPage() {
   const [, setIsWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const [demoProgress, setDemoProgress] = useState(0)
+  const [isCreateBudgetModalOpen, setIsCreateBudgetModalOpen] = useState(false)
+  const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false)
   const demoProgressIntervalRef = useRef<number | null>(null)
 
   // Memoized callbacks
@@ -204,6 +210,8 @@ export default function DashboardPage() {
     useSubscriptions()
   const { data: reminders = [], isLoading: isRemindersLoading } = useReminders()
   const seedCategoriesMutation = useSeedCategories()
+  const createBudgetMutation = useCreateBudget()
+  const createGoalMutation = useCreateGoal()
   const createReminderMutation = useCreateReminder()
   const updateReminderMutation = useUpdateReminder()
   const clearCompletedRemindersMutation = useClearCompletedReminders()
@@ -2134,7 +2142,11 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground mt-1 mb-4">
                         Create a budget to track monthly spending.
                       </p>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsCreateBudgetModalOpen(true)}
+                      >
                         Create budget
                       </Button>
                     </div>
@@ -2171,7 +2183,11 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground mt-1 mb-4">
                         Add a goal to keep progress visible.
                       </p>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsCreateGoalModalOpen(true)}
+                      >
                         Set a goal
                       </Button>
                     </div>
@@ -2323,6 +2339,25 @@ export default function DashboardPage() {
           </div>
         </FadeIn>
       </div>
+      <CreateBudgetModal
+        open={isCreateBudgetModalOpen}
+        onOpenChange={setIsCreateBudgetModalOpen}
+        onSubmit={async (budgetData) => {
+          await createBudgetMutation.mutateAsync(budgetData)
+          setIsCreateBudgetModalOpen(false)
+        }}
+        isLoading={createBudgetMutation.isPending}
+        categories={categories}
+      />
+      <CreateGoalModal
+        open={isCreateGoalModalOpen}
+        onOpenChange={setIsCreateGoalModalOpen}
+        onSubmit={async (goalData) => {
+          await createGoalMutation.mutateAsync(goalData)
+          setIsCreateGoalModalOpen(false)
+        }}
+        isLoading={createGoalMutation.isPending}
+      />
     </>
   )
 }

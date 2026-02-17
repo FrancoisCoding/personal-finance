@@ -9,6 +9,7 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "secrets:check": "node scripts/check-secrets.cjs",
     "test": "vitest run --config vitest.config.mts --coverage",
     "test:watch": "vitest --config vitest.config.mts",
     "db:generate": "prisma generate",

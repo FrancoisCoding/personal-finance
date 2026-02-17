@@ -7,8 +7,24 @@ on:
     branches: [main]
 
 jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Secrets check
+        run: npm run secrets:check
+
   format:
     runs-on: ubuntu-latest
+    needs: secrets
     steps:
       - name: Checkout
         uses: actions/checkout@v4

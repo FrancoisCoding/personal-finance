@@ -7,14 +7,23 @@ import { categorizeTransaction } from '@/lib/ai'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
+interface IBulkCategorizeRequestBody {
+  transactionIds?: string[]
+}
+
 export async function POST(request: NextRequest) {
   try {
     const confidenceThreshold = 0.7
 
     if (isDemoModeRequest(request)) {
-      const body = await request.json().catch(() => ({}))
+      const body = (await request
+        .json()
+        .catch(() => ({}))) as IBulkCategorizeRequestBody
       const transactionIds = Array.isArray(body?.transactionIds)
-        ? body.transactionIds
+        ? body.transactionIds.filter(
+            (transactionId): transactionId is string =>
+              typeof transactionId === 'string'
+          )
         : []
       const demoResults = transactionIds.map((id: string) => ({
         transactionId: id,
@@ -63,7 +72,7 @@ export async function POST(request: NextRequest) {
       ])
     )
 
-    const body = await request.json()
+    const body = (await request.json()) as IBulkCategorizeRequestBody
     const { transactionIds } = body
 
     if (!transactionIds || !Array.isArray(transactionIds)) {

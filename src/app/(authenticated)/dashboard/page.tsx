@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { useQueryClient } from '@tanstack/react-query'
@@ -705,7 +706,12 @@ export default function DashboardPage() {
       total,
       hasData: recentDonations.length > 0,
     }
-  }, [inferDonationCause, normalizeDonationRecipient, transformedTransactions])
+  }, [
+    getMedian,
+    inferDonationCause,
+    normalizeDonationRecipient,
+    transformedTransactions,
+  ])
 
   const recentTransactions = useMemo(
     () =>
@@ -851,6 +857,31 @@ export default function DashboardPage() {
         : undefined,
     }
   }, [transactions])
+
+  const securitySnapshot = useMemo(() => {
+    const reviewThreshold = 600
+    const recentWindowStart = new Date()
+    recentWindowStart.setDate(recentWindowStart.getDate() - 14)
+
+    const reviewItems = transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date)
+      return (
+        transaction.type === 'EXPENSE' &&
+        Math.abs(transaction.amount) >= reviewThreshold &&
+        transactionDate >= recentWindowStart
+      )
+    }).length
+
+    const creditCardsTracked = accounts.filter(
+      (account) => account.type === 'CREDIT_CARD'
+    ).length
+
+    return {
+      reviewItems,
+      connectedAccounts: accounts.length,
+      creditCardsTracked,
+    }
+  }, [accounts, transactions])
 
   if (isLoading) {
     return (
@@ -1380,6 +1411,71 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </FadeIn>
+
+        <FadeIn delay={0.35}>
+          <Card className="border-border/70 bg-card/90 shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle>Security &amp; Privacy</CardTitle>
+                  <CardDescription>
+                    Audit activity, access sessions, and data controls.
+                  </CardDescription>
+                </div>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/security">Open security center</Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
+              <div
+                className={
+                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                }
+              >
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Review items
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {securitySnapshot.reviewItems}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  High-value expenses in the last 14 days.
+                </p>
+              </div>
+              <div
+                className={
+                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                }
+              >
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Connected accounts
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {securitySnapshot.connectedAccounts}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Account connections monitored in one place.
+                </p>
+              </div>
+              <div
+                className={
+                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                }
+              >
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Credit cards tracked
+                </p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">
+                  {securitySnapshot.creditCardsTracked}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Cards included in utilization and alert checks.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </FadeIn>
       </div>
     </>

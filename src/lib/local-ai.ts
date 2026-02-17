@@ -529,7 +529,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
 
   if (asksSpike) {
     if (spikeSnapshot.previousTotal === 0) {
-      return 'I do not have enough prior spending history to detect spikes yet.'
+      return 'There is not enough prior spending history to detect spikes yet.'
     }
     const change = spikeSnapshot.percentChange * 100
     const direction = change >= 0 ? 'up' : 'down'

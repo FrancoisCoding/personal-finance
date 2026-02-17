@@ -59,9 +59,7 @@ const NotificationTriggers = () => {
 
   useEffect(() => {
     if (!isAlertRuleEnabled('credit-utilization')) return
-    if (
-      creditCardUtilization <= notificationThresholds.utilizationWarning
-    ) {
+    if (creditCardUtilization <= notificationThresholds.utilizationWarning) {
       return
     }
 
@@ -193,8 +191,7 @@ const NotificationTriggers = () => {
       previousTotal > 0 &&
       recentTotal >
         previousTotal * (1 + notificationThresholds.spendingSpikeRatio) &&
-      recentTotal - previousTotal >=
-        notificationThresholds.spendingSpikeMinimum
+      recentTotal - previousTotal >= notificationThresholds.spendingSpikeMinimum
     ) {
       addNotification({
         type: 'warning',
@@ -467,8 +464,7 @@ const NotificationTriggers = () => {
 
     if (
       previousIncome > 0 &&
-      currentIncome <
-        previousIncome * notificationThresholds.incomeDropRatio
+      currentIncome < previousIncome * notificationThresholds.incomeDropRatio
     ) {
       addNotification({
         type: 'warning',

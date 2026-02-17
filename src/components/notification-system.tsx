@@ -88,9 +88,7 @@ export const alertRules: IAlertRuleDefinition[] = [
     description: 'Warn when combined checking and savings dip too low.',
     category: 'system',
     severity: 'warning',
-    detail: `Cash below ${formatCurrency(
-      notificationThresholds.lowBalance
-    )}.`,
+    detail: `Cash below ${formatCurrency(notificationThresholds.lowBalance)}.`,
     defaultEnabled: true,
   },
   {
@@ -198,18 +196,17 @@ export const alertRules: IAlertRuleDefinition[] = [
   },
 ]
 
-const alertRuleGroups = alertRules.reduce<Record<string, IAlertRuleDefinition[]>>(
-  (groups, rule) => {
-    const category =
-      rule.category.charAt(0).toUpperCase() + rule.category.slice(1)
-    if (!groups[category]) {
-      groups[category] = []
-    }
-    groups[category].push(rule)
-    return groups
-  },
-  {}
-)
+const alertRuleGroups = alertRules.reduce<
+  Record<string, IAlertRuleDefinition[]>
+>((groups, rule) => {
+  const category =
+    rule.category.charAt(0).toUpperCase() + rule.category.slice(1)
+  if (!groups[category]) {
+    groups[category] = []
+  }
+  groups[category].push(rule)
+  return groups
+}, {})
 
 const orderedAlertRuleGroups = Object.entries(alertRuleGroups).sort(
   ([a], [b]) => a.localeCompare(b)
@@ -310,9 +307,7 @@ export function NotificationProvider({
 
   useEffect(() => {
     try {
-      const stored = window.localStorage.getItem(
-        notificationHistoryStorageKey
-      )
+      const stored = window.localStorage.getItem(notificationHistoryStorageKey)
       if (!stored) return
       const parsed = JSON.parse(stored)
       if (!Array.isArray(parsed)) return
@@ -349,9 +344,10 @@ export function NotificationProvider({
       const payload = notifications
         .slice(0, notificationHistoryLimit)
         .map((notification) => {
-          const { action, timestamp, ...rest } = notification
+          const { timestamp, ...rest } = notification
           return {
             ...rest,
+            action: undefined,
             timestamp: timestamp.toISOString(),
           }
         })
@@ -733,7 +729,6 @@ export function NotificationCenter() {
     return map
   }, [notifications])
 
-
   const filterOptions = [
     { id: 'all', label: 'All', count: notifications.length },
     { id: 'unread', label: 'Unread', count: unreadNotifications.length },
@@ -1099,17 +1094,13 @@ export function NotificationCenter() {
                               onClick={() => toggleAlertRule(rule.id)}
                               className={cn(
                                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                                isEnabled
-                                  ? 'bg-emerald-500/80'
-                                  : 'bg-muted/60'
+                                isEnabled ? 'bg-emerald-500/80' : 'bg-muted/60'
                               )}
                             >
                               <span
                                 className={cn(
                                   'inline-block h-4 w-4 rounded-full bg-white shadow transition-transform',
-                                  isEnabled
-                                    ? 'translate-x-5'
-                                    : 'translate-x-1'
+                                  isEnabled ? 'translate-x-5' : 'translate-x-1'
                                 )}
                               />
                             </button>

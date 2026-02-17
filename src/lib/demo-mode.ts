@@ -1,12 +1,15 @@
+import type { Session } from 'next-auth'
+
 export const DEMO_MODE_COOKIE = 'demo_mode'
 const DEMO_MODE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
 
-export const demoSession = {
+export const demoSession: Session = {
   user: {
     id: 'demo-user',
     name: 'Demo User',
     email: 'demo@finance.app',
   },
+  expires: '9999-12-31T23:59:59.999Z',
 }
 
 export const isDemoModeRequest = (request: Request) => {

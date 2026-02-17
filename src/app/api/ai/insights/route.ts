@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
           targetAmount: goal.targetAmount,
           currentAmount: goal.currentAmount,
           targetDate: goal.targetDate || undefined,
-          createdAt: goal.createdAt,
         }))
       )
 

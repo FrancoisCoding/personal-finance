@@ -22,6 +22,7 @@ import {
   Menu,
   Search,
   Receipt,
+  ShieldCheck,
   Sparkles,
   Wallet,
   X,
@@ -52,6 +53,9 @@ import { cn } from '@/lib/utils'
 import { sidebarOpenAtom } from '@/store/ui-atoms'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 
+const securityNavigationStorageKey = 'financeflow.show-security-nav'
+const securityNavigationEventName = 'financeflow:security-nav-visibility'
+
 export interface IDashboardShellProps {
   children: React.ReactNode
   session?: Session | null
@@ -67,6 +71,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
+  const [shouldShowSecurityNavigation, setShouldShowSecurityNavigation] =
+    useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [activeOptionIndex, setActiveOptionIndex] = useState(-1)
   const blurTimeoutRef = useRef<number | null>(null)
@@ -108,6 +114,24 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         description: 'Recurring charges, renewals, and subscriptions.',
         keywords: ['recurring', 'renewals', 'subscriptions', 'upcoming'],
       },
+      ...(isDemoMode || shouldShowSecurityNavigation
+        ? [
+            {
+              name: 'Security & Privacy',
+              href: '/security',
+              icon: ShieldCheck,
+              description:
+                'Audit activity, access sessions, and data controls.',
+              keywords: [
+                'security',
+                'privacy',
+                'audit',
+                'sessions',
+                'data controls',
+              ],
+            },
+          ]
+        : []),
       {
         name: 'Financial Assistant',
         href: '/assistant',
@@ -123,7 +147,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         ],
       },
     ],
-    []
+    [isDemoMode, shouldShowSecurityNavigation]
   )
 
   const closeSidebar = () => setIsSidebarOpen(false)
@@ -154,6 +178,35 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       }
     } catch (error) {
       console.warn('Failed to load search history', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(securityNavigationStorageKey)
+      setShouldShowSecurityNavigation(stored === '1')
+    } catch (error) {
+      console.warn('Failed to load security navigation preference', error)
+    }
+
+    const handleSecurityNavigationEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<{ isVisible?: boolean }>
+      const isVisible = customEvent.detail?.isVisible
+      if (typeof isVisible === 'boolean') {
+        setShouldShowSecurityNavigation(isVisible)
+      }
+    }
+
+    window.addEventListener(
+      securityNavigationEventName,
+      handleSecurityNavigationEvent
+    )
+
+    return () => {
+      window.removeEventListener(
+        securityNavigationEventName,
+        handleSecurityNavigationEvent
+      )
     }
   }, [])
 
@@ -196,6 +249,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       {
         text: 'How is my net worth trending this month?',
         keywords: ['net worth', 'trend', 'growth', 'assets', 'liabilities'],
+      },
+      {
+        text: 'Show recent security and privacy activity.',
+        keywords: ['security', 'privacy', 'audit', 'access', 'sessions'],
       },
     ],
     []

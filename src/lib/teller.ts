@@ -10,11 +10,13 @@ let cachedAgent: https.Agent | null = null
 const getEnvironment = () =>
   process.env.TELLER_ENV || process.env.NEXT_PUBLIC_TELLER_ENV || 'sandbox'
 
+const normalizePemValue = (value: string) => value.replace(/\\n/g, '\n')
+
 const readPemValue = (value?: string | null, filePath?: string | null) => {
-  if (value) return value
+  if (value) return normalizePemValue(value)
   if (!filePath) return null
   const resolvedPath = path.resolve(filePath)
-  return fs.readFileSync(resolvedPath, 'utf8')
+  return normalizePemValue(fs.readFileSync(resolvedPath, 'utf8'))
 }
 
 const getTellerAgent = () => {

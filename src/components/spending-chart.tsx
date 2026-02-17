@@ -23,13 +23,26 @@ const SpendingChart = memo(function SpendingChart({
   previousMonthTotal,
   className = '',
 }: SpendingChartProps) {
+  const colorPalette = [
+    '#84CC16',
+    '#3B82F6',
+    '#F97316',
+    '#8B5CF6',
+    '#06B6D4',
+    '#EF4444',
+    '#F59E0B',
+    '#14B8A6',
+    '#EC4899',
+    '#6366F1',
+  ]
+
   const sortedData = [...data].sort((a, b) => b.amount - a.amount)
   const topItems = sortedData.slice(0, 4)
   const remainingTotal = sortedData
     .slice(4)
     .reduce((sum, item) => sum + item.amount, 0)
   const totalAmount = sortedData.reduce((sum, item) => sum + item.amount, 0)
-  const displayData = [
+  const preliminaryData = [
     ...topItems,
     ...(remainingTotal > 0
       ? [
@@ -46,6 +59,28 @@ const SpendingChart = memo(function SpendingChart({
     ...item,
     percentage: totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0,
   }))
+
+  const usedColors = new Set<string>()
+  let paletteIndex = 0
+  const displayData = preliminaryData.map((item) => {
+    const normalizedIncomingColor = item.color.trim().toLowerCase()
+    if (
+      normalizedIncomingColor &&
+      !usedColors.has(normalizedIncomingColor) &&
+      normalizedIncomingColor !== '#9ca3af'
+    ) {
+      usedColors.add(normalizedIncomingColor)
+      return { ...item, color: normalizedIncomingColor }
+    }
+
+    while (usedColors.has(colorPalette[paletteIndex % colorPalette.length])) {
+      paletteIndex += 1
+    }
+    const uniqueColor = colorPalette[paletteIndex % colorPalette.length]
+    paletteIndex += 1
+    usedColors.add(uniqueColor)
+    return { ...item, color: uniqueColor }
+  })
 
   const changePercent =
     previousMonthTotal > 0

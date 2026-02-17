@@ -336,25 +336,47 @@ export default function DashboardPage() {
   const { utilization: creditCardUtilization } = useCreditCardUtilization()
 
   useEffect(() => {
+    if (isDemoMode) {
+      return
+    }
+
     const interval = setInterval(
       () => {
+        if (document.visibilityState !== 'visible') {
+          return
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
         queryClient.invalidateQueries({ queryKey: queryKeys.transactions })
         queryClient.invalidateQueries({ queryKey: queryKeys.budgets })
         queryClient.invalidateQueries({ queryKey: queryKeys.goals })
-        queryClient.invalidateQueries({ queryKey: queryKeys.categories })
         queryClient.invalidateQueries({ queryKey: ['credit-cards'] })
       },
       5 * 60 * 1000
     )
 
     return () => clearInterval(interval)
-  }, [queryClient])
+  }, [isDemoMode, queryClient])
 
   // Transform data for AI functions
   const categoryLookup = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories]
+  )
+
+  const transactionDateEntries = useMemo(
+    () =>
+      transactions.map((transaction) => {
+        const transactionDate = new Date(transaction.date)
+        return {
+          transaction,
+          transactionDate,
+          dayKey: transactionDate.toISOString().slice(0, 10),
+          monthKey: `${transactionDate.getFullYear()}-${String(
+            transactionDate.getMonth() + 1
+          ).padStart(2, '0')}`,
+        }
+      }),
+    [transactions]
   )
 
   const transformedTransactions = useMemo(
@@ -715,10 +737,13 @@ export default function DashboardPage() {
 
   const recentTransactions = useMemo(
     () =>
-      [...transactions]
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5),
-    [transactions]
+      [...transactionDateEntries]
+        .sort(
+          (a, b) => b.transactionDate.getTime() - a.transactionDate.getTime()
+        )
+        .slice(0, 5)
+        .map(({ transaction }) => transaction),
+    [transactionDateEntries]
   )
 
   const spendingData = useMemo(
@@ -732,36 +757,68 @@ export default function DashboardPage() {
     [transformedTransactions]
   )
 
-  const cashFlowData = useMemo(
-    () =>
-      Array.from({ length: 6 }, (_, i) => {
-        const date = new Date()
-        date.setMonth(date.getMonth() - i)
-        const monthTransactions = transactions.filter((t) => {
-          const tDate = new Date(t.date)
-          return (
-            tDate.getMonth() === date.getMonth() &&
-            tDate.getFullYear() === date.getFullYear()
-          )
-        })
+  const cashFlowData = useMemo(() => {
+    const monthWindows = Array.from({ length: 6 }, (_, index) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - (5 - index))
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}`
+      return {
+        monthKey,
+        label: date.toLocaleDateString('en-US', { month: 'short' }),
+      }
+    })
 
-        const income = monthTransactions
-          .filter((t) => t.type === 'INCOME')
-          .reduce((sum, t) => sum + t.amount, 0)
+    const monthlyTotals = new Map(
+      monthWindows.map(({ monthKey, label }) => [
+        monthKey,
+        { date: label, income: 0, expenses: 0 },
+      ])
+    )
 
-        const expenses = monthTransactions
-          .filter((t) => t.type === 'EXPENSE')
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    transactionDateEntries.forEach(({ transaction, monthKey }) => {
+      const bucket = monthlyTotals.get(monthKey)
+      if (!bucket) return
 
-        return {
-          date: date.toLocaleDateString('en-US', { month: 'short' }),
-          income,
-          expenses,
-          net: income - expenses,
-        }
-      }).reverse(),
-    [transactions]
-  )
+      if (transaction.type === 'INCOME') {
+        bucket.income += transaction.amount
+        return
+      }
+
+      if (transaction.type === 'EXPENSE') {
+        bucket.expenses += Math.abs(transaction.amount)
+      }
+    })
+
+    return monthWindows.map(({ monthKey }) => {
+      const totals = monthlyTotals.get(monthKey)
+      const income = totals?.income ?? 0
+      const expenses = totals?.expenses ?? 0
+      return {
+        date: totals?.date ?? '',
+        income,
+        expenses,
+        net: income - expenses,
+      }
+    })
+  }, [transactionDateEntries])
+
+  const expenseTotalsByDay = useMemo(() => {
+    const totals = new Map<string, number>()
+
+    transactionDateEntries.forEach(({ transaction, dayKey }) => {
+      if (transaction.type !== 'EXPENSE') {
+        return
+      }
+      totals.set(
+        dayKey,
+        (totals.get(dayKey) ?? 0) + Math.abs(transaction.amount)
+      )
+    })
+
+    return totals
+  }, [transactionDateEntries])
 
   const { netWorth, netWorthSummaryItems, hasNetWorthData } = useMemo(() => {
     const assets = totalBalance
@@ -797,21 +854,8 @@ export default function DashboardPage() {
     const dailyExpenses = Array.from({ length: 30 }, (_, index) => {
       const day = new Date()
       day.setDate(day.getDate() - (29 - index))
-      const dayStart = new Date(day)
-      dayStart.setHours(0, 0, 0, 0)
-      const dayEnd = new Date(day)
-      dayEnd.setHours(23, 59, 59, 999)
-
-      return transactions
-        .filter((transaction) => {
-          const transactionDate = new Date(transaction.date)
-          return (
-            transaction.type === 'EXPENSE' &&
-            transactionDate >= dayStart &&
-            transactionDate <= dayEnd
-          )
-        })
-        .reduce((total, transaction) => total + Math.abs(transaction.amount), 0)
+      const dayKey = day.toISOString().slice(0, 10)
+      return expenseTotalsByDay.get(dayKey) ?? 0
     })
     const recentWindow = 7
     const recentExpenses = dailyExpenses.slice(-recentWindow)
@@ -856,21 +900,20 @@ export default function DashboardPage() {
           }
         : undefined,
     }
-  }, [transactions])
+  }, [expenseTotalsByDay])
 
   const securitySnapshot = useMemo(() => {
     const reviewThreshold = 600
     const recentWindowStart = new Date()
     recentWindowStart.setDate(recentWindowStart.getDate() - 14)
+    const recentWindowStartTimestamp = recentWindowStart.getTime()
 
-    const reviewItems = transactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date)
-      return (
+    const reviewItems = transactionDateEntries.filter(
+      ({ transaction, transactionDate }) =>
         transaction.type === 'EXPENSE' &&
         Math.abs(transaction.amount) >= reviewThreshold &&
-        transactionDate >= recentWindowStart
-      )
-    }).length
+        transactionDate.getTime() >= recentWindowStartTimestamp
+    ).length
 
     const creditCardsTracked = accounts.filter(
       (account) => account.type === 'CREDIT_CARD'
@@ -881,7 +924,60 @@ export default function DashboardPage() {
       connectedAccounts: accounts.length,
       creditCardsTracked,
     }
-  }, [accounts, transactions])
+  }, [accounts, transactionDateEntries])
+
+  const dataQualitySnapshot = useMemo(() => {
+    const uncategorizedCount = transactions.filter((transaction) => {
+      const categoryName =
+        transaction.categoryRelation?.name ??
+        categoryLookup.get(transaction.categoryId ?? '') ??
+        transaction.category
+
+      return (
+        !categoryName ||
+        categoryName === 'Other' ||
+        categoryName === 'Uncategorized'
+      )
+    }).length
+
+    const duplicateBuckets = new Map<string, number>()
+    transactionDateEntries.forEach(({ transaction, dayKey }) => {
+      const normalizedDescription = transaction.description
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+      const amountKey = Math.abs(transaction.amount).toFixed(2)
+      const bucketKey = `${dayKey}|${transaction.type}|${amountKey}|${normalizedDescription}`
+      duplicateBuckets.set(
+        bucketKey,
+        (duplicateBuckets.get(bucketKey) ?? 0) + 1
+      )
+    })
+
+    const possibleDuplicates = Array.from(duplicateBuckets.values()).reduce(
+      (count, bucketSize) => count + Math.max(0, bucketSize - 1),
+      0
+    )
+
+    const staleThresholdMs = 7 * 24 * 60 * 60 * 1000
+    const now = Date.now()
+    const staleAccounts = accounts.filter((account) => {
+      if (!account.updatedAt) {
+        return false
+      }
+      const updatedAtMs = new Date(account.updatedAt).getTime()
+      if (!Number.isFinite(updatedAtMs)) {
+        return false
+      }
+      return now - updatedAtMs > staleThresholdMs
+    }).length
+
+    return {
+      uncategorizedCount,
+      possibleDuplicates,
+      staleAccounts,
+    }
+  }, [accounts, categoryLookup, transactionDateEntries, transactions])
 
   if (isLoading) {
     return (
@@ -1414,68 +1510,133 @@ export default function DashboardPage() {
         </FadeIn>
 
         <FadeIn delay={0.35}>
-          <Card className="border-border/70 bg-card/90 shadow-sm">
-            <CardHeader className="border-b border-border/60 pb-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Security &amp; Privacy</CardTitle>
-                  <CardDescription>
-                    Audit activity, access sessions, and data controls.
-                  </CardDescription>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <Card className="border-border/70 bg-card/90 shadow-sm">
+              <CardHeader className="border-b border-border/60 pb-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle>Security &amp; Privacy</CardTitle>
+                    <CardDescription>
+                      Audit activity, access sessions, and data controls.
+                    </CardDescription>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/security">Open security center</Link>
+                  </Button>
                 </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/security">Open security center</Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
-              <div
-                className={
-                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                }
-              >
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Review items
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-foreground">
-                  {securitySnapshot.reviewItems}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  High-value expenses in the last 14 days.
-                </p>
-              </div>
-              <div
-                className={
-                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                }
-              >
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Connected accounts
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-foreground">
-                  {securitySnapshot.connectedAccounts}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Account connections monitored in one place.
-                </p>
-              </div>
-              <div
-                className={
-                  'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                }
-              >
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Credit cards tracked
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-foreground">
-                  {securitySnapshot.creditCardsTracked}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Cards included in utilization and alert checks.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Review items
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {securitySnapshot.reviewItems}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    High-value expenses in the last 14 days.
+                  </p>
+                </div>
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Connected accounts
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {securitySnapshot.connectedAccounts}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Account connections monitored in one place.
+                  </p>
+                </div>
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Credit cards tracked
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {securitySnapshot.creditCardsTracked}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Cards included in utilization and alert checks.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/70 bg-card/90 shadow-sm">
+              <CardHeader className="border-b border-border/60 pb-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle>Data Quality Center</CardTitle>
+                    <CardDescription>
+                      Keep transactions accurate before insights and forecasts.
+                    </CardDescription>
+                  </div>
+                  <Button asChild size="sm">
+                    <Link href="/transactions">Review data</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Uncategorized
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {dataQualitySnapshot.uncategorizedCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Transactions ready for category review.
+                  </p>
+                </div>
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Possible duplicates
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {dataQualitySnapshot.possibleDuplicates}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Similar entries on the same day and amount.
+                  </p>
+                </div>
+                <div
+                  className={
+                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
+                  }
+                >
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Stale accounts
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-foreground">
+                    {dataQualitySnapshot.staleAccounts}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Accounts not refreshed in the last 7 days.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </FadeIn>
       </div>
     </>

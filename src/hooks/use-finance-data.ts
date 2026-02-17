@@ -19,6 +19,8 @@ export interface Account {
   description?: string
   isActive: boolean
   creditLimit?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export interface Transaction {

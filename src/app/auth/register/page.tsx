@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -24,9 +24,10 @@ import { Progress } from '@/components/ui/progress'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
-import { Github, Mail, Sparkles } from 'lucide-react'
+import { Mail, Sparkles } from 'lucide-react'
 
 export default function RegisterPage() {
+  const { status } = useSession()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,6 +48,12 @@ export default function RegisterPage() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard')
+    }
+  }, [router, status])
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -191,15 +198,6 @@ export default function RegisterPage() {
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Continue with Google
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthSignIn('github')}
-                  disabled={isLoading}
-                >
-                  <Github className="mr-2 h-4 w-4" />
-                  Continue with GitHub
                 </Button>
               </div>
 

@@ -2,13 +2,11 @@ describe('auth options', () => {
   it('builds providers and callbacks', async () => {
     process.env.GOOGLE_CLIENT_ID = 'google-id'
     process.env.GOOGLE_CLIENT_SECRET = 'google-secret'
-    process.env.GITHUB_ID = 'github-id'
-    process.env.GITHUB_SECRET = 'github-secret'
 
     vi.resetModules()
     const { authOptions } = await import('./auth')
 
-    expect(authOptions.providers?.length).toBe(2)
+    expect(authOptions.providers?.length).toBe(1)
 
     const sessionResult = await authOptions.callbacks?.session?.({
       session: { user: {} } as { user: { id?: string } },
@@ -57,6 +55,25 @@ describe('auth options', () => {
       user: undefined,
     })
     expect(jwtNoUser?.sub).toBe('keep')
+
+    const redirectRelative = await authOptions.callbacks?.redirect?.({
+      url: '/dashboard',
+      baseUrl: 'https://example.com',
+    })
+    expect(redirectRelative).toBe('https://example.com/dashboard')
+
+    const redirectSignIn = await authOptions.callbacks?.redirect?.({
+      url: '/auth/login',
+      baseUrl: 'https://example.com',
+    })
+    expect(redirectSignIn).toBe('https://example.com/dashboard')
+
+    const redirectExternal = await authOptions.callbacks?.redirect?.({
+      url: 'https://malicious.example/phish',
+      baseUrl: 'https://example.com',
+    })
+    expect(redirectExternal).toBe('https://example.com/dashboard')
+
     expect(authOptions.pages?.signIn).toBe('/auth/login')
     expect(authOptions.session?.strategy).toBe('jwt')
   })

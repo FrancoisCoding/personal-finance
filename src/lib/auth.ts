@@ -1,7 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import GoogleProvider from 'next-auth/providers/google'
-import GitHubProvider from 'next-auth/providers/github'
 import { prisma } from './prisma'
 
 // Extend the built-in session types
@@ -23,10 +22,6 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
   ],
   callbacks: {
     session: async ({ session, token }) => {
@@ -40,6 +35,31 @@ export const authOptions: NextAuthOptions = {
         token.sub = user.id
       }
       return token
+    },
+    redirect: async ({ url, baseUrl }) => {
+      if (url.startsWith('/')) {
+        if (url === '/auth/login' || url === '/auth/register') {
+          return `${baseUrl}/dashboard`
+        }
+        return `${baseUrl}${url}`
+      }
+
+      try {
+        const parsedUrl = new URL(url)
+        if (parsedUrl.origin === baseUrl) {
+          if (
+            parsedUrl.pathname === '/auth/login' ||
+            parsedUrl.pathname === '/auth/register'
+          ) {
+            return `${baseUrl}/dashboard`
+          }
+          return url
+        }
+      } catch (error) {
+        void error
+      }
+
+      return `${baseUrl}/dashboard`
     },
   },
   pages: {

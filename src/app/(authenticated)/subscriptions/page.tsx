@@ -136,6 +136,25 @@ const getMonthlyEquivalent = (amount: number, cycle: DetectedBillingCycle) => {
   return amount / 12
 }
 
+const getSubscriptionCycleDays = (cycle: Subscription['billingCycle']) => {
+  if (cycle === 'WEEKLY') return 7
+  if (cycle === 'MONTHLY') return 30
+  if (cycle === 'QUARTERLY') return 90
+  if (cycle === 'YEARLY') return 365
+  return 30
+}
+
+const getSubscriptionMonthlyEquivalent = (
+  amount: number,
+  cycle: Subscription['billingCycle']
+) => {
+  if (cycle === 'WEEKLY') return amount * 4.33
+  if (cycle === 'MONTHLY') return amount
+  if (cycle === 'QUARTERLY') return amount / 3
+  if (cycle === 'YEARLY') return amount / 12
+  return amount
+}
+
 export default function SubscriptionsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -340,6 +359,163 @@ export default function SubscriptionsPage() {
     (sum, item) => sum + item.monthlyEquivalent,
     0
   )
+
+  const subscriptionIntelligence = useMemo(() => {
+    const now = new Date()
+    const expenseTransactionEntries = transactions
+      .filter((transaction) => transaction.type === 'EXPENSE')
+      .map((transaction) => ({
+        transaction,
+        transactionDate: new Date(transaction.date),
+        normalizedDescription: normalizeDescription(transaction.description),
+      }))
+
+    const items = activeSubscriptions
+      .map((subscription) => {
+        const normalizedName = normalizeDescription(subscription.name)
+        const matchingCharges = expenseTransactionEntries
+          .filter((entry) => {
+            if (!normalizedName || !entry.normalizedDescription) {
+              return false
+            }
+            return (
+              entry.normalizedDescription === normalizedName ||
+              entry.normalizedDescription.includes(normalizedName) ||
+              normalizedName.includes(entry.normalizedDescription)
+            )
+          })
+          .sort(
+            (a, b) => b.transactionDate.getTime() - a.transactionDate.getTime()
+          )
+
+        const latestCharge = matchingCharges[0]
+        const priorAmounts = matchingCharges
+          .slice(1, 7)
+          .map((entry) => Math.abs(entry.transaction.amount))
+        const baselineAmount =
+          priorAmounts.length > 0 ? getMedian(priorAmounts) : undefined
+        const latestAmount = latestCharge
+          ? Math.abs(latestCharge.transaction.amount)
+          : undefined
+
+        const priceIncreasePercent =
+          baselineAmount && latestAmount && latestAmount > baselineAmount
+            ? ((latestAmount - baselineAmount) / baselineAmount) * 100
+            : undefined
+        const hasPriceIncrease =
+          priceIncreasePercent !== undefined && priceIncreasePercent >= 10
+
+        const cycleDays = getSubscriptionCycleDays(subscription.billingCycle)
+        const daysSinceLastCharge = latestCharge
+          ? Math.ceil(
+              (now.getTime() - latestCharge.transactionDate.getTime()) / DAY_MS
+            )
+          : null
+        const likelyUnused =
+          daysSinceLastCharge !== null
+            ? daysSinceLastCharge >
+              cycleDays + Math.max(10, Math.round(cycleDays * 0.4))
+            : false
+
+        const nextBillingDate = new Date(subscription.nextBillingDate)
+        const daysUntilRenewal = Math.ceil(
+          (nextBillingDate.getTime() - now.getTime()) / DAY_MS
+        )
+
+        const monthlyEquivalent = getSubscriptionMonthlyEquivalent(
+          subscription.amount,
+          subscription.billingCycle
+        )
+        const monthlyIncreaseAmount =
+          hasPriceIncrease && baselineAmount && latestAmount
+            ? getSubscriptionMonthlyEquivalent(
+                latestAmount - baselineAmount,
+                subscription.billingCycle
+              )
+            : 0
+
+        let riskScore = 0
+        if (daysUntilRenewal <= 3) {
+          riskScore += 3
+        } else if (daysUntilRenewal <= 7) {
+          riskScore += 2
+        } else if (daysUntilRenewal <= 14) {
+          riskScore += 1
+        }
+        if (hasPriceIncrease) {
+          riskScore += 2
+        }
+        if (likelyUnused) {
+          riskScore += 2
+        }
+        if (monthlyEquivalent >= 60) {
+          riskScore += 1
+        }
+
+        const riskLevel: 'high' | 'medium' | 'low' =
+          riskScore >= 4 ? 'high' : riskScore >= 2 ? 'medium' : 'low'
+        const potentialMonthlySavings =
+          (likelyUnused ? monthlyEquivalent : 0) + monthlyIncreaseAmount
+
+        const signals: string[] = []
+        if (daysUntilRenewal <= 7) {
+          signals.push(
+            daysUntilRenewal <= 1
+              ? 'Renews within 24h'
+              : `Renews in ${daysUntilRenewal} days`
+          )
+        }
+        if (hasPriceIncrease && priceIncreasePercent) {
+          signals.push(`Price up ${priceIncreasePercent.toFixed(1)}%`)
+        }
+        if (likelyUnused && daysSinceLastCharge !== null) {
+          signals.push(`No charge for ${daysSinceLastCharge} days`)
+        }
+
+        return {
+          subscription,
+          daysUntilRenewal,
+          riskLevel,
+          riskScore,
+          hasPriceIncrease,
+          priceIncreasePercent,
+          likelyUnused,
+          daysSinceLastCharge,
+          potentialMonthlySavings,
+          signals,
+        }
+      })
+      .sort(
+        (a, b) =>
+          b.riskScore - a.riskScore ||
+          b.potentialMonthlySavings - a.potentialMonthlySavings
+      )
+
+    const byId = new Map(items.map((item) => [item.subscription.id, item]))
+    const highRiskCount = items.filter(
+      (item) => item.riskLevel === 'high'
+    ).length
+    const priceIncreaseCount = items.filter(
+      (item) => item.hasPriceIncrease
+    ).length
+    const likelyUnusedCount = items.filter((item) => item.likelyUnused).length
+    const estimatedSavings = items.reduce(
+      (sum, item) => sum + item.potentialMonthlySavings,
+      0
+    )
+    const highlightedItems = items.filter(
+      (item) => item.riskLevel !== 'low' || item.signals.length > 0
+    )
+
+    return {
+      byId,
+      highRiskCount,
+      priceIncreaseCount,
+      likelyUnusedCount,
+      estimatedSavings,
+      highlightedItems,
+    }
+  }, [activeSubscriptions, transactions])
 
   if (status === 'loading' || isLoading) {
     return (
@@ -694,7 +870,8 @@ export default function SubscriptionsPage() {
               </div>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              {formatCurrency(detectedMonthlyCost)} monthly estimated
+              {formatCurrency(detectedMonthlyCost)} monthly estimated ·{' '}
+              {subscriptionIntelligence.highRiskCount} high-risk alerts
             </p>
           </CardContent>
         </Card>
@@ -860,6 +1037,9 @@ export default function SubscriptionsPage() {
                   (nextBilling.getTime() - new Date().getTime()) /
                     (1000 * 60 * 60 * 24)
                 )
+                const insight = subscriptionIntelligence.byId.get(
+                  subscription.id
+                )
 
                 return (
                   <div
@@ -878,6 +1058,21 @@ export default function SubscriptionsPage() {
                         {formatCurrency(subscription.amount)} ·{' '}
                         {subscription.billingCycle.toLowerCase()}
                       </p>
+                      {insight && insight.signals.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-1">
+                          {insight.signals.slice(0, 2).map((signal) => (
+                            <span
+                              key={`${subscription.id}-${signal}`}
+                              className={
+                                'rounded-full border border-border/60 ' +
+                                'bg-muted/30 px-2 py-0.5 text-[11px] text-muted-foreground'
+                              }
+                            >
+                              {signal}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                       <div className="text-right">
@@ -919,6 +1114,168 @@ export default function SubscriptionsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card
+        className="border-border/60 bg-card/80 shadow-sm"
+        data-demo-step="demo-subscriptions-intelligence"
+      >
+        <CardHeader className="border-b border-border/60">
+          <CardTitle>Subscription intelligence</CardTitle>
+          <CardDescription>
+            Renewal risk, price changes, and likely-unused subscriptions from
+            recent billing activity.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-6">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                High-risk renewals
+              </p>
+              <p className="mt-1 text-lg font-semibold text-foreground">
+                {subscriptionIntelligence.highRiskCount}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Price increases
+              </p>
+              <p className="mt-1 text-lg font-semibold text-foreground">
+                {subscriptionIntelligence.priceIncreaseCount}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Likely unused
+              </p>
+              <p className="mt-1 text-lg font-semibold text-foreground">
+                {subscriptionIntelligence.likelyUnusedCount}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Estimated monthly savings
+              </p>
+              <p className="mt-1 text-lg font-semibold text-emerald-600 dark:text-emerald-300">
+                {formatCurrency(subscriptionIntelligence.estimatedSavings)}
+              </p>
+            </div>
+          </div>
+
+          {subscriptionIntelligence.highlightedItems.length === 0 ? (
+            <div
+              className={
+                'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                'px-4 py-6 text-center'
+              }
+            >
+              <p className="text-sm font-medium text-foreground">
+                No intelligence alerts right now
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                As new charges arrive, this section will highlight risks and
+                optimization opportunities.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subscriptionIntelligence.highlightedItems
+                .slice(0, 6)
+                .map((item) => {
+                  const monthlyEquivalent = getSubscriptionMonthlyEquivalent(
+                    item.subscription.amount,
+                    item.subscription.billingCycle
+                  )
+
+                  return (
+                    <div
+                      key={item.subscription.id}
+                      className={
+                        'flex flex-col gap-3 rounded-xl border border-border/60 ' +
+                        'bg-muted/15 p-4 sm:flex-row sm:items-start ' +
+                        'sm:justify-between'
+                      }
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">
+                            {item.subscription.name}
+                          </p>
+                          <span
+                            className={
+                              'rounded-full border px-2 py-0.5 text-[11px] ' +
+                              'font-semibold ' +
+                              (item.riskLevel === 'high'
+                                ? 'border-rose-500/40 bg-rose-500/10 text-rose-500'
+                                : item.riskLevel === 'medium'
+                                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-500'
+                                  : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500')
+                            }
+                          >
+                            {item.riskLevel === 'high'
+                              ? 'High risk'
+                              : item.riskLevel === 'medium'
+                                ? 'Watch'
+                                : 'Stable'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatCurrency(item.subscription.amount)} ·{' '}
+                          {item.subscription.billingCycle.toLowerCase()} ·{' '}
+                          {formatCurrency(monthlyEquivalent)}/month equivalent
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {item.signals.map((signal) => (
+                            <span
+                              key={`${item.subscription.id}-${signal}`}
+                              className={
+                                'rounded-full border border-border/60 ' +
+                                'bg-muted/30 px-2 py-0.5 text-[11px] text-muted-foreground'
+                              }
+                            >
+                              {signal}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {item.daysUntilRenewal <= 14 ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-9 w-9 rounded-full border border-border/60"
+                            onClick={() =>
+                              handleRenewalReminder(
+                                item.subscription,
+                                item.daysUntilRenewal
+                              )
+                            }
+                            aria-label={`Remind me about ${item.subscription.name}`}
+                          >
+                            <Bell className="h-4 w-4" />
+                          </Button>
+                        ) : null}
+                        {item.likelyUnused ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              handleToggleSubscription(item.subscription.id)
+                            }
+                            disabled={isUpdatingSubscription}
+                          >
+                            Pause
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card
         className="border-border/60 bg-card/80 shadow-sm"

@@ -182,6 +182,9 @@ export default function DashboardPage() {
   const [isCreateBudgetModalOpen, setIsCreateBudgetModalOpen] = useState(false)
   const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false)
   const demoProgressIntervalRef = useRef<number | null>(null)
+  const highContrastActionButtonClass =
+    'min-h-11 bg-primary text-primary-foreground hover:bg-primary/90 ' +
+    'focus-visible:ring-2 focus-visible:ring-primary/80'
 
   // Memoized callbacks
   const handleTellerSuccess = useCallback(() => {
@@ -1485,13 +1488,25 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3" data-demo-step="demo-actions">
-              <AddTransactionDialog />
+              <AddTransactionDialog
+                buttonClassName={highContrastActionButtonClass}
+              />
               {isDemoMode ? (
-                <Button variant="outline" disabled>
+                <Button
+                  variant="outline"
+                  disabled
+                  className={
+                    'min-h-11 border-primary/60 bg-primary/12 text-primary-foreground ' +
+                    'disabled:opacity-70'
+                  }
+                >
                   Connect Bank Account
                 </Button>
               ) : (
-                <TellerLink onSuccess={handleTellerSuccess} />
+                <TellerLink
+                  onSuccess={handleTellerSuccess}
+                  buttonClassName={highContrastActionButtonClass}
+                />
               )}
             </div>
           </div>

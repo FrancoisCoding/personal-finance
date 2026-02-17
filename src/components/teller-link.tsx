@@ -25,10 +25,12 @@ declare global {
 
 interface TellerLinkProps {
   onSuccess: () => void
+  buttonClassName?: string
 }
 
 export const TellerLink = memo(function TellerLink({
   onSuccess,
+  buttonClassName,
 }: TellerLinkProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isScriptReady, setIsScriptReady] = useState(false)
@@ -127,7 +129,15 @@ export const TellerLink = memo(function TellerLink({
         strategy="afterInteractive"
         onLoad={() => setIsScriptReady(true)}
       />
-      <Button onClick={handleConnect} disabled={isLoading || !isScriptReady}>
+      <Button
+        onClick={handleConnect}
+        disabled={isLoading || !isScriptReady}
+        className={
+          buttonClassName ??
+          'min-h-11 bg-primary text-primary-foreground hover:bg-primary/90 ' +
+            'focus-visible:ring-2 focus-visible:ring-primary/80'
+        }
+      >
         {isLoading ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
         ) : (

@@ -26,7 +26,13 @@ import {
   useCreateTransaction,
 } from '@/hooks/use-finance-data'
 
-export function AddTransactionDialog() {
+interface AddTransactionDialogProps {
+  buttonClassName?: string
+}
+
+export function AddTransactionDialog({
+  buttonClassName,
+}: AddTransactionDialogProps) {
   const [open, setOpen] = useState(false)
   const { data: accounts = [] } = useAccounts()
   const { data: categories = [] } = useCategories()
@@ -76,7 +82,15 @@ export function AddTransactionDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Transaction</Button>
+        <Button
+          className={
+            buttonClassName ??
+            'min-h-11 bg-primary text-primary-foreground hover:bg-primary/90 ' +
+              'focus-visible:ring-2 focus-visible:ring-primary/80'
+          }
+        >
+          Add Transaction
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

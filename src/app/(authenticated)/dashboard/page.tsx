@@ -183,9 +183,9 @@ export default function DashboardPage() {
   const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false)
   const demoProgressIntervalRef = useRef<number | null>(null)
   const highContrastActionButtonClass =
-    'min-h-11 border border-primary/70 bg-primary text-primary-foreground ' +
-    'shadow-[0_0_0_1px_hsl(var(--primary)/0.45),0_10px_28px_hsl(var(--primary)/0.28)] ' +
-    'hover:brightness-110 focus-visible:ring-2 focus-visible:ring-primary ' +
+    'min-h-11 border border-primary/85 bg-primary text-slate-950 font-semibold ' +
+    'shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_12px_30px_hsl(var(--primary)/0.33)] ' +
+    'hover:bg-primary/90 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-primary ' +
     'focus-visible:ring-offset-2 focus-visible:ring-offset-background'
 
   // Memoized callbacks

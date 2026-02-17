@@ -1833,7 +1833,7 @@ export default function DashboardPage() {
                     </CardDescription>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link href="/dashboard#demo-budget-progress">Open</Link>
+                    <Link href="#budget-progress">Open</Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -2116,6 +2116,7 @@ export default function DashboardPage() {
               {/* Budget Progress */}
               <Card
                 className="border-border/70 bg-card/90 shadow-sm h-full"
+                id="budget-progress"
                 data-demo-step="demo-budget-progress"
               >
                 <CardHeader className="border-b border-border/60 pb-3">

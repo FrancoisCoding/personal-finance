@@ -21,6 +21,9 @@ const displayFont = Sora({
   variable: '--font-display',
 })
 
+const adsensePublisherId =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? 'ca-pub-2720502399458958'
+
 export const metadata: Metadata = {
   title: 'Finance App - AI-Powered Personal Finance Management',
   description:
@@ -33,6 +36,9 @@ export const metadata: Metadata = {
     'money management',
   ],
   authors: [{ name: 'Finance App Team' }],
+  other: {
+    'google-adsense-account': adsensePublisherId,
+  },
 }
 
 export const viewport: Viewport = {

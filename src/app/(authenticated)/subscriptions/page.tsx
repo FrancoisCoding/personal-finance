@@ -22,6 +22,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import { useNotifications } from '@/components/notification-system'
 import {
   CreditCard,
@@ -156,6 +157,7 @@ export default function SubscriptionsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { isDemoMode } = useDemoMode()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const { addNotification, setShowNotificationCenter } = useNotifications()
   const { data: subscriptions = [], isLoading } = useSubscriptions()
   const { data: categories = [] } = useCategories()
@@ -165,6 +167,7 @@ export default function SubscriptionsPage() {
   const deleteSubscriptionMutation = useDeleteSubscription()
   const isUpdatingSubscription = updateSubscriptionMutation.isPending
   const isDeletingSubscription = deleteSubscriptionMutation.isPending
+  const hasProAccess = isDemoMode || billingData?.currentPlan === 'PRO'
 
   const [addingDetected, setAddingDetected] = useState<Set<string>>(new Set())
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null)
@@ -513,7 +516,11 @@ export default function SubscriptionsPage() {
     }
   }, [activeSubscriptions, transactions])
 
-  if (status === 'loading' || isLoading) {
+  if (
+    status === 'loading' ||
+    isLoading ||
+    (!isDemoMode && !!session?.user?.id && isBillingLoading)
+  ) {
     return (
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 lg:px-8">
         <div className="space-y-3">
@@ -866,8 +873,9 @@ export default function SubscriptionsPage() {
               </div>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              {formatCurrency(detectedMonthlyCost)} monthly estimated ·{' '}
-              {subscriptionIntelligence.highRiskCount} high-risk alerts
+              {hasProAccess
+                ? `${formatCurrency(detectedMonthlyCost)} monthly estimated · ${subscriptionIntelligence.highRiskCount} high-risk alerts`
+                : `${formatCurrency(detectedMonthlyCost)} monthly estimated`}
             </p>
           </CardContent>
         </Card>
@@ -1033,9 +1041,9 @@ export default function SubscriptionsPage() {
                   (nextBilling.getTime() - new Date().getTime()) /
                     (1000 * 60 * 60 * 24)
                 )
-                const insight = subscriptionIntelligence.byId.get(
-                  subscription.id
-                )
+                const insight = hasProAccess
+                  ? subscriptionIntelligence.byId.get(subscription.id)
+                  : null
 
                 return (
                   <div
@@ -1111,167 +1119,188 @@ export default function SubscriptionsPage() {
         </Card>
       </div>
 
-      <Card
-        className="border-border/60 bg-card/80 shadow-sm"
-        data-demo-step="demo-subscriptions-intelligence"
-      >
-        <CardHeader className="border-b border-border/60">
-          <CardTitle>Subscription intelligence</CardTitle>
-          <CardDescription>
-            Renewal risk, price changes, and likely-unused subscriptions from
-            recent billing activity.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 pt-6">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                High-risk renewals
-              </p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {subscriptionIntelligence.highRiskCount}
-              </p>
+      {hasProAccess ? (
+        <Card
+          className="border-border/60 bg-card/80 shadow-sm"
+          data-demo-step="demo-subscriptions-intelligence"
+        >
+          <CardHeader className="border-b border-border/60">
+            <CardTitle>Subscription optimizer</CardTitle>
+            <CardDescription>
+              Renewal risk, price changes, and likely-unused subscriptions from
+              recent billing activity.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-6">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  High-risk renewals
+                </p>
+                <p className="mt-1 text-lg font-semibold text-foreground">
+                  {subscriptionIntelligence.highRiskCount}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Price increases
+                </p>
+                <p className="mt-1 text-lg font-semibold text-foreground">
+                  {subscriptionIntelligence.priceIncreaseCount}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Likely unused
+                </p>
+                <p className="mt-1 text-lg font-semibold text-foreground">
+                  {subscriptionIntelligence.likelyUnusedCount}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Estimated monthly savings
+                </p>
+                <p className="mt-1 text-lg font-semibold text-emerald-600 dark:text-emerald-300">
+                  {formatCurrency(subscriptionIntelligence.estimatedSavings)}
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Price increases
-              </p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {subscriptionIntelligence.priceIncreaseCount}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Likely unused
-              </p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {subscriptionIntelligence.likelyUnusedCount}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Estimated monthly savings
-              </p>
-              <p className="mt-1 text-lg font-semibold text-emerald-600 dark:text-emerald-300">
-                {formatCurrency(subscriptionIntelligence.estimatedSavings)}
-              </p>
-            </div>
-          </div>
 
-          {subscriptionIntelligence.highlightedItems.length === 0 ? (
-            <div
-              className={
-                'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
-                'px-4 py-6 text-center'
-              }
-            >
-              <p className="text-sm font-medium text-foreground">
-                No intelligence alerts right now
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                As new charges arrive, this section will highlight risks and
-                optimization opportunities.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {subscriptionIntelligence.highlightedItems
-                .slice(0, 6)
-                .map((item) => {
-                  const monthlyEquivalent = getSubscriptionMonthlyEquivalent(
-                    item.subscription.amount,
-                    item.subscription.billingCycle
-                  )
+            {subscriptionIntelligence.highlightedItems.length === 0 ? (
+              <div
+                className={
+                  'rounded-lg border border-dashed border-border/70 bg-muted/20 ' +
+                  'px-4 py-6 text-center'
+                }
+              >
+                <p className="text-sm font-medium text-foreground">
+                  No intelligence alerts right now
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  As new charges arrive, this section will highlight risks and
+                  optimization opportunities.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subscriptionIntelligence.highlightedItems
+                  .slice(0, 6)
+                  .map((item) => {
+                    const monthlyEquivalent = getSubscriptionMonthlyEquivalent(
+                      item.subscription.amount,
+                      item.subscription.billingCycle
+                    )
 
-                  return (
-                    <div
-                      key={item.subscription.id}
-                      className={
-                        'flex flex-col gap-3 rounded-xl border border-border/60 ' +
-                        'bg-muted/15 p-4 sm:flex-row sm:items-start ' +
-                        'sm:justify-between'
-                      }
-                    >
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">
-                            {item.subscription.name}
-                          </p>
-                          <span
-                            className={
-                              'rounded-full border px-2 py-0.5 text-[11px] ' +
-                              'font-semibold ' +
-                              (item.riskLevel === 'high'
-                                ? 'border-rose-500/40 bg-rose-500/10 text-rose-500'
-                                : item.riskLevel === 'medium'
-                                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-500'
-                                  : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500')
-                            }
-                          >
-                            {item.riskLevel === 'high'
-                              ? 'High risk'
-                              : item.riskLevel === 'medium'
-                                ? 'Watch'
-                                : 'Stable'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(item.subscription.amount)} ·{' '}
-                          {item.subscription.billingCycle.toLowerCase()} ·{' '}
-                          {formatCurrency(monthlyEquivalent)}/month equivalent
-                        </p>
-                        <div className="flex flex-wrap items-center gap-1">
-                          {item.signals.map((signal) => (
+                    return (
+                      <div
+                        key={item.subscription.id}
+                        className={
+                          'flex flex-col gap-3 rounded-xl border border-border/60 ' +
+                          'bg-muted/15 p-4 sm:flex-row sm:items-start ' +
+                          'sm:justify-between'
+                        }
+                      >
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">
+                              {item.subscription.name}
+                            </p>
                             <span
-                              key={`${item.subscription.id}-${signal}`}
                               className={
-                                'rounded-full border border-border/60 ' +
-                                'bg-muted/30 px-2 py-0.5 text-[11px] text-muted-foreground'
+                                'rounded-full border px-2 py-0.5 text-[11px] ' +
+                                'font-semibold ' +
+                                (item.riskLevel === 'high'
+                                  ? 'border-rose-500/40 bg-rose-500/10 text-rose-500'
+                                  : item.riskLevel === 'medium'
+                                    ? 'border-amber-500/40 bg-amber-500/10 text-amber-500'
+                                    : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500')
                               }
                             >
-                              {signal}
+                              {item.riskLevel === 'high'
+                                ? 'High risk'
+                                : item.riskLevel === 'medium'
+                                  ? 'Watch'
+                                  : 'Stable'}
                             </span>
-                          ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {formatCurrency(item.subscription.amount)} ·{' '}
+                            {item.subscription.billingCycle.toLowerCase()} ·{' '}
+                            {formatCurrency(monthlyEquivalent)}/month equivalent
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1">
+                            {item.signals.map((signal) => (
+                              <span
+                                key={`${item.subscription.id}-${signal}`}
+                                className={
+                                  'rounded-full border border-border/60 ' +
+                                  'bg-muted/30 px-2 py-0.5 text-[11px] text-muted-foreground'
+                                }
+                              >
+                                {signal}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {item.daysUntilRenewal <= 14 ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-9 w-9 rounded-full border border-border/60"
+                              onClick={() =>
+                                handleRenewalReminder(
+                                  item.subscription,
+                                  item.daysUntilRenewal
+                                )
+                              }
+                              aria-label={`Remind me about ${item.subscription.name}`}
+                            >
+                              <Bell className="h-4 w-4" />
+                            </Button>
+                          ) : null}
+                          {item.likelyUnused ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleToggleSubscription(item.subscription.id)
+                              }
+                              disabled={isUpdatingSubscription}
+                            >
+                              Pause
+                            </Button>
+                          ) : null}
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {item.daysUntilRenewal <= 14 ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-9 w-9 rounded-full border border-border/60"
-                            onClick={() =>
-                              handleRenewalReminder(
-                                item.subscription,
-                                item.daysUntilRenewal
-                              )
-                            }
-                            aria-label={`Remind me about ${item.subscription.name}`}
-                          >
-                            <Bell className="h-4 w-4" />
-                          </Button>
-                        ) : null}
-                        {item.likelyUnused ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              handleToggleSubscription(item.subscription.id)
-                            }
-                            disabled={isUpdatingSubscription}
-                          >
-                            Pause
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    )
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-border/60 bg-card/80 shadow-sm">
+          <CardHeader className="border-b border-border/60">
+            <CardTitle>Subscription optimizer</CardTitle>
+            <CardDescription>
+              Upgrade to Pro for cancellation and spend optimization
+              recommendations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-6">
+            <p className="text-sm text-muted-foreground">
+              Pro unlocks price-change detection, likely-unused subscriptions,
+              and projected monthly savings recommendations.
+            </p>
+            <Button asChild>
+              <a href="/billing">Upgrade to Pro</a>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card
         className="border-border/60 bg-card/80 shadow-sm"

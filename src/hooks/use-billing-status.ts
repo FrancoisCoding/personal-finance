@@ -24,6 +24,7 @@ interface ICurrentSubscription {
 
 interface IBillingStatusResponse {
   currentPlan: 'BASIC' | 'PRO' | null
+  isSuperUser?: boolean
   currentSubscription: ICurrentSubscription | null
   availablePlans: IPlanDefinition[]
 }

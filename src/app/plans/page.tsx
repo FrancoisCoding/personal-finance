@@ -36,6 +36,7 @@ const publicPlanCatalog = [
       'Everything in Starter',
       'Financial Assistant access',
       'Advanced AI insights',
+      'Subscription optimizer',
       'Priority support',
       '7-day free trial',
     ],
@@ -96,6 +97,7 @@ export default function PlansPage() {
     }) ?? publicPlanCatalog
 
   const currentPlan = data?.currentPlan ?? null
+  const isSuperUser = data?.isSuperUser === true
   const shouldShowPlanLoading = Boolean(session?.user?.id) && isLoading
 
   return (
@@ -119,7 +121,9 @@ export default function PlansPage() {
           </p>
           {currentPlan ? (
             <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
-              Your current live plan is <strong>{currentPlan}</strong>.
+              {isSuperUser
+                ? 'You have superuser access with full Pro features.'
+                : `Your current live plan is ${currentPlan}.`}
               <Button
                 variant="link"
                 className="ml-1 h-auto px-1 text-emerald-200"
@@ -174,6 +178,7 @@ export default function PlansPage() {
             availablePlans.map((plan) => {
               const isCurrentPlan = currentPlan === plan.plan
               const isSubmitting = isSubmittingPlan === plan.plan
+              const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
               return (
                 <Card
                   key={plan.plan}
@@ -204,7 +209,7 @@ export default function PlansPage() {
                     </ul>
                     <Button
                       className="min-h-11"
-                      disabled={isCurrentPlan || isSubmitting}
+                      disabled={isDisabled}
                       onClick={() =>
                         handleSelectPlan(plan.plan as 'BASIC' | 'PRO')
                       }
@@ -214,6 +219,8 @@ export default function PlansPage() {
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Redirecting...
                         </>
+                      ) : isSuperUser ? (
+                        'Superuser access enabled'
                       ) : isCurrentPlan ? (
                         'Current plan'
                       ) : session?.user?.id ? (

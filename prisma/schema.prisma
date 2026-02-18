@@ -302,6 +302,7 @@ model User {
   email             String  @unique
   emailVerified     DateTime?
   image             String?
+  isSuperUser       Boolean @default(false)
   timezone          String  @default("UTC")
   currency          String  @default("USD")
   createdAt         DateTime @default(now())

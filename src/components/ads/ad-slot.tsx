@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import {
   adConsentChangedEventName,
   readAdConsentValue,
@@ -47,6 +49,8 @@ export function AdSlot({
   minHeightClassName = 'min-h-[120px]',
   title = 'Sponsored',
 }: IAdSlotProps) {
+  const { data: session } = useSession()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const [consentValue, setConsentValue] = useState<TAdConsentValue | null>(null)
   const [isReadyForAdsense, setIsReadyForAdsense] = useState(false)
   const [hasAdError, setHasAdError] = useState(false)
@@ -55,6 +59,12 @@ export function AdSlot({
   const adClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
   const effectiveConsentValue = resolveAdConsentValue(consentValue)
   const canRenderAd = useMemo(() => {
+    if (session?.user?.id && isBillingLoading) {
+      return false
+    }
+    if (billingData?.currentPlan === 'PRO') {
+      return false
+    }
     return Boolean(
       slotId &&
         adClientId &&
@@ -62,7 +72,16 @@ export function AdSlot({
         !hasAdError &&
         isReadyForAdsense
     )
-  }, [adClientId, effectiveConsentValue, hasAdError, isReadyForAdsense, slotId])
+  }, [
+    adClientId,
+    billingData?.currentPlan,
+    effectiveConsentValue,
+    hasAdError,
+    isBillingLoading,
+    isReadyForAdsense,
+    session?.user?.id,
+    slotId,
+  ])
 
   useEffect(() => {
     setConsentValue(readAdConsentValue())
@@ -113,6 +132,13 @@ export function AdSlot({
   }, [canRenderAd])
 
   if (consentValue === 'declined') {
+    return null
+  }
+
+  if (
+    session?.user?.id &&
+    (isBillingLoading || billingData?.currentPlan === 'PRO')
+  ) {
     return null
   }
 

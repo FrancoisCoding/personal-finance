@@ -38,6 +38,7 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
       'Everything in Starter',
       'Financial Assistant access',
       'Advanced AI insights',
+      'Subscription optimizer',
       'Priority support',
       '7-day free trial',
     ],

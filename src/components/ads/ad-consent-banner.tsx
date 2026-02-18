@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { Megaphone, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import {
   TAdConsentValue,
   readAdConsentValue,
@@ -24,6 +26,8 @@ const hiddenPathPrefixes = [
 ]
 
 export function AdConsentBanner() {
+  const { data: session } = useSession()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const pathname = usePathname()
   const [consentValue, setConsentValue] = useState<TAdConsentValue | null>(null)
 
@@ -44,6 +48,13 @@ export function AdConsentBanner() {
   }
 
   if (isHiddenPath || consentValue) {
+    return null
+  }
+
+  if (
+    session?.user?.id &&
+    (isBillingLoading || billingData?.currentPlan === 'PRO')
+  ) {
     return null
   }
 

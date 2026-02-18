@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     const [
       usersCount,
+      superUsersCount,
       contactsCount,
       activeSubscriptionsCount,
       trialingSubscriptionsCount,
@@ -51,6 +52,9 @@ export async function GET(request: NextRequest) {
       topLoginLocations,
     ] = await Promise.all([
       prisma.user.count(),
+      prisma.user.count({
+        where: { isSuperUser: true },
+      }),
       prisma.contactSubmission.count(),
       prisma.appSubscription.count({
         where: { status: AppSubscriptionStatus.ACTIVE },
@@ -161,6 +165,7 @@ export async function GET(request: NextRequest) {
       },
       userMetrics: {
         totalUsers: usersCount,
+        superUsers: superUsersCount,
         newUsersLast7Days: usersLast7DaysCount,
         newUsersLast30Days: usersLast30DaysCount,
         verifiedUsers: verifiedUsersCount,

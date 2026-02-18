@@ -28,6 +28,7 @@ interface IAdminSummary {
 
 interface IUserMetrics {
   totalUsers: number
+  superUsers: number
   newUsersLast7Days: number
   newUsersLast30Days: number
   verifiedUsers: number
@@ -120,7 +121,28 @@ interface IAdminSessionsResponse {
   sessions: IAdminSession[]
 }
 
-type TAdminSection = 'overview' | 'contacts' | 'subscriptions' | 'sessions'
+interface IAdminUser {
+  id: string
+  name: string | null
+  email: string
+  isSuperUser: boolean
+  createdAt: string
+  emailVerified: string | null
+  currentPlan: 'BASIC' | 'PRO' | null
+}
+
+interface IAdminUsersResponse {
+  total: number
+  page: number
+  users: IAdminUser[]
+}
+
+type TAdminSection =
+  | 'overview'
+  | 'contacts'
+  | 'subscriptions'
+  | 'sessions'
+  | 'users'
 
 const pageSize = 25
 
@@ -168,6 +190,14 @@ export default function AdminPortalPage() {
   const [sessionsQuery, setSessionsQuery] = useState('')
   const [sessionsInputValue, setSessionsInputValue] = useState('')
   const [isSessionsLoading, setIsSessionsLoading] = useState(false)
+
+  const [users, setUsers] = useState<IAdminUser[]>([])
+  const [usersTotal, setUsersTotal] = useState(0)
+  const [usersPage, setUsersPage] = useState(1)
+  const [usersQuery, setUsersQuery] = useState('')
+  const [usersInputValue, setUsersInputValue] = useState('')
+  const [isUsersLoading, setIsUsersLoading] = useState(false)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
 
   const loadSummary = useCallback(async () => {
     const response = await fetch('/api/admin/analytics')
@@ -260,6 +290,33 @@ export default function AdminPortalPage() {
     }
   }, [])
 
+  const loadUsers = useCallback(async (page: number, query: string) => {
+    setIsUsersLoading(true)
+    try {
+      const response = await fetch(
+        `/api/admin/users?page=${page}&pageSize=${pageSize}&q=${queryParam(query)}`
+      )
+      const payload = (await response.json().catch(() => ({}))) as
+        | IAdminUsersResponse
+        | { error?: string }
+      if (!response.ok) {
+        throw new Error(
+          (payload as { error?: string })?.error || 'Failed to load users.'
+        )
+      }
+      const data = payload as IAdminUsersResponse
+      setUsers(data.users)
+      setUsersTotal(data.total)
+      setUsersPage(data.page)
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to load users.'
+      )
+    } finally {
+      setIsUsersLoading(false)
+    }
+  }, [])
+
   const loadAllData = useCallback(async () => {
     setErrorMessage('')
     await Promise.all([
@@ -267,6 +324,7 @@ export default function AdminPortalPage() {
       loadContacts(contactsPage, contactsQuery),
       loadSubscriptions(subscriptionsPage, subscriptionsQuery),
       loadSessions(sessionsPage, sessionsQuery),
+      loadUsers(usersPage, usersQuery),
     ])
   }, [
     contactsPage,
@@ -274,11 +332,14 @@ export default function AdminPortalPage() {
     loadContacts,
     loadSessions,
     loadSubscriptions,
+    loadUsers,
     loadSummary,
     sessionsPage,
     sessionsQuery,
     subscriptionsPage,
     subscriptionsQuery,
+    usersPage,
+    usersQuery,
   ])
 
   const contactsTotalPages = Math.max(1, Math.ceil(contactsTotal / pageSize))
@@ -287,6 +348,7 @@ export default function AdminPortalPage() {
     Math.ceil(subscriptionsTotal / pageSize)
   )
   const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / pageSize))
+  const usersTotalPages = Math.max(1, Math.ceil(usersTotal / pageSize))
 
   const contactsExportUrl = `/api/admin/export?type=contacts&q=${queryParam(
     contactsQuery
@@ -365,6 +427,14 @@ export default function AdminPortalPage() {
   }, [sessionsInputValue])
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setUsersPage(1)
+      setUsersQuery(usersInputValue.trim())
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [usersInputValue])
+
+  useEffect(() => {
     if (isLoading) return
     void loadContacts(contactsPage, contactsQuery)
   }, [contactsPage, contactsQuery, isLoading, loadContacts])
@@ -378,6 +448,11 @@ export default function AdminPortalPage() {
     if (isLoading) return
     void loadSessions(sessionsPage, sessionsQuery)
   }, [isLoading, loadSessions, sessionsPage, sessionsQuery])
+
+  useEffect(() => {
+    if (isLoading) return
+    void loadUsers(usersPage, usersQuery)
+  }, [isLoading, loadUsers, usersPage, usersQuery])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -422,11 +497,39 @@ export default function AdminPortalPage() {
     }
   }
 
+  const handleToggleSuperUser = async (user: IAdminUser) => {
+    setUpdatingUserId(user.id)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          isSuperUser: !user.isSuperUser,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to update superuser access.')
+      }
+      await Promise.all([loadSummary(), loadUsers(usersPage, usersQuery)])
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update superuser access.'
+      )
+    } finally {
+      setUpdatingUserId(null)
+    }
+  }
+
   const sectionItems = [
     { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { key: 'contacts' as const, label: 'Contacts', icon: Mail },
     { key: 'subscriptions' as const, label: 'Subscriptions', icon: CreditCard },
     { key: 'sessions' as const, label: 'Sessions', icon: Shield },
+    { key: 'users' as const, label: 'Users', icon: Users },
   ]
 
   if (isLoading) {
@@ -536,11 +639,12 @@ export default function AdminPortalPage() {
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
                       <p className="text-xs text-muted-foreground">
-                        Verified / bank-connected
+                        Verified / bank-connected / superusers
                       </p>
                       <p className="mt-1 text-lg font-semibold">
                         {analytics?.userMetrics.verifiedUsers ?? 0} /{' '}
-                        {analytics?.userMetrics.connectedBankUsers ?? 0}
+                        {analytics?.userMetrics.connectedBankUsers ?? 0} /{' '}
+                        {analytics?.userMetrics.superUsers ?? 0}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
@@ -944,6 +1048,119 @@ export default function AdminPortalPage() {
                       <p className="mt-2 text-xs text-muted-foreground">
                         {session.name} • Last active{' '}
                         {formatTimestamp(session.lastActiveAt)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {activeSection === 'users' ? (
+            <Card className="border-border/70 bg-card/90">
+              <CardHeader className="space-y-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Platform users
+                  </CardTitle>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={usersInputValue}
+                      onChange={(event) =>
+                        setUsersInputValue(event.target.value)
+                      }
+                      placeholder="Search by user email or name..."
+                      className="h-10 w-full sm:w-72"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Showing{' '}
+                    {usersTotal === 0 ? 0 : (usersPage - 1) * pageSize + 1}-
+                    {Math.min(usersPage * pageSize, usersTotal)} of {usersTotal}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={usersPage <= 1 || isUsersLoading}
+                      onClick={() =>
+                        setUsersPage((value) => Math.max(1, value - 1))
+                      }
+                    >
+                      Prev
+                    </Button>
+                    <span>
+                      Page {usersPage} / {usersTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={usersPage >= usersTotalPages || isUsersLoading}
+                      onClick={() =>
+                        setUsersPage((value) =>
+                          Math.min(usersTotalPages, value + 1)
+                        )
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {isUsersLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading users...
+                  </div>
+                ) : users.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No users found.
+                  </p>
+                ) : (
+                  users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="rounded-lg border border-border/60 bg-background/70 p-3"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium">
+                            {user.name || user.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {user.currentPlan ? user.currentPlan : 'No plan'}
+                          </Badge>
+                          {user.isSuperUser ? (
+                            <Badge variant="secondary">Superuser</Badge>
+                          ) : null}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={updatingUserId === user.id}
+                            onClick={() => handleToggleSuperUser(user)}
+                          >
+                            {updatingUserId === user.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : user.isSuperUser ? (
+                              'Remove superuser'
+                            ) : (
+                              'Grant superuser'
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Joined {formatTimestamp(user.createdAt)} • Email
+                        verified: {user.emailVerified ? 'Yes' : 'No'}
                       </p>
                     </div>
                   ))

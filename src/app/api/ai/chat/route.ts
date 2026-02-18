@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { chatWithAI } from '@/lib/local-ai'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
-import {
-  comparePlanPriority,
-  getEffectivePlanFromSubscriptions,
-} from '@/lib/billing'
-import { prisma } from '@/lib/prisma'
+import { getUserEntitlements } from '@/lib/user-entitlements'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,16 +15,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
 
-      const subscriptions = await prisma.appSubscription.findMany({
-        where: { userId: session.user.id },
-        orderBy: { updatedAt: 'desc' },
-      })
-      const effectiveSubscription =
-        getEffectivePlanFromSubscriptions(subscriptions)
-      const hasProAccess =
-        effectiveSubscription &&
-        comparePlanPriority(effectiveSubscription.plan) >=
-          comparePlanPriority(AppPlan.PRO)
+      const { hasProAccess } = await getUserEntitlements(session.user.id)
 
       if (!hasProAccess) {
         return NextResponse.json(

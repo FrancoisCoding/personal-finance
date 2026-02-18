@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import {
-  getStripePriceIdForPlan,
-  getEffectivePlanFromSubscriptions,
-} from '@/lib/billing'
+import { getStripePriceIdForPlan } from '@/lib/billing'
 import { stripeClient } from '@/lib/stripe'
+import { getUserEntitlements } from '@/lib/user-entitlements'
 
 const parsePlan = (value: unknown): AppPlan | null => {
   if (value === 'BASIC' || value === AppPlan.BASIC) {
@@ -47,13 +44,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const existingSubscriptions = await prisma.appSubscription.findMany({
-      where: { userId: session.user.id },
-      orderBy: { updatedAt: 'desc' },
-    })
-    const effectiveSubscription = getEffectivePlanFromSubscriptions(
-      existingSubscriptions
-    )
+    const { isSuperUser, effectiveSubscription, subscriptions } =
+      await getUserEntitlements(session.user.id)
+
+    if (isSuperUser) {
+      return NextResponse.json(
+        { error: 'Superuser accounts already include full Pro access.' },
+        { status: 400 }
+      )
+    }
+
     if (effectiveSubscription?.plan === plan) {
       return NextResponse.json(
         { error: `You are already on the ${plan.toLowerCase()} plan.` },
@@ -62,9 +62,8 @@ export async function POST(request: NextRequest) {
     }
 
     let stripeCustomerId =
-      existingSubscriptions.find(
-        (subscription) => subscription.stripeCustomerId
-      )?.stripeCustomerId ?? null
+      subscriptions.find((subscription) => subscription.stripeCustomerId)
+        ?.stripeCustomerId ?? null
 
     if (!stripeCustomerId) {
       const customer = await stripeClient.customers.create({

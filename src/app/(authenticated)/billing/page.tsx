@@ -34,6 +34,7 @@ const publicPlanCatalog = [
       'Everything in Starter',
       'Financial Assistant access',
       'Advanced AI insights',
+      'Subscription optimizer',
       'Priority support',
       '7-day free trial',
     ],
@@ -129,6 +130,7 @@ export default function BillingPage() {
   }
 
   const currentPlan = data?.currentPlan
+  const isSuperUser = data?.isSuperUser === true
   const availablePlans =
     data?.availablePlans.slice().sort((left, right) => {
       return (
@@ -151,6 +153,13 @@ export default function BillingPage() {
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
           Your account is in live-locked mode until you choose a paid plan. You
           can still continue in demo mode anytime.
+        </div>
+      ) : null}
+
+      {isSuperUser ? (
+        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+          Superuser access is active on this account. Pro features are enabled
+          without billing.
         </div>
       ) : null}
 
@@ -230,6 +239,7 @@ export default function BillingPage() {
         {availablePlans.map((plan) => {
           const isCurrentPlan = currentPlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan
+          const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
           return (
             <Card
               key={plan.plan}
@@ -263,7 +273,7 @@ export default function BillingPage() {
                     onClick={() =>
                       handleStartCheckout(plan.plan as 'BASIC' | 'PRO')
                     }
-                    disabled={isCurrentPlan || isSubmitting}
+                    disabled={isDisabled}
                     className="min-h-11"
                   >
                     {isSubmitting ? (
@@ -271,6 +281,8 @@ export default function BillingPage() {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Redirecting...
                       </>
+                    ) : isSuperUser ? (
+                      'Superuser access enabled'
                     ) : isCurrentPlan ? (
                       'Current plan'
                     ) : (

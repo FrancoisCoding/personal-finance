@@ -2,11 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-import {
-  planDefinitions,
-  getEffectivePlanFromSubscriptions,
-} from '@/lib/billing'
-import { prisma } from '@/lib/prisma'
+import { planDefinitions } from '@/lib/billing'
+import { getUserEntitlements } from '@/lib/user-entitlements'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,17 +14,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const subscriptions = await prisma.appSubscription.findMany({
-      where: { userId: session.user.id },
-      orderBy: { updatedAt: 'desc' },
-    })
-
-    const effectiveSubscription =
-      getEffectivePlanFromSubscriptions(subscriptions)
-    const currentPlan = effectiveSubscription?.plan ?? null
+    const { isSuperUser, currentPlan, effectiveSubscription } =
+      await getUserEntitlements(session.user.id)
 
     return NextResponse.json({
       currentPlan,
+      isSuperUser,
       currentSubscription: effectiveSubscription
         ? {
             id: effectiveSubscription.id,

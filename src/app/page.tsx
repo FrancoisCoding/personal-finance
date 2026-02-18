@@ -417,7 +417,7 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-border/60 mt-8 pt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              (c) 2026 FinanceFlow. All rights reserved.
+              &copy; 2026 FrancoisCoding. All rights reserved.
             </p>
           </div>
         </div>

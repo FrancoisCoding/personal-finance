@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Loader2, LogOut, RefreshCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 interface IAdminSummary {
   usersCount: number
@@ -58,7 +59,28 @@ interface IAdminContact {
 
 interface IAdminAnalyticsResponse {
   summary: IAdminSummary
+  subscriptions?: IAdminSubscription[]
+  sessions?: IAdminSession[]
+}
+
+interface IAdminContactsResponse {
+  total: number
+  page: number
+  pageSize: number
+  contacts: IAdminContact[]
+}
+
+interface IAdminSubscriptionsResponse {
+  total: number
+  page: number
+  pageSize: number
   subscriptions: IAdminSubscription[]
+}
+
+interface IAdminSessionsResponse {
+  total: number
+  page: number
+  pageSize: number
   sessions: IAdminSession[]
 }
 
@@ -68,40 +90,165 @@ const formatTimestamp = (value: string | null) => {
 }
 
 export default function AdminPortalPage() {
+  const pageSize = 25
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
   const [summary, setSummary] = useState<IAdminSummary | null>(null)
   const [subscriptions, setSubscriptions] = useState<IAdminSubscription[]>([])
   const [sessions, setSessions] = useState<IAdminSession[]>([])
   const [contacts, setContacts] = useState<IAdminContact[]>([])
+  const [contactsTotal, setContactsTotal] = useState(0)
+  const [subscriptionsTotal, setSubscriptionsTotal] = useState(0)
+  const [sessionsTotal, setSessionsTotal] = useState(0)
+  const [contactsPage, setContactsPage] = useState(1)
+  const [subscriptionsPage, setSubscriptionsPage] = useState(1)
+  const [sessionsPage, setSessionsPage] = useState(1)
+  const [contactsQuery, setContactsQuery] = useState('')
+  const [subscriptionsQuery, setSubscriptionsQuery] = useState('')
+  const [sessionsQuery, setSessionsQuery] = useState('')
+  const [contactsInputValue, setContactsInputValue] = useState('')
+  const [subscriptionsInputValue, setSubscriptionsInputValue] = useState('')
+  const [sessionsInputValue, setSessionsInputValue] = useState('')
+  const [isContactsLoading, setIsContactsLoading] = useState(false)
+  const [isSubscriptionsLoading, setIsSubscriptionsLoading] = useState(false)
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false)
   const [deletingContactId, setDeletingContactId] = useState<string | null>(
     null
   )
 
-  const loadData = async () => {
+  const loadSummary = useCallback(async () => {
+    setErrorMessage('')
+    const analyticsResponse = await fetch('/api/admin/analytics')
+    const analyticsPayload = await analyticsResponse.json().catch(() => ({}))
+    if (!analyticsResponse.ok) {
+      throw new Error(analyticsPayload?.error || 'Failed to load analytics.')
+    }
+
+    const analyticsData = analyticsPayload as IAdminAnalyticsResponse
+    setSummary(analyticsData.summary)
+  }, [])
+
+  const loadContacts = useCallback(
+    async (options?: { page?: number; query?: string }) => {
+      setIsContactsLoading(true)
+      setErrorMessage('')
+      try {
+        const targetPage = options?.page ?? contactsPage
+        const targetQuery = options?.query ?? contactsQuery
+        const response = await fetch(
+          `/api/admin/contacts?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
+            targetQuery
+          )}`
+        )
+        const payload = (await response.json().catch(() => ({}))) as
+          | IAdminContactsResponse
+          | { error?: string }
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string })?.error || 'Failed to load contacts.'
+          )
+        }
+        const data = payload as IAdminContactsResponse
+        setContacts(data.contacts)
+        setContactsTotal(data.total)
+        setContactsPage(data.page)
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to load contacts.'
+        )
+      } finally {
+        setIsContactsLoading(false)
+      }
+    },
+    [contactsPage, contactsQuery]
+  )
+
+  const loadSubscriptions = useCallback(
+    async (options?: { page?: number; query?: string }) => {
+      setIsSubscriptionsLoading(true)
+      setErrorMessage('')
+      try {
+        const targetPage = options?.page ?? subscriptionsPage
+        const targetQuery = options?.query ?? subscriptionsQuery
+        const response = await fetch(
+          `/api/admin/subscriptions?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
+            targetQuery
+          )}`
+        )
+        const payload = (await response.json().catch(() => ({}))) as
+          | IAdminSubscriptionsResponse
+          | { error?: string }
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string })?.error ||
+              'Failed to load subscriptions.'
+          )
+        }
+        const data = payload as IAdminSubscriptionsResponse
+        setSubscriptions(data.subscriptions)
+        setSubscriptionsTotal(data.total)
+        setSubscriptionsPage(data.page)
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load subscriptions.'
+        )
+      } finally {
+        setIsSubscriptionsLoading(false)
+      }
+    },
+    [subscriptionsPage, subscriptionsQuery]
+  )
+
+  const loadSessions = useCallback(
+    async (options?: { page?: number; query?: string }) => {
+      setIsSessionsLoading(true)
+      setErrorMessage('')
+      try {
+        const targetPage = options?.page ?? sessionsPage
+        const targetQuery = options?.query ?? sessionsQuery
+        const response = await fetch(
+          `/api/admin/sessions?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
+            targetQuery
+          )}`
+        )
+        const payload = (await response.json().catch(() => ({}))) as
+          | IAdminSessionsResponse
+          | { error?: string }
+        if (!response.ok) {
+          throw new Error(
+            (payload as { error?: string })?.error || 'Failed to load sessions.'
+          )
+        }
+        const data = payload as IAdminSessionsResponse
+        setSessions(data.sessions)
+        setSessionsTotal(data.total)
+        setSessionsPage(data.page)
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to load sessions.'
+        )
+      } finally {
+        setIsSessionsLoading(false)
+      }
+    },
+    [sessionsPage, sessionsQuery]
+  )
+
+  const loadData = useCallback(async () => {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const [analyticsResponse, contactsResponse] = await Promise.all([
-        fetch('/api/admin/analytics'),
-        fetch('/api/admin/contacts'),
+      await Promise.all([
+        loadSummary(),
+        loadContacts({ page: contactsPage, query: contactsQuery }),
+        loadSubscriptions({
+          page: subscriptionsPage,
+          query: subscriptionsQuery,
+        }),
+        loadSessions({ page: sessionsPage, query: sessionsQuery }),
       ])
-
-      const analyticsPayload = await analyticsResponse.json().catch(() => ({}))
-      if (!analyticsResponse.ok) {
-        throw new Error(analyticsPayload?.error || 'Failed to load analytics.')
-      }
-
-      const contactsPayload = await contactsResponse.json().catch(() => ({}))
-      if (!contactsResponse.ok) {
-        throw new Error(contactsPayload?.error || 'Failed to load contacts.')
-      }
-
-      const analyticsData = analyticsPayload as IAdminAnalyticsResponse
-      setSummary(analyticsData.summary)
-      setSubscriptions(analyticsData.subscriptions)
-      setSessions(analyticsData.sessions)
-      setContacts((contactsPayload?.contacts as IAdminContact[]) ?? [])
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to load admin data.'
@@ -109,11 +256,61 @@ export default function AdminPortalPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [
+    contactsPage,
+    contactsQuery,
+    loadContacts,
+    loadSessions,
+    loadSubscriptions,
+    loadSummary,
+    sessionsPage,
+    sessionsQuery,
+    subscriptionsPage,
+    subscriptionsQuery,
+  ])
 
   useEffect(() => {
-    loadData()
-  }, [])
+    void loadData()
+  }, [loadData])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setContactsPage(1)
+      setContactsQuery(contactsInputValue.trim())
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [contactsInputValue])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSubscriptionsPage(1)
+      setSubscriptionsQuery(subscriptionsInputValue.trim())
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [subscriptionsInputValue])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSessionsPage(1)
+      setSessionsQuery(sessionsInputValue.trim())
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [sessionsInputValue])
+
+  useEffect(() => {
+    if (isLoading) return
+    void loadContacts()
+  }, [contactsPage, contactsQuery, isLoading, loadContacts])
+
+  useEffect(() => {
+    if (isLoading) return
+    void loadSubscriptions()
+  }, [isLoading, loadSubscriptions, subscriptionsPage, subscriptionsQuery])
+
+  useEffect(() => {
+    if (isLoading) return
+    void loadSessions()
+  }, [isLoading, loadSessions, sessionsPage, sessionsQuery])
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' })
@@ -132,9 +329,7 @@ export default function AdminPortalPage() {
       if (!response.ok) {
         throw new Error(payload?.error || 'Failed to delete contact.')
       }
-      setContacts((previous) =>
-        previous.filter((contact) => contact.id !== contactId)
-      )
+      await Promise.all([loadSummary(), loadContacts()])
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to delete contact.'
@@ -165,6 +360,31 @@ export default function AdminPortalPage() {
           ]
         : [],
     [summary]
+  )
+
+  const contactsTotalPages = Math.max(1, Math.ceil(contactsTotal / pageSize))
+  const subscriptionsTotalPages = Math.max(
+    1,
+    Math.ceil(subscriptionsTotal / pageSize)
+  )
+  const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / pageSize))
+
+  const contactsExportUrl = useMemo(
+    () =>
+      `/api/admin/export?type=contacts&q=${encodeURIComponent(contactsQuery)}`,
+    [contactsQuery]
+  )
+  const subscriptionsExportUrl = useMemo(
+    () =>
+      `/api/admin/export?type=subscriptions&q=${encodeURIComponent(
+        subscriptionsQuery
+      )}`,
+    [subscriptionsQuery]
+  )
+  const sessionsExportUrl = useMemo(
+    () =>
+      `/api/admin/export?type=sessions&q=${encodeURIComponent(sessionsQuery)}`,
+    [sessionsQuery]
   )
 
   if (isLoading) {
@@ -220,11 +440,68 @@ export default function AdminPortalPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <Card className="border-border/70 bg-card/90">
-            <CardHeader>
-              <CardTitle>Contact submissions</CardTitle>
+            <CardHeader className="space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle>Contact submissions</CardTitle>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Input
+                    value={contactsInputValue}
+                    onChange={(event) =>
+                      setContactsInputValue(event.target.value)
+                    }
+                    placeholder="Search contacts..."
+                    className="h-10 w-full sm:w-56"
+                  />
+                  <Button asChild variant="outline" className="h-10">
+                    <a href={contactsExportUrl}>Export CSV</a>
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span>
+                  Showing{' '}
+                  {contactsTotal === 0 ? 0 : (contactsPage - 1) * pageSize + 1}-
+                  {Math.min(contactsPage * pageSize, contactsTotal)} of{' '}
+                  {contactsTotal}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={contactsPage <= 1 || isContactsLoading}
+                    onClick={() =>
+                      setContactsPage((value) => Math.max(1, value - 1))
+                    }
+                  >
+                    Prev
+                  </Button>
+                  <span>
+                    Page {contactsPage} / {contactsTotalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={
+                      contactsPage >= contactsTotalPages || isContactsLoading
+                    }
+                    onClick={() =>
+                      setContactsPage((value) =>
+                        Math.min(contactsTotalPages, value + 1)
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {contacts.length === 0 ? (
+              {isContactsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading contacts...
+                </div>
+              ) : contacts.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No support messages yet.
                 </p>
@@ -269,16 +546,79 @@ export default function AdminPortalPage() {
 
           <div className="space-y-6">
             <Card className="border-border/70 bg-card/90">
-              <CardHeader>
-                <CardTitle>Paid users</CardTitle>
+              <CardHeader className="space-y-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle>Paid users</CardTitle>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={subscriptionsInputValue}
+                      onChange={(event) =>
+                        setSubscriptionsInputValue(event.target.value)
+                      }
+                      placeholder="Search subscriptions..."
+                      className="h-10 w-full sm:w-56"
+                    />
+                    <Button asChild variant="outline" className="h-10">
+                      <a href={subscriptionsExportUrl}>Export CSV</a>
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Showing{' '}
+                    {subscriptionsTotal === 0
+                      ? 0
+                      : (subscriptionsPage - 1) * pageSize + 1}
+                    -
+                    {Math.min(subscriptionsPage * pageSize, subscriptionsTotal)}{' '}
+                    of {subscriptionsTotal}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        subscriptionsPage <= 1 || isSubscriptionsLoading
+                      }
+                      onClick={() =>
+                        setSubscriptionsPage((value) => Math.max(1, value - 1))
+                      }
+                    >
+                      Prev
+                    </Button>
+                    <span>
+                      Page {subscriptionsPage} / {subscriptionsTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        subscriptionsPage >= subscriptionsTotalPages ||
+                        isSubscriptionsLoading
+                      }
+                      onClick={() =>
+                        setSubscriptionsPage((value) =>
+                          Math.min(subscriptionsTotalPages, value + 1)
+                        )
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                {subscriptions.length === 0 ? (
+                {isSubscriptionsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading subscriptions...
+                  </div>
+                ) : subscriptions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No subscriptions found.
                   </p>
                 ) : (
-                  subscriptions.slice(0, 20).map((subscription) => (
+                  subscriptions.map((subscription) => (
                     <div
                       key={subscription.id}
                       className="rounded-lg border border-border/60 bg-background/70 p-2 text-sm"
@@ -292,6 +632,13 @@ export default function AdminPortalPage() {
                       <p className="mt-1 text-xs text-muted-foreground">
                         {subscription.plan} • {subscription.status}
                       </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Trial ends: {formatTimestamp(subscription.trialEndsAt)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Period ends:{' '}
+                        {formatTimestamp(subscription.currentPeriodEnd)}
+                      </p>
                     </div>
                   ))
                 )}
@@ -299,16 +646,75 @@ export default function AdminPortalPage() {
             </Card>
 
             <Card className="border-border/70 bg-card/90">
-              <CardHeader>
-                <CardTitle>Recent login locations</CardTitle>
+              <CardHeader className="space-y-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle>Recent login locations</CardTitle>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={sessionsInputValue}
+                      onChange={(event) =>
+                        setSessionsInputValue(event.target.value)
+                      }
+                      placeholder="Search sessions..."
+                      className="h-10 w-full sm:w-56"
+                    />
+                    <Button asChild variant="outline" className="h-10">
+                      <a href={sessionsExportUrl}>Export CSV</a>
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Showing{' '}
+                    {sessionsTotal === 0
+                      ? 0
+                      : (sessionsPage - 1) * pageSize + 1}
+                    -{Math.min(sessionsPage * pageSize, sessionsTotal)} of{' '}
+                    {sessionsTotal}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={sessionsPage <= 1 || isSessionsLoading}
+                      onClick={() =>
+                        setSessionsPage((value) => Math.max(1, value - 1))
+                      }
+                    >
+                      Prev
+                    </Button>
+                    <span>
+                      Page {sessionsPage} / {sessionsTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        sessionsPage >= sessionsTotalPages || isSessionsLoading
+                      }
+                      onClick={() =>
+                        setSessionsPage((value) =>
+                          Math.min(sessionsTotalPages, value + 1)
+                        )
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
-                {sessions.length === 0 ? (
+                {isSessionsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading sessions...
+                  </div>
+                ) : sessions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No login sessions found.
                   </p>
                 ) : (
-                  sessions.slice(0, 20).map((session) => (
+                  sessions.map((session) => (
                     <div
                       key={session.id}
                       className="rounded-lg border border-border/60 bg-background/70 p-2 text-xs"

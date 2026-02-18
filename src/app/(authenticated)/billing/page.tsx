@@ -13,6 +13,7 @@ export default function BillingPage() {
   const { toast } = useToast()
   const { data, isLoading, refetch } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false)
 
   const handleStartCheckout = async (plan: 'BASIC' | 'PRO') => {
     setIsSubmittingPlan(plan)
@@ -40,6 +41,31 @@ export default function BillingPage() {
         variant: 'destructive',
       })
       setIsSubmittingPlan(null)
+    }
+  }
+
+  const handleOpenCustomerPortal = async () => {
+    setIsOpeningPortal(true)
+    try {
+      const response = await fetch('/api/billing/portal', { method: 'POST' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Unable to open customer portal.')
+      }
+      if (!payload?.url) {
+        throw new Error('Customer portal URL was not returned.')
+      }
+      window.location.href = payload.url as string
+    } catch (error) {
+      toast({
+        title: 'Billing error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Unable to open customer portal.',
+        variant: 'destructive',
+      })
+      setIsOpeningPortal(false)
     }
   }
 
@@ -89,6 +115,23 @@ export default function BillingPage() {
                 ).toLocaleDateString()}
               </p>
             ) : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                className="min-h-11"
+                onClick={handleOpenCustomerPortal}
+                disabled={isOpeningPortal}
+              >
+                {isOpeningPortal ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Opening portal...
+                  </>
+                ) : (
+                  'Manage subscription'
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : null}

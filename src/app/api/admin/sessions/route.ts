@@ -39,19 +39,27 @@ export async function GET(request: NextRequest) {
     const where = query
       ? {
           OR: [
+            { location: { contains: query, mode: 'insensitive' as const } },
             { name: { contains: query, mode: 'insensitive' as const } },
-            { email: { contains: query, mode: 'insensitive' as const } },
-            { subject: { contains: query, mode: 'insensitive' as const } },
-            { message: { contains: query, mode: 'insensitive' as const } },
+            {
+              user: {
+                email: { contains: query, mode: 'insensitive' as const },
+              },
+            },
+            {
+              user: {
+                name: { contains: query, mode: 'insensitive' as const },
+              },
+            },
           ],
         }
       : undefined
 
-    const [total, contacts] = await Promise.all([
-      prisma.contactSubmission.count({ where }),
-      prisma.contactSubmission.findMany({
+    const [total, sessions] = await Promise.all([
+      prisma.accessSession.count({ where }),
+      prisma.accessSession.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { lastActiveAt: 'desc' },
         take: pageSize,
         skip: (page - 1) * pageSize,
         include: {
@@ -70,50 +78,20 @@ export async function GET(request: NextRequest) {
       total,
       page,
       pageSize,
-      contacts: contacts.map((contact) => ({
-        id: contact.id,
-        name: contact.name,
-        email: contact.email,
-        subject: contact.subject,
-        message: contact.message,
-        createdAt: contact.createdAt.toISOString(),
-        user: contact.user,
+      sessions: sessions.map((session) => ({
+        id: session.id,
+        sessionKey: session.sessionKey,
+        name: session.name,
+        location: session.location,
+        isTrusted: session.isTrusted,
+        lastActiveAt: session.lastActiveAt.toISOString(),
+        user: session.user,
       })),
     })
   } catch (error) {
-    console.error('Admin contacts load error:', error)
+    console.error('Admin sessions load error:', error)
     return NextResponse.json(
-      { error: 'Failed to load contact submissions.' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const adminToken = request.cookies.get(adminSessionCookieName)?.value
-    if (!verifyAdminSessionToken(adminToken)) {
-      return unauthorizedResponse()
-    }
-
-    const body = await request.json().catch(() => ({}))
-    const contactId = typeof body?.id === 'string' ? body.id.trim() : ''
-    if (!contactId) {
-      return NextResponse.json(
-        { error: 'Missing contact id.' },
-        { status: 400 }
-      )
-    }
-
-    await prisma.contactSubmission.delete({
-      where: { id: contactId },
-    })
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Admin contact delete error:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete contact submission.' },
+      { error: 'Failed to load sessions.' },
       { status: 500 }
     )
   }

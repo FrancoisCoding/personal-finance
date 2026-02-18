@@ -1,7 +1,19 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Loader2, LogOut, RefreshCcw, Trash2 } from 'lucide-react'
+import {
+  BarChart3,
+  CreditCard,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  Mail,
+  RefreshCcw,
+  Shield,
+  Trash2,
+  Users,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,33 +26,71 @@ interface IAdminSummary {
   trialingSubscriptions: number
 }
 
+interface IUserMetrics {
+  totalUsers: number
+  newUsersLast7Days: number
+  newUsersLast30Days: number
+  verifiedUsers: number
+  connectedBankUsers: number
+}
+
+interface ISubscriptionMetrics {
+  payingUsers: number
+  activeSubscriptions: number
+  trialingSubscriptions: number
+  basicSubscribers: number
+  proSubscribers: number
+  projectedMonthlyRevenueInCents: number
+  statusBreakdown: {
+    active: number
+    trialing: number
+    pastDue: number
+    canceled: number
+    incomplete: number
+  }
+}
+
+interface IEngagementMetrics {
+  sessionsLast24Hours: number
+  sessionsLast7Days: number
+  activeUsersLast7Days: number
+  averageSessionsPerActiveUserLast7Days: number
+  topLoginLocations: Array<{ location: string; count: number }>
+}
+
+interface IOperationsMetrics {
+  contactsLast7Days: number
+  contactsLast30Days: number
+  totalFinancialAccounts: number
+  totalTransactions: number
+  totalGoals: number
+  totalReminders: number
+}
+
+interface IAdminAnalyticsResponse {
+  summary: IAdminSummary
+  userMetrics: IUserMetrics
+  subscriptionMetrics: ISubscriptionMetrics
+  engagementMetrics: IEngagementMetrics
+  operationsMetrics: IOperationsMetrics
+}
+
 interface IAdminSubscription {
   id: string
   plan: string
   status: string
   trialEndsAt: string | null
   currentPeriodEnd: string | null
-  cancelAtPeriodEnd: boolean
-  updatedAt: string
-  user: {
-    id: string
-    name: string | null
-    email: string
-  }
+  user: { id: string; name: string | null; email: string }
 }
 
 interface IAdminSession {
   id: string
-  sessionKey: string
   name: string
   location: string
   isTrusted: boolean
   lastActiveAt: string
-  user: {
-    id: string
-    name: string | null
-    email: string
-  }
+  user: { id: string; name: string | null; email: string }
 }
 
 interface IAdminContact {
@@ -50,212 +100,174 @@ interface IAdminContact {
   subject: string
   message: string
   createdAt: string
-  user: {
-    id: string
-    name: string | null
-    email: string
-  } | null
-}
-
-interface IAdminAnalyticsResponse {
-  summary: IAdminSummary
-  subscriptions?: IAdminSubscription[]
-  sessions?: IAdminSession[]
 }
 
 interface IAdminContactsResponse {
   total: number
   page: number
-  pageSize: number
   contacts: IAdminContact[]
 }
 
 interface IAdminSubscriptionsResponse {
   total: number
   page: number
-  pageSize: number
   subscriptions: IAdminSubscription[]
 }
 
 interface IAdminSessionsResponse {
   total: number
   page: number
-  pageSize: number
   sessions: IAdminSession[]
 }
 
-const formatTimestamp = (value: string | null) => {
-  if (!value) return '--'
-  return new Date(value).toLocaleString()
-}
+type TAdminSection = 'overview' | 'contacts' | 'subscriptions' | 'sessions'
+
+const pageSize = 25
+
+const formatTimestamp = (value: string | null) =>
+  value ? new Date(value).toLocaleString() : '--'
+
+const formatUsdFromCents = (valueInCents: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  }).format(valueInCents / 100)
+
+const queryParam = (value: string) => encodeURIComponent(value)
 
 export default function AdminPortalPage() {
-  const pageSize = 25
+  const [activeSection, setActiveSection] = useState<TAdminSection>('overview')
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [summary, setSummary] = useState<IAdminSummary | null>(null)
-  const [subscriptions, setSubscriptions] = useState<IAdminSubscription[]>([])
-  const [sessions, setSessions] = useState<IAdminSession[]>([])
+  const [analytics, setAnalytics] = useState<IAdminAnalyticsResponse | null>(
+    null
+  )
+
   const [contacts, setContacts] = useState<IAdminContact[]>([])
   const [contactsTotal, setContactsTotal] = useState(0)
-  const [subscriptionsTotal, setSubscriptionsTotal] = useState(0)
-  const [sessionsTotal, setSessionsTotal] = useState(0)
   const [contactsPage, setContactsPage] = useState(1)
-  const [subscriptionsPage, setSubscriptionsPage] = useState(1)
-  const [sessionsPage, setSessionsPage] = useState(1)
   const [contactsQuery, setContactsQuery] = useState('')
-  const [subscriptionsQuery, setSubscriptionsQuery] = useState('')
-  const [sessionsQuery, setSessionsQuery] = useState('')
   const [contactsInputValue, setContactsInputValue] = useState('')
-  const [subscriptionsInputValue, setSubscriptionsInputValue] = useState('')
-  const [sessionsInputValue, setSessionsInputValue] = useState('')
   const [isContactsLoading, setIsContactsLoading] = useState(false)
-  const [isSubscriptionsLoading, setIsSubscriptionsLoading] = useState(false)
-  const [isSessionsLoading, setIsSessionsLoading] = useState(false)
   const [deletingContactId, setDeletingContactId] = useState<string | null>(
     null
   )
 
-  const loadSummary = useCallback(async () => {
-    setErrorMessage('')
-    const analyticsResponse = await fetch('/api/admin/analytics')
-    const analyticsPayload = await analyticsResponse.json().catch(() => ({}))
-    if (!analyticsResponse.ok) {
-      throw new Error(analyticsPayload?.error || 'Failed to load analytics.')
-    }
+  const [subscriptions, setSubscriptions] = useState<IAdminSubscription[]>([])
+  const [subscriptionsTotal, setSubscriptionsTotal] = useState(0)
+  const [subscriptionsPage, setSubscriptionsPage] = useState(1)
+  const [subscriptionsQuery, setSubscriptionsQuery] = useState('')
+  const [subscriptionsInputValue, setSubscriptionsInputValue] = useState('')
+  const [isSubscriptionsLoading, setIsSubscriptionsLoading] = useState(false)
 
-    const analyticsData = analyticsPayload as IAdminAnalyticsResponse
-    setSummary(analyticsData.summary)
+  const [sessions, setSessions] = useState<IAdminSession[]>([])
+  const [sessionsTotal, setSessionsTotal] = useState(0)
+  const [sessionsPage, setSessionsPage] = useState(1)
+  const [sessionsQuery, setSessionsQuery] = useState('')
+  const [sessionsInputValue, setSessionsInputValue] = useState('')
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false)
+
+  const loadSummary = useCallback(async () => {
+    const response = await fetch('/api/admin/analytics')
+    const payload = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Failed to load analytics.')
+    }
+    setAnalytics(payload as IAdminAnalyticsResponse)
   }, [])
 
-  const loadContacts = useCallback(
-    async (options?: { page?: number; query?: string }) => {
-      setIsContactsLoading(true)
-      setErrorMessage('')
-      try {
-        const targetPage = options?.page ?? contactsPage
-        const targetQuery = options?.query ?? contactsQuery
-        const response = await fetch(
-          `/api/admin/contacts?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
-            targetQuery
-          )}`
-        )
-        const payload = (await response.json().catch(() => ({}))) as
-          | IAdminContactsResponse
-          | { error?: string }
-        if (!response.ok) {
-          throw new Error(
-            (payload as { error?: string })?.error || 'Failed to load contacts.'
-          )
-        }
-        const data = payload as IAdminContactsResponse
-        setContacts(data.contacts)
-        setContactsTotal(data.total)
-        setContactsPage(data.page)
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : 'Failed to load contacts.'
-        )
-      } finally {
-        setIsContactsLoading(false)
-      }
-    },
-    [contactsPage, contactsQuery]
-  )
-
-  const loadSubscriptions = useCallback(
-    async (options?: { page?: number; query?: string }) => {
-      setIsSubscriptionsLoading(true)
-      setErrorMessage('')
-      try {
-        const targetPage = options?.page ?? subscriptionsPage
-        const targetQuery = options?.query ?? subscriptionsQuery
-        const response = await fetch(
-          `/api/admin/subscriptions?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
-            targetQuery
-          )}`
-        )
-        const payload = (await response.json().catch(() => ({}))) as
-          | IAdminSubscriptionsResponse
-          | { error?: string }
-        if (!response.ok) {
-          throw new Error(
-            (payload as { error?: string })?.error ||
-              'Failed to load subscriptions.'
-          )
-        }
-        const data = payload as IAdminSubscriptionsResponse
-        setSubscriptions(data.subscriptions)
-        setSubscriptionsTotal(data.total)
-        setSubscriptionsPage(data.page)
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load subscriptions.'
-        )
-      } finally {
-        setIsSubscriptionsLoading(false)
-      }
-    },
-    [subscriptionsPage, subscriptionsQuery]
-  )
-
-  const loadSessions = useCallback(
-    async (options?: { page?: number; query?: string }) => {
-      setIsSessionsLoading(true)
-      setErrorMessage('')
-      try {
-        const targetPage = options?.page ?? sessionsPage
-        const targetQuery = options?.query ?? sessionsQuery
-        const response = await fetch(
-          `/api/admin/sessions?page=${targetPage}&pageSize=${pageSize}&q=${encodeURIComponent(
-            targetQuery
-          )}`
-        )
-        const payload = (await response.json().catch(() => ({}))) as
-          | IAdminSessionsResponse
-          | { error?: string }
-        if (!response.ok) {
-          throw new Error(
-            (payload as { error?: string })?.error || 'Failed to load sessions.'
-          )
-        }
-        const data = payload as IAdminSessionsResponse
-        setSessions(data.sessions)
-        setSessionsTotal(data.total)
-        setSessionsPage(data.page)
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error ? error.message : 'Failed to load sessions.'
-        )
-      } finally {
-        setIsSessionsLoading(false)
-      }
-    },
-    [sessionsPage, sessionsQuery]
-  )
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    setErrorMessage('')
+  const loadContacts = useCallback(async (page: number, query: string) => {
+    setIsContactsLoading(true)
     try {
-      await Promise.all([
-        loadSummary(),
-        loadContacts({ page: contactsPage, query: contactsQuery }),
-        loadSubscriptions({
-          page: subscriptionsPage,
-          query: subscriptionsQuery,
-        }),
-        loadSessions({ page: sessionsPage, query: sessionsQuery }),
-      ])
+      const response = await fetch(
+        `/api/admin/contacts?page=${page}&pageSize=${pageSize}&q=${queryParam(query)}`
+      )
+      const payload = (await response.json().catch(() => ({}))) as
+        | IAdminContactsResponse
+        | { error?: string }
+      if (!response.ok) {
+        throw new Error(
+          (payload as { error?: string })?.error || 'Failed to load contacts.'
+        )
+      }
+      const data = payload as IAdminContactsResponse
+      setContacts(data.contacts)
+      setContactsTotal(data.total)
+      setContactsPage(data.page)
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'Failed to load admin data.'
+        error instanceof Error ? error.message : 'Failed to load contacts.'
       )
     } finally {
-      setIsLoading(false)
+      setIsContactsLoading(false)
     }
+  }, [])
+
+  const loadSubscriptions = useCallback(async (page: number, query: string) => {
+    setIsSubscriptionsLoading(true)
+    try {
+      const response = await fetch(
+        `/api/admin/subscriptions?page=${page}&pageSize=${pageSize}&q=${queryParam(query)}`
+      )
+      const payload = (await response.json().catch(() => ({}))) as
+        | IAdminSubscriptionsResponse
+        | { error?: string }
+      if (!response.ok) {
+        throw new Error(
+          (payload as { error?: string })?.error ||
+            'Failed to load subscriptions.'
+        )
+      }
+      const data = payload as IAdminSubscriptionsResponse
+      setSubscriptions(data.subscriptions)
+      setSubscriptionsTotal(data.total)
+      setSubscriptionsPage(data.page)
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to load subscriptions.'
+      )
+    } finally {
+      setIsSubscriptionsLoading(false)
+    }
+  }, [])
+
+  const loadSessions = useCallback(async (page: number, query: string) => {
+    setIsSessionsLoading(true)
+    try {
+      const response = await fetch(
+        `/api/admin/sessions?page=${page}&pageSize=${pageSize}&q=${queryParam(query)}`
+      )
+      const payload = (await response.json().catch(() => ({}))) as
+        | IAdminSessionsResponse
+        | { error?: string }
+      if (!response.ok) {
+        throw new Error(
+          (payload as { error?: string })?.error || 'Failed to load sessions.'
+        )
+      }
+      const data = payload as IAdminSessionsResponse
+      setSessions(data.sessions)
+      setSessionsTotal(data.total)
+      setSessionsPage(data.page)
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to load sessions.'
+      )
+    } finally {
+      setIsSessionsLoading(false)
+    }
+  }, [])
+
+  const loadAllData = useCallback(async () => {
+    setErrorMessage('')
+    await Promise.all([
+      loadSummary(),
+      loadContacts(contactsPage, contactsQuery),
+      loadSubscriptions(subscriptionsPage, subscriptionsQuery),
+      loadSessions(sessionsPage, sessionsQuery),
+    ])
   }, [
     contactsPage,
     contactsQuery,
@@ -269,48 +281,116 @@ export default function AdminPortalPage() {
     subscriptionsQuery,
   ])
 
-  useEffect(() => {
-    void loadData()
-  }, [loadData])
+  const contactsTotalPages = Math.max(1, Math.ceil(contactsTotal / pageSize))
+  const subscriptionsTotalPages = Math.max(
+    1,
+    Math.ceil(subscriptionsTotal / pageSize)
+  )
+  const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / pageSize))
+
+  const contactsExportUrl = `/api/admin/export?type=contacts&q=${queryParam(
+    contactsQuery
+  )}`
+  const subscriptionsExportUrl = `/api/admin/export?type=subscriptions&q=${queryParam(subscriptionsQuery)}`
+  const sessionsExportUrl = `/api/admin/export?type=sessions&q=${queryParam(
+    sessionsQuery
+  )}`
+
+  const summaryCards = useMemo(
+    () =>
+      analytics
+        ? [
+            {
+              label: 'Platform users',
+              value: analytics.summary.usersCount.toLocaleString(),
+            },
+            {
+              label: 'Paying users',
+              value: analytics.subscriptionMetrics.payingUsers.toLocaleString(),
+            },
+            {
+              label: 'Projected MRR',
+              value: formatUsdFromCents(
+                analytics.subscriptionMetrics.projectedMonthlyRevenueInCents
+              ),
+            },
+            {
+              label: 'Sessions (7d)',
+              value:
+                analytics.engagementMetrics.sessionsLast7Days.toLocaleString(),
+            },
+          ]
+        : [],
+    [analytics]
+  )
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const initialize = async () => {
+      setIsLoading(true)
+      try {
+        await loadAllData()
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to load admin data.'
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void initialize()
+  }, [loadAllData])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
       setContactsPage(1)
       setContactsQuery(contactsInputValue.trim())
-    }, 350)
-    return () => clearTimeout(timer)
+    }, 300)
+    return () => window.clearTimeout(timer)
   }, [contactsInputValue])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setSubscriptionsPage(1)
       setSubscriptionsQuery(subscriptionsInputValue.trim())
-    }, 350)
-    return () => clearTimeout(timer)
+    }, 300)
+    return () => window.clearTimeout(timer)
   }, [subscriptionsInputValue])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setSessionsPage(1)
       setSessionsQuery(sessionsInputValue.trim())
-    }, 350)
-    return () => clearTimeout(timer)
+    }, 300)
+    return () => window.clearTimeout(timer)
   }, [sessionsInputValue])
 
   useEffect(() => {
     if (isLoading) return
-    void loadContacts()
+    void loadContacts(contactsPage, contactsQuery)
   }, [contactsPage, contactsQuery, isLoading, loadContacts])
 
   useEffect(() => {
     if (isLoading) return
-    void loadSubscriptions()
+    void loadSubscriptions(subscriptionsPage, subscriptionsQuery)
   }, [isLoading, loadSubscriptions, subscriptionsPage, subscriptionsQuery])
 
   useEffect(() => {
     if (isLoading) return
-    void loadSessions()
+    void loadSessions(sessionsPage, sessionsQuery)
   }, [isLoading, loadSessions, sessionsPage, sessionsQuery])
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await loadAllData()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Failed to refresh admin data.'
+      )
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' })
@@ -329,7 +409,10 @@ export default function AdminPortalPage() {
       if (!response.ok) {
         throw new Error(payload?.error || 'Failed to delete contact.')
       }
-      await Promise.all([loadSummary(), loadContacts()])
+      await Promise.all([
+        loadSummary(),
+        loadContacts(contactsPage, contactsQuery),
+      ])
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Failed to delete contact.'
@@ -339,53 +422,12 @@ export default function AdminPortalPage() {
     }
   }
 
-  const summaryCards = useMemo(
-    () =>
-      summary
-        ? [
-            { label: 'Platform users', value: summary.usersCount.toString() },
-            { label: 'Messages', value: summary.contactsCount.toString() },
-            {
-              label: 'Active subscriptions',
-              value: summary.activeSubscriptions.toString(),
-            },
-            {
-              label: 'Trialing subscriptions',
-              value: summary.trialingSubscriptions.toString(),
-            },
-            {
-              label: 'Recent active sessions',
-              value: summary.activeSessionsCount.toString(),
-            },
-          ]
-        : [],
-    [summary]
-  )
-
-  const contactsTotalPages = Math.max(1, Math.ceil(contactsTotal / pageSize))
-  const subscriptionsTotalPages = Math.max(
-    1,
-    Math.ceil(subscriptionsTotal / pageSize)
-  )
-  const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / pageSize))
-
-  const contactsExportUrl = useMemo(
-    () =>
-      `/api/admin/export?type=contacts&q=${encodeURIComponent(contactsQuery)}`,
-    [contactsQuery]
-  )
-  const subscriptionsExportUrl = useMemo(
-    () =>
-      `/api/admin/export?type=subscriptions&q=${encodeURIComponent(
-        subscriptionsQuery
-      )}`,
-    [subscriptionsQuery]
-  )
-  const sessionsExportUrl = useMemo(
-    () =>
-      `/api/admin/export?type=sessions&q=${encodeURIComponent(sessionsQuery)}`,
-    [sessionsQuery]
-  )
+  const sectionItems = [
+    { key: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
+    { key: 'contacts' as const, label: 'Contacts', icon: Mail },
+    { key: 'subscriptions' as const, label: 'Subscriptions', icon: CreditCard },
+    { key: 'sessions' as const, label: 'Sessions', icon: Shield },
+  ]
 
   if (isLoading) {
     return (
@@ -396,167 +438,323 @@ export default function AdminPortalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="mx-auto grid w-full max-w-[1500px] gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-2xl border border-border/60 bg-card/90 p-4 lg:sticky lg:top-6">
           <div>
-            <h1 className="text-3xl font-semibold">Admin portal</h1>
-            <p className="text-sm text-muted-foreground">
-              Monitor contacts, subscriptions, users, and session activity.
+            <h1 className="text-xl font-semibold">Admin portal</h1>
+            <p className="text-xs text-muted-foreground">
+              FinanceFlow control center
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={loadData}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Refresh
+
+          <div className="mt-5 grid gap-2">
+            {sectionItems.map((section) => {
+              const Icon = section.icon
+              const isActive = activeSection === section.key
+              return (
+                <button
+                  key={section.key}
+                  type="button"
+                  onClick={() => setActiveSection(section.key)}
+                  className={
+                    'w-full rounded-xl border p-3 text-left transition ' +
+                    (isActive
+                      ? 'border-primary/60 bg-primary/10'
+                      : 'border-border/60 bg-background/60 hover:border-primary/40')
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4" />
+                    <span className="text-sm font-medium">{section.label}</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="mt-5 grid gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="mr-2 h-4 w-4" />
+              )}
+              Refresh data
             </Button>
             <Button variant="destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
           </div>
-        </div>
+        </aside>
 
-        {errorMessage ? (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-400">
-            {errorMessage}
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {summaryCards.map((card) => (
-            <Card key={card.label} className="border-border/70 bg-card/90">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">
-                  {card.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-2xl font-semibold">
-                {card.value}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <Card className="border-border/70 bg-card/90">
-            <CardHeader className="space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle>Contact submissions</CardTitle>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <Input
-                    value={contactsInputValue}
-                    onChange={(event) =>
-                      setContactsInputValue(event.target.value)
-                    }
-                    placeholder="Search contacts..."
-                    className="h-10 w-full sm:w-56"
-                  />
-                  <Button asChild variant="outline" className="h-10">
-                    <a href={contactsExportUrl}>Export CSV</a>
-                  </Button>
-                </div>
+        <main className="space-y-6">
+          {errorMessage ? (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-400">
+              {errorMessage}
+            </div>
+          ) : null}
+          {activeSection === 'overview' ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {summaryCards.map((card) => (
+                  <Card
+                    key={card.label}
+                    className="border-border/70 bg-card/90"
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-muted-foreground">
+                        {card.label}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-2xl font-semibold">
+                      {card.value}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-                <span>
-                  Showing{' '}
-                  {contactsTotal === 0 ? 0 : (contactsPage - 1) * pageSize + 1}-
-                  {Math.min(contactsPage * pageSize, contactsTotal)} of{' '}
-                  {contactsTotal}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={contactsPage <= 1 || isContactsLoading}
-                    onClick={() =>
-                      setContactsPage((value) => Math.max(1, value - 1))
-                    }
-                  >
-                    Prev
-                  </Button>
-                  <span>
-                    Page {contactsPage} / {contactsTotalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={
-                      contactsPage >= contactsTotalPages || isContactsLoading
-                    }
-                    onClick={() =>
-                      setContactsPage((value) =>
-                        Math.min(contactsTotalPages, value + 1)
-                      )
-                    }
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {isContactsLoading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading contacts...
-                </div>
-              ) : contacts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No support messages yet.
-                </p>
-              ) : (
-                contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="rounded-xl border border-border/60 bg-background/70 p-3"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="font-medium">{contact.subject}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {contact.name} ({contact.email}) •{' '}
-                          {formatTimestamp(contact.createdAt)}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteContact(contact.id)}
-                        disabled={deletingContactId === contact.id}
-                      >
-                        {deletingContactId === contact.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Trash2 className="mr-1 h-4 w-4" />
-                            Delete
-                          </>
-                        )}
-                      </Button>
+
+              <div className="grid gap-4 xl:grid-cols-3">
+                <Card className="border-border/70 bg-card/90 xl:col-span-2">
+                  <CardHeader>
+                    <CardTitle>User analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        New users (7d / 30d)
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {analytics?.userMetrics.newUsersLast7Days ?? 0} /{' '}
+                        {analytics?.userMetrics.newUsersLast30Days ?? 0}
+                      </p>
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
-                      {contact.message}
-                    </p>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Verified / bank-connected
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {analytics?.userMetrics.verifiedUsers ?? 0} /{' '}
+                        {analytics?.userMetrics.connectedBankUsers ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Contacts (7d / 30d)
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {analytics?.operationsMetrics.contactsLast7Days ?? 0} /{' '}
+                        {analytics?.operationsMetrics.contactsLast30Days ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-background/60 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Goals / reminders
+                      </p>
+                      <p className="mt-1 text-lg font-semibold">
+                        {analytics?.operationsMetrics.totalGoals ?? 0} /{' '}
+                        {analytics?.operationsMetrics.totalReminders ?? 0}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          <div className="space-y-6">
+                <Card className="border-border/70 bg-card/90">
+                  <CardHeader>
+                    <CardTitle>Plan health</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
+                      <span className="text-muted-foreground">Starter</span>
+                      <span>
+                        {analytics?.subscriptionMetrics.basicSubscribers ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
+                      <span className="text-muted-foreground">Pro</span>
+                      <span>
+                        {analytics?.subscriptionMetrics.proSubscribers ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
+                      <span className="text-muted-foreground">Past due</span>
+                      <span>
+                        {analytics?.subscriptionMetrics.statusBreakdown
+                          .pastDue ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
+                      <span className="text-muted-foreground">Canceled</span>
+                      <span>
+                        {analytics?.subscriptionMetrics.statusBreakdown
+                          .canceled ?? 0}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border-border/70 bg-card/90">
+                <CardHeader>
+                  <CardTitle>Top login locations</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {analytics?.engagementMetrics.topLoginLocations.length ? (
+                    analytics.engagementMetrics.topLoginLocations.map(
+                      (location) => (
+                        <div
+                          key={`${location.location}-${location.count}`}
+                          className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm"
+                        >
+                          <span className="truncate text-muted-foreground">
+                            {location.location}
+                          </span>
+                          <Badge variant="secondary">{location.count}</Badge>
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No session location data available.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
+
+          {activeSection === 'contacts' ? (
             <Card className="border-border/70 bg-card/90">
               <CardHeader className="space-y-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle>Paid users</CardTitle>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    Contact submissions
+                  </CardTitle>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={contactsInputValue}
+                      onChange={(event) =>
+                        setContactsInputValue(event.target.value)
+                      }
+                      placeholder="Search by name, email, subject..."
+                      className="h-10 w-full sm:w-72"
+                    />
+                    <Button asChild variant="outline" className="h-10">
+                      <a href={contactsExportUrl}>Export CSV</a>
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Showing{' '}
+                    {contactsTotal === 0
+                      ? 0
+                      : (contactsPage - 1) * pageSize + 1}
+                    -{Math.min(contactsPage * pageSize, contactsTotal)} of{' '}
+                    {contactsTotal}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={contactsPage <= 1 || isContactsLoading}
+                      onClick={() =>
+                        setContactsPage((value) => Math.max(1, value - 1))
+                      }
+                    >
+                      Prev
+                    </Button>
+                    <span>
+                      Page {contactsPage} / {contactsTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        contactsPage >= contactsTotalPages || isContactsLoading
+                      }
+                      onClick={() =>
+                        setContactsPage((value) =>
+                          Math.min(contactsTotalPages, value + 1)
+                        )
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {isContactsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading contacts...
+                  </div>
+                ) : contacts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No support messages yet.
+                  </p>
+                ) : (
+                  contacts.map((contact) => (
+                    <div
+                      key={contact.id}
+                      className="rounded-xl border border-border/60 bg-background/70 p-3"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium">{contact.subject}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {contact.name} ({contact.email}) •{' '}
+                            {formatTimestamp(contact.createdAt)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteContact(contact.id)}
+                          disabled={deletingContactId === contact.id}
+                        >
+                          {deletingContactId === contact.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Trash2 className="mr-1 h-4 w-4" />
+                              Delete
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                        {contact.message}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
+          {activeSection === 'subscriptions' ? (
+            <Card className="border-border/70 bg-card/90">
+              <CardHeader className="space-y-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                    Subscription customers
+                  </CardTitle>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <Input
                       value={subscriptionsInputValue}
                       onChange={(event) =>
                         setSubscriptionsInputValue(event.target.value)
                       }
-                      placeholder="Search subscriptions..."
-                      className="h-10 w-full sm:w-56"
+                      placeholder="Search by user email or name..."
+                      className="h-10 w-full sm:w-72"
                     />
                     <Button asChild variant="outline" className="h-10">
                       <a href={subscriptionsExportUrl}>Export CSV</a>
@@ -621,22 +819,25 @@ export default function AdminPortalPage() {
                   subscriptions.map((subscription) => (
                     <div
                       key={subscription.id}
-                      className="rounded-lg border border-border/60 bg-background/70 p-2 text-sm"
+                      className="rounded-lg border border-border/60 bg-background/70 p-3"
                     >
-                      <p className="font-medium">
-                        {subscription.user.name || subscription.user.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {subscription.user.email}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {subscription.plan} • {subscription.status}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Trial ends: {formatTimestamp(subscription.trialEndsAt)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Period ends:{' '}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-medium">
+                            {subscription.user.name || subscription.user.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {subscription.user.email}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">{subscription.plan}</Badge>
+                          <Badge variant="outline">{subscription.status}</Badge>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Trial ends: {formatTimestamp(subscription.trialEndsAt)}{' '}
+                        • Current period ends:{' '}
                         {formatTimestamp(subscription.currentPeriodEnd)}
                       </p>
                     </div>
@@ -644,19 +845,24 @@ export default function AdminPortalPage() {
                 )}
               </CardContent>
             </Card>
+          ) : null}
 
+          {activeSection === 'sessions' ? (
             <Card className="border-border/70 bg-card/90">
               <CardHeader className="space-y-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle>Recent login locations</CardTitle>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Login sessions
+                  </CardTitle>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <Input
                       value={sessionsInputValue}
                       onChange={(event) =>
                         setSessionsInputValue(event.target.value)
                       }
-                      placeholder="Search sessions..."
-                      className="h-10 w-full sm:w-56"
+                      placeholder="Search by location or user..."
+                      className="h-10 w-full sm:w-72"
                     />
                     <Button asChild variant="outline" className="h-10">
                       <a href={sessionsExportUrl}>Export CSV</a>
@@ -717,15 +923,26 @@ export default function AdminPortalPage() {
                   sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="rounded-lg border border-border/60 bg-background/70 p-2 text-xs"
+                      className="rounded-lg border border-border/60 bg-background/70 p-3"
                     >
-                      <p className="font-medium text-sm">
-                        {session.user.name || session.user.email}
-                      </p>
-                      <p className="text-muted-foreground">
-                        {session.location}
-                      </p>
-                      <p className="text-muted-foreground">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium">
+                            {session.user.name || session.user.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {session.user.email}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{session.location}</Badge>
+                          {session.isTrusted ? (
+                            <Badge variant="secondary">Trusted</Badge>
+                          ) : null}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {session.name} • Last active{' '}
                         {formatTimestamp(session.lastActiveAt)}
                       </p>
                     </div>
@@ -733,8 +950,14 @@ export default function AdminPortalPage() {
                 )}
               </CardContent>
             </Card>
+          ) : null}
+
+          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 p-3 text-xs text-muted-foreground">
+            <BarChart3 className="h-4 w-4" />
+            Analytics reflect live database records for users, subscriptions,
+            sessions, and contact activity.
           </div>
-        </div>
+        </main>
       </div>
     </div>
   )

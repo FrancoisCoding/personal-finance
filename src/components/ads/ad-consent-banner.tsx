@@ -51,8 +51,8 @@ export function AdConsentBanner() {
     <section className="fixed inset-x-3 bottom-3 z-[90] sm:inset-x-6">
       <div className="mx-auto w-full max-w-5xl rounded-2xl border border-border/70 bg-card/95 p-4 shadow-2xl backdrop-blur">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="flex gap-3">
-            <div className="mt-0.5 rounded-full border border-primary/40 bg-primary/15 p-2 text-primary">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/15 text-primary">
               <Megaphone className="h-4 w-4" />
             </div>
             <div className="space-y-1">

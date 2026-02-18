@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ContactForm } from '@/components/support/contact-form'
 
 const contactOptions = [
   {
@@ -59,7 +60,7 @@ export default function SupportPage() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {contactOptions.map((option) => (
             <Card key={option.title}>
               <CardHeader>
@@ -72,19 +73,22 @@ export default function SupportPage() {
           ))}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Frequently asked questions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {faqItems.map((item) => (
-              <div key={item.question} className="space-y-2">
-                <h3 className="text-base font-semibold">{item.question}</h3>
-                <p className="text-sm text-muted-foreground">{item.answer}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <ContactForm />
+          <Card>
+            <CardHeader>
+              <CardTitle>Frequently asked questions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {faqItems.map((item) => (
+                <div key={item.question} className="space-y-2">
+                  <h3 className="text-base font-semibold">{item.question}</h3>
+                  <p className="text-sm text-muted-foreground">{item.answer}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   )

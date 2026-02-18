@@ -258,6 +258,23 @@ model AccessSession {
   @@map("access_sessions")
 }
 
+model ContactSubmission {
+  id                String   @id @default(cuid())
+  userId            String?
+  name              String
+  email             String
+  subject           String
+  message           String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("contact_submissions")
+}
+
 model User {
   id                String  @id @default(cuid())
   name              String?
@@ -284,6 +301,7 @@ model User {
   alertNotifications AlertNotification[]
   alertRulePreferences AlertRulePreference[]
   accessSessions    AccessSession[]
+  contactSubmissions ContactSubmission[]
   tellerEnrollments TellerEnrollment[]
 
   @@map("users")

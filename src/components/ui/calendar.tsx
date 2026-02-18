@@ -22,24 +22,25 @@ function Calendar({
         months:
           'relative flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
         month: 'relative space-y-4',
-        month_caption: 'relative flex items-center justify-center pt-1',
+        month_caption:
+          'pointer-events-none relative z-20 flex items-center justify-center px-10 pt-1',
         caption_label: 'text-sm font-medium',
-        nav: 'absolute inset-x-0 top-0 flex items-center justify-between px-1',
+        nav: 'absolute inset-x-0 top-0 z-30 flex items-center justify-between px-1',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 border-border/70 bg-background/80 p-0 text-foreground ' +
-            'opacity-100 hover:bg-muted/40 hover:text-foreground focus-visible:ring-primary/90 ' +
-            'dark:border-border/90 dark:bg-card/95 dark:text-foreground dark:hover:bg-muted/70 ' +
+          'pointer-events-auto h-8 w-8 border-border/70 bg-background/85 p-0 text-foreground ' +
+            'opacity-100 hover:bg-muted/55 hover:text-foreground focus-visible:ring-primary/90 ' +
+            'dark:border-primary/70 dark:bg-primary/35 dark:text-primary-foreground dark:hover:bg-primary/50 ' +
             'dark:focus-visible:ring-primary/90'
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 border-border/70 bg-background/80 p-0 text-foreground ' +
-            'opacity-100 hover:bg-muted/40 hover:text-foreground focus-visible:ring-primary/90 ' +
-            'dark:border-border/90 dark:bg-card/95 dark:text-foreground dark:hover:bg-muted/70 ' +
+          'pointer-events-auto h-8 w-8 border-border/70 bg-background/85 p-0 text-foreground ' +
+            'opacity-100 hover:bg-muted/55 hover:text-foreground focus-visible:ring-primary/90 ' +
+            'dark:border-primary/70 dark:bg-primary/35 dark:text-primary-foreground dark:hover:bg-primary/50 ' +
             'dark:focus-visible:ring-primary/90'
         ),
-        month_grid: 'mx-auto w-full border-collapse',
+        month_grid: 'relative z-10 mx-auto w-full border-collapse',
         weekdays: 'flex',
         weekday:
           'w-9 rounded-md text-center text-[0.8rem] font-normal text-muted-foreground',

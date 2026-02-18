@@ -209,7 +209,7 @@ export function AddReminderModal({
           {buttonLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-h-[90vh] max-w-[calc(100vw-1.5rem)] overflow-y-auto sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Reminder</DialogTitle>
           <DialogDescription>
@@ -254,7 +254,7 @@ export function AddReminderModal({
                       type="button"
                       variant="outline"
                       className={cn(
-                        'w-full justify-start text-left font-normal',
+                        'min-h-10 w-full justify-start text-left font-normal',
                         !formData.dueDate && 'text-muted-foreground'
                       )}
                     >
@@ -266,7 +266,10 @@ export function AddReminderModal({
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-2" align="start">
+                  <PopoverContent
+                    className="w-[min(20rem,calc(100vw-2rem))] p-2"
+                    align="start"
+                  >
                     <Calendar
                       mode="single"
                       selected={selectedDueDate ?? undefined}
@@ -280,8 +283,8 @@ export function AddReminderModal({
                     />
                   </PopoverContent>
                 </Popover>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <div className="col-span-2 space-y-1 sm:col-span-1">
                     <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                       Hour
                     </p>

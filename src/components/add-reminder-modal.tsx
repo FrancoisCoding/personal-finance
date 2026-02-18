@@ -246,7 +246,7 @@ export function AddReminderModal({
                 <Clock3 className="h-3.5 w-3.5" />
                 Schedule
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+              <div className="space-y-3">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -266,7 +266,7 @@ export function AddReminderModal({
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-2" align="start">
                     <Calendar
                       mode="single"
                       selected={selectedDueDate ?? undefined}
@@ -281,54 +281,69 @@ export function AddReminderModal({
                   </PopoverContent>
                 </Popover>
                 <div className="grid grid-cols-3 gap-2">
-                  <Select
-                    value={formData.dueHour}
-                    onValueChange={(value) =>
-                      handleInputChange('dueHour', value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hourOptions.map((hour) => (
-                        <SelectItem key={hour} value={hour}>
-                          {hour}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={formData.dueMinute}
-                    onValueChange={(value) =>
-                      handleInputChange('dueMinute', value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {minuteOptions.map((minute) => (
-                        <SelectItem key={minute} value={minute}>
-                          {minute}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={formData.dueMeridiem}
-                    onValueChange={(value) =>
-                      handleInputChange('dueMeridiem', value as 'AM' | 'PM')
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AM">AM</SelectItem>
-                      <SelectItem value="PM">PM</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-1">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                      Hour
+                    </p>
+                    <Select
+                      value={formData.dueHour}
+                      onValueChange={(value) =>
+                        handleInputChange('dueHour', value)
+                      }
+                    >
+                      <SelectTrigger className="h-10 min-w-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {hourOptions.map((hour) => (
+                          <SelectItem key={hour} value={hour}>
+                            {hour}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                      Minute
+                    </p>
+                    <Select
+                      value={formData.dueMinute}
+                      onValueChange={(value) =>
+                        handleInputChange('dueMinute', value)
+                      }
+                    >
+                      <SelectTrigger className="h-10 min-w-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {minuteOptions.map((minute) => (
+                          <SelectItem key={minute} value={minute}>
+                            {minute}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                      Period
+                    </p>
+                    <Select
+                      value={formData.dueMeridiem}
+                      onValueChange={(value) =>
+                        handleInputChange('dueMeridiem', value as 'AM' | 'PM')
+                      }
+                    >
+                      <SelectTrigger className="h-10 min-w-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AM">AM</SelectItem>
+                        <SelectItem value="PM">PM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>

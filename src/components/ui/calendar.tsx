@@ -24,14 +24,18 @@ function Calendar({
         month: 'relative space-y-4',
         month_caption: 'relative flex items-center justify-center pt-1',
         caption_label: 'text-sm font-medium',
-        nav: 'absolute inset-x-1 top-1 flex items-center justify-between',
+        nav: 'absolute inset-x-0 top-0 flex items-center justify-between px-1',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100'
+          'h-7 w-7 border-border/70 bg-background/80 p-0 text-muted-foreground ' +
+            'opacity-100 hover:bg-muted/40 hover:text-foreground dark:border-border/80 ' +
+            'dark:bg-card/80 dark:text-muted-foreground dark:hover:bg-muted/60'
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
-          'h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100'
+          'h-7 w-7 border-border/70 bg-background/80 p-0 text-muted-foreground ' +
+            'opacity-100 hover:bg-muted/40 hover:text-foreground dark:border-border/80 ' +
+            'dark:bg-card/80 dark:text-muted-foreground dark:hover:bg-muted/60'
         ),
         month_grid: 'mx-auto w-full border-collapse',
         weekdays: 'flex',
@@ -43,7 +47,7 @@ function Calendar({
           buttonVariants({ variant: 'ghost' }),
           'h-9 w-9 p-0 font-normal aria-selected:opacity-100'
         ),
-        chevron: 'h-4 w-4',
+        chevron: 'h-4 w-4 text-current',
         selected:
           'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
         today: 'bg-accent text-accent-foreground',

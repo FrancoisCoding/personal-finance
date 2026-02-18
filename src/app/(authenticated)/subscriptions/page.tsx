@@ -631,19 +631,15 @@ export default function SubscriptionsPage() {
         nextBillingDate: detected.nextBillingDate,
         categoryId: detected.categoryId,
         notes: 'Detected from recurring transactions',
+        suppressSuccessToast: true,
       },
       {
         onSuccess: () => {
-          toast({
+          addNotification({
+            type: 'success',
             title: 'Subscription added',
-            description: `"${detected.name}" has been added to your subscriptions.`,
-          })
-        },
-        onError: (error) => {
-          toast({
-            title: 'Unable to add subscription',
-            description: error.message || 'Please try again.',
-            variant: 'destructive',
+            message: `"${detected.name}" is now tracked in your subscriptions.`,
+            category: 'system',
           })
         },
         onSettled: () => {
@@ -704,13 +700,10 @@ export default function SubscriptionsPage() {
       {
         id: cancelTarget.id,
         updates: { isActive: false, notes: nextNotes },
+        suppressSuccessToast: true,
       },
       {
         onSuccess: () => {
-          toast({
-            title: 'Cancellation started',
-            description: `${cancelTarget.name} has been paused. Follow the checklist to finish canceling with the provider.`,
-          })
           addNotification({
             type: 'warning',
             title: 'Cancel subscription',

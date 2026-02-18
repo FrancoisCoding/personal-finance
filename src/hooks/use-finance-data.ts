@@ -895,11 +895,21 @@ export function useCreateSubscription() {
       nextBillingDate: Date
       categoryId?: string
       notes?: string
+      suppressSuccessToast?: boolean
+      suppressErrorToast?: boolean
     }) => {
+      const subscriptionPayload = {
+        name: subscription.name,
+        amount: subscription.amount,
+        billingCycle: subscription.billingCycle,
+        nextBillingDate: subscription.nextBillingDate,
+        categoryId: subscription.categoryId,
+        notes: subscription.notes,
+      }
       const res = await fetch('/api/subscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription),
+        body: JSON.stringify(subscriptionPayload),
       })
       if (!res.ok) throw new Error('Failed to create subscription')
       return res.json()
@@ -927,19 +937,25 @@ export function useCreateSubscription() {
       )
       return { previousSubscriptions }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
+      if (variables.suppressSuccessToast) {
+        return
+      }
       toast({
         title: 'Subscription created',
         description: 'Your subscription has been created successfully.',
       })
     },
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       if (context?.previousSubscriptions) {
         queryClient.setQueryData(
           queryKeys.subscriptions,
           context.previousSubscriptions
         )
+      }
+      if (variables.suppressErrorToast) {
+        return
       }
       toast({
         title: 'Error',
@@ -964,6 +980,8 @@ export function useUpdateSubscription() {
     }: {
       id: string
       updates: Partial<Subscription>
+      suppressSuccessToast?: boolean
+      suppressErrorToast?: boolean
     }) => {
       const res = await fetch(`/api/subscriptions/${id}`, {
         method: 'PATCH',
@@ -989,19 +1007,25 @@ export function useUpdateSubscription() {
       )
       return { previousSubscriptions }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscriptions })
+      if (variables.suppressSuccessToast) {
+        return
+      }
       toast({
         title: 'Subscription updated',
         description: 'Your subscription has been updated successfully.',
       })
     },
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       if (context?.previousSubscriptions) {
         queryClient.setQueryData(
           queryKeys.subscriptions,
           context.previousSubscriptions
         )
+      }
+      if (variables.suppressErrorToast) {
+        return
       }
       toast({
         title: 'Update failed',

@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import {
   useAccounts,
   useSubscriptions,
@@ -22,6 +23,7 @@ import {
 } from '@/hooks/use-finance-data'
 import {
   Bot,
+  Crown,
   CreditCard,
   Send,
   Sparkles,
@@ -116,6 +118,7 @@ export default function FinancialAssistantPage() {
   const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
   const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
     useSubscriptions()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
 
   const [messages, setMessages] = useState<Message[]>([buildWelcomeMessage()])
   const [input, setInput] = useState('')
@@ -283,7 +286,12 @@ export default function FinancialAssistantPage() {
     `${subscriptions.length} subscriptions`
 
   const isDataLoading =
-    isTransactionsLoading || isAccountsLoading || isSubscriptionsLoading
+    isTransactionsLoading ||
+    isAccountsLoading ||
+    isSubscriptionsLoading ||
+    isBillingLoading
+
+  const hasProAccess = isDemoMode || billingData?.currentPlan === 'PRO'
 
   if (status === 'loading' || isDataLoading) {
     return (
@@ -384,6 +392,31 @@ export default function FinancialAssistantPage() {
           </div>
         </div>
       </div>
+    )
+  }
+
+  if (!hasProAccess) {
+    return (
+      <Card className="mx-auto max-w-3xl border-border/70 bg-card/90 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Crown className="h-5 w-5 text-amber-500" />
+            Pro feature
+          </CardTitle>
+          <CardDescription>
+            Financial Assistant is available on the Pro plan.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Upgrade to Pro to unlock AI guidance, advanced insight prompts, and
+            personalized recommendations.
+          </p>
+          <Button asChild className="min-h-11">
+            <a href="/billing">Upgrade to Pro</a>
+          </Button>
+        </CardContent>
+      </Card>
     )
   }
 

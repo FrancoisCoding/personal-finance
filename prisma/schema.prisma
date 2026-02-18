@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 // NextAuth.js required models (must come before Account model)
@@ -275,6 +275,27 @@ model ContactSubmission {
   @@map("contact_submissions")
 }
 
+model AppSubscription {
+  id                String   @id @default(cuid())
+  userId            String
+  plan              AppPlan
+  status            AppSubscriptionStatus
+  stripeCustomerId  String?
+  stripeSubscriptionId String? @unique
+  stripePriceId     String?
+  trialEndsAt       DateTime?
+  currentPeriodEnd  DateTime?
+  cancelAtPeriodEnd Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, updatedAt])
+  @@map("app_subscriptions")
+}
+
 model User {
   id                String  @id @default(cuid())
   name              String?
@@ -302,6 +323,7 @@ model User {
   alertRulePreferences AlertRulePreference[]
   accessSessions    AccessSession[]
   contactSubmissions ContactSubmission[]
+  appSubscriptions  AppSubscription[]
   tellerEnrollments TellerEnrollment[]
 
   @@map("users")
@@ -362,4 +384,17 @@ enum ReminderPriority {
   LOW
   MEDIUM
   HIGH
+}
+
+enum AppPlan {
+  BASIC
+  PRO
+}
+
+enum AppSubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
 }

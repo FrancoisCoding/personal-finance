@@ -122,6 +122,13 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         description: 'Budget performance, forecasts, and risk monitoring.',
         keywords: ['budgets', 'forecast', 'limits', 'spending', 'overrun'],
       },
+      {
+        name: 'Billing',
+        href: '/billing',
+        icon: CreditCard,
+        description: 'Plan management, checkout, and trial status.',
+        keywords: ['billing', 'subscription', 'plan', 'checkout', 'trial'],
+      },
       ...(isDemoMode || shouldShowSecurityNavigation
         ? [
             {
@@ -180,6 +187,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       accounts: 'Accounts',
       transactions: 'Transactions',
       subscriptions: 'Subscriptions',
+      billing: 'Billing',
       security: 'Security & Privacy',
       assistant: 'Financial Assistant',
       budgets: 'Budgets',
@@ -191,6 +199,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       accounts: Wallet,
       transactions: Receipt,
       subscriptions: CreditCard,
+      billing: CreditCard,
       security: ShieldCheck,
       assistant: Sparkles,
       budgets: Wallet,

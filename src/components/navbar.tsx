@@ -56,6 +56,11 @@ export function Navbar() {
             </div>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
+              <Link href="/support#contact-form">
+                <Button variant="ghost" size="sm">
+                  Support
+                </Button>
+              </Link>
               <Link href="/auth/login">
                 <Button>Sign In</Button>
               </Link>
@@ -164,6 +169,9 @@ export function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/support#contact-form">Contact support</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

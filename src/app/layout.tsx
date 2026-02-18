@@ -9,6 +9,7 @@ import {
   NotificationProvider,
   ToastContainer,
 } from '@/components/notification-system'
+import { AdConsentBanner } from '@/components/ads/ad-consent-banner'
 
 const bodyFont = Manrope({
   subsets: ['latin'],
@@ -59,6 +60,7 @@ export default function RootLayout({
             <AuthProvider>
               <NotificationProvider>
                 {children}
+                <AdConsentBanner />
                 <ToastContainer />
                 <Toaster />
               </NotificationProvider>

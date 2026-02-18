@@ -6,6 +6,7 @@ import { Spotlight } from '@/components/ui/spotlight'
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
 import { FadeIn } from '@/components/motion/fade-in'
 import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
+import { AdSlot } from '@/components/ads/ad-slot'
 import {
   Shield,
   Zap,
@@ -104,6 +105,10 @@ const testimonials = [
 ]
 
 export default function LandingPage() {
+  const landingHeroAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING_HERO
+  const landingFooterAdSlotId =
+    process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING_FOOTER
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <a
@@ -126,13 +131,23 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Logo size="lg" />
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link
+                href="/support#contact-form"
+                className="hidden sm:inline-flex"
+              >
+                <Button variant="ghost" size="sm">
+                  Support
+                </Button>
+              </Link>
               <ThemeToggle />
-              <Link href="/auth/login">
-                <Button variant="outline">Sign In</Button>
+              <Link href="/auth/login" className="hidden sm:inline-flex">
+                <Button variant="outline" size="sm">
+                  Sign In
+                </Button>
               </Link>
               <Link href="/auth/register">
-                <Button>Get Started</Button>
+                <Button size="sm">Get Started</Button>
               </Link>
             </div>
           </div>
@@ -218,6 +233,17 @@ export default function LandingPage() {
                 forecastRange={netWorthForecastRange}
               />
             </FadeIn>
+          </div>
+        </section>
+
+        <section className="px-4 pb-4">
+          <div className="container mx-auto">
+            <AdSlot
+              slotId={landingHeroAdSlotId}
+              title="Sponsored resources"
+              className="mx-auto max-w-5xl"
+              minHeightClassName="min-h-[140px]"
+            />
           </div>
         </section>
 
@@ -358,6 +384,17 @@ export default function LandingPage() {
                 </Link>
               </div>
             </FadeIn>
+          </div>
+        </section>
+
+        <section className="px-4 pb-8">
+          <div className="container mx-auto">
+            <AdSlot
+              slotId={landingFooterAdSlotId}
+              title="Partner spotlight"
+              className="mx-auto max-w-5xl"
+              minHeightClassName="min-h-[140px]"
+            />
           </div>
         </section>
       </main>

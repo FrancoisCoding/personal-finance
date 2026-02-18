@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AdSlot } from '@/components/ads/ad-slot'
 import { ContactForm } from '@/components/support/contact-form'
 
 const contactOptions = [
@@ -34,6 +35,8 @@ const faqItems = [
 ]
 
 export default function SupportPage() {
+  const supportSidebarAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_SUPPORT
+
   return (
     <div className="min-h-screen bg-background">
       <a
@@ -74,20 +77,31 @@ export default function SupportPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <ContactForm />
-          <Card>
-            <CardHeader>
-              <CardTitle>Frequently asked questions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {faqItems.map((item) => (
-                <div key={item.question} className="space-y-2">
-                  <h3 className="text-base font-semibold">{item.question}</h3>
-                  <p className="text-sm text-muted-foreground">{item.answer}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <div id="contact-form">
+            <ContactForm />
+          </div>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Frequently asked questions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {faqItems.map((item) => (
+                  <div key={item.question} className="space-y-2">
+                    <h3 className="text-base font-semibold">{item.question}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {item.answer}
+                    </p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+            <AdSlot
+              slotId={supportSidebarAdSlotId}
+              title="Sponsored tools"
+              minHeightClassName="min-h-[160px]"
+            />
+          </div>
         </div>
       </main>
     </div>

@@ -151,7 +151,7 @@ export default function LandingPage() {
                   Sign In
                 </Button>
               </Link>
-              <Link href="/auth/register">
+              <Link href="/plans">
                 <Button size="sm">Get Started</Button>
               </Link>
             </div>
@@ -208,7 +208,7 @@ export default function LandingPage() {
               </div>
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/auth/register" className="w-full sm:w-auto">
+                  <Link href="/plans" className="w-full sm:w-auto">
                     <Button
                       size="lg"
                       className="w-full text-base sm:w-auto sm:text-lg"
@@ -217,13 +217,13 @@ export default function LandingPage() {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href="/auth/login" className="w-full sm:w-auto">
+                  <Link href="/plans" className="w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="lg"
                       className="w-full text-base sm:w-auto sm:text-lg"
                     >
-                      View live demo
+                      Compare options
                     </Button>
                   </Link>
                 </div>
@@ -396,7 +396,7 @@ export default function LandingPage() {
                   confidence and move faster every month.
                 </p>
                 <Link
-                  href="/auth/register"
+                  href="/plans"
                   className="inline-flex w-full justify-center sm:w-auto"
                 >
                   <Button

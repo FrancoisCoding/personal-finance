@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateEnhancedInsights } from '@/lib/enhanced-ai'
 import type { Transaction, Budget, Goal } from '@prisma/client'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
+import {
+  comparePlanPriority,
+  getEffectivePlanFromSubscriptions,
+} from '@/lib/billing'
+
+const ensureProPlanAccess = async (userId: string) => {
+  const subscriptions = await prisma.appSubscription.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+  })
+  const effectiveSubscription = getEffectivePlanFromSubscriptions(subscriptions)
+  return (
+    effectiveSubscription &&
+    comparePlanPriority(effectiveSubscription.plan) >=
+      comparePlanPriority(AppPlan.PRO)
+  )
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,6 +67,12 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!(await ensureProPlanAccess(session.user.id))) {
+      return NextResponse.json(
+        { error: 'Pro plan required for advanced AI insights.' },
+        { status: 403 }
+      )
     }
 
     // Get user's financial data
@@ -151,6 +175,12 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!(await ensureProPlanAccess(session.user.id))) {
+      return NextResponse.json(
+        { error: 'Pro plan required for advanced AI insights.' },
+        { status: 403 }
+      )
     }
 
     const { type, data } = await request.json()

@@ -61,6 +61,7 @@ import {
 import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
 import { calculateBudgetForecastItems } from '@/lib/budget-forecast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
 
 const SpendingChart = dynamic(
@@ -175,6 +176,7 @@ const AnalyticsDashboard = dynamic(
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { isDemoMode } = useDemoMode()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const queryClient = useQueryClient()
   const [, setIsWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
@@ -228,7 +230,9 @@ export default function DashboardPage() {
     isGoalsLoading ||
     isCategoriesLoading ||
     isCreditCardsLoading ||
-    isRemindersLoading
+    isRemindersLoading ||
+    (!isDemoMode && !!session?.user?.id && isBillingLoading)
+  const hasProTierAccess = isDemoMode || billingData?.currentPlan === 'PRO'
 
   useEffect(() => {
     if (!isDemoMode) return
@@ -1853,14 +1857,36 @@ export default function DashboardPage() {
 
             {/* AI Insights */}
             <div className="lg:col-span-1 h-full">
-              <div data-demo-step="demo-insights">
-                <AIFinancialInsights
-                  transactions={transformedTransactions}
-                  budgets={transformedBudgets}
-                  goals={transformedGoals}
-                  className="h-full"
-                />
-              </div>
+              {hasProTierAccess ? (
+                <div data-demo-step="demo-insights">
+                  <AIFinancialInsights
+                    transactions={transformedTransactions}
+                    budgets={transformedBudgets}
+                    goals={transformedGoals}
+                    className="h-full"
+                  />
+                </div>
+              ) : (
+                <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                  <CardHeader>
+                    <CardTitle>Advanced AI insights</CardTitle>
+                    <CardDescription>
+                      Upgrade to Pro to unlock deep AI analysis and
+                      recommendation panels.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Starter includes core budgeting and transaction workflows.
+                      Pro adds advanced AI insight blocks and full assistant
+                      access.
+                    </p>
+                    <Button asChild>
+                      <Link href="/billing">Upgrade to Pro</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </FadeIn>
@@ -1878,12 +1904,32 @@ export default function DashboardPage() {
 
             {/* Analytics Dashboard */}
             <div data-demo-step="demo-analytics" className="h-full">
-              <AnalyticsDashboard
-                transactions={transformedTransactions}
-                budgets={transformedBudgets}
-                goals={transformedGoals}
-                className="h-full"
-              />
+              {hasProTierAccess ? (
+                <AnalyticsDashboard
+                  transactions={transformedTransactions}
+                  budgets={transformedBudgets}
+                  goals={transformedGoals}
+                  className="h-full"
+                />
+              ) : (
+                <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                  <CardHeader>
+                    <CardTitle>Pro analytics dashboard</CardTitle>
+                    <CardDescription>
+                      Pro members get richer financial signal breakdowns and
+                      AI-driven trend interpretation.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Upgrade anytime to unlock advanced analytics.
+                    </p>
+                    <Button asChild variant="outline">
+                      <Link href="/billing">See plan options</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </FadeIn>

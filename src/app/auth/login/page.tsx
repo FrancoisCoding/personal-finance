@@ -39,6 +39,11 @@ export default function LoginPage() {
   const { toast } = useToast()
   const { startDemoMode } = useDemoMode()
   const authError = searchParams.get('error')
+  const callbackUrlParam = searchParams.get('callbackUrl')
+  const callbackUrl =
+    callbackUrlParam && callbackUrlParam.startsWith('/')
+      ? callbackUrlParam
+      : '/dashboard'
   const authErrorMessage =
     authError === 'OAuthAccountNotLinked'
       ? 'This email is linked to a different sign-in method.'
@@ -61,9 +66,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/dashboard')
+      router.replace(callbackUrl)
     }
-  }, [router, status])
+  }, [callbackUrl, router, status])
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +78,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         email,
         password,
+        callbackUrl,
         redirect: false,
       })
 
@@ -83,7 +89,7 @@ export default function LoginPage() {
           variant: 'destructive',
         })
       } else {
-        router.push('/dashboard')
+        router.push(callbackUrl)
       }
     } catch (error) {
       toast({
@@ -99,7 +105,7 @@ export default function LoginPage() {
   const handleOAuthSignIn = async (provider: string) => {
     setIsLoading(true)
     try {
-      await signIn(provider, { callbackUrl: '/dashboard' })
+      await signIn(provider, { callbackUrl })
     } catch (error) {
       toast({
         title: 'Error',

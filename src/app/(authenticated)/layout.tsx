@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,7 @@ import NotificationTriggers from '@/components/notification-triggers'
 import DemoWalkthrough from '@/components/demo-walkthrough'
 import { demoSession } from '@/lib/demo-mode'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { useBillingStatus } from '@/hooks/use-billing-status'
 import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
 import { registerAccessSessionHeartbeat } from '@/lib/access-session-client'
 
@@ -21,13 +22,20 @@ export default function AuthenticatedLayout({
 }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
   const { isDemoMode } = useDemoMode()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const queryClient = useQueryClient()
   const [isClientReady, setIsClientReady] = useState(false)
   const [isWalkthroughOpen, setIsWalkthroughOpen] = useAtom(
     demoWalkthroughOpenAtom
   )
   const isDemoReady = isClientReady && isDemoMode
+  const isBillingRoute = pathname === '/billing'
+  const requiresSubscriptionCheck =
+    Boolean(session?.user?.id) && !isDemoReady && !isBillingRoute
+  const isSubscriptionLocked =
+    requiresSubscriptionCheck && !isBillingLoading && !billingData?.currentPlan
   const effectiveSession = session ?? (isDemoReady ? demoSession : null)
 
   useEffect(() => {
@@ -43,6 +51,26 @@ export default function AuthenticatedLayout({
       return
     }
   }, [session, status, router, isDemoReady, isClientReady])
+
+  useEffect(() => {
+    if (!isClientReady) return
+    if (status === 'loading') return
+    if (!session?.user?.id) return
+    if (isDemoReady) return
+    if (isBillingLoading) return
+    if (!billingData?.currentPlan && !isBillingRoute) {
+      router.replace('/billing?locked=1')
+    }
+  }, [
+    billingData?.currentPlan,
+    isBillingLoading,
+    isBillingRoute,
+    isClientReady,
+    isDemoReady,
+    router,
+    session?.user?.id,
+    status,
+  ])
 
   useEffect(() => {
     if (!isClientReady) return
@@ -84,7 +112,11 @@ export default function AuthenticatedLayout({
     }
   }, [isClientReady, isDemoReady, setIsWalkthroughOpen])
 
-  if (!isClientReady || (status === 'loading' && !isDemoReady)) {
+  if (
+    !isClientReady ||
+    (status === 'loading' && !isDemoReady) ||
+    (requiresSubscriptionCheck && isBillingLoading)
+  ) {
     return (
       <DashboardShell session={effectiveSession}>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -99,6 +131,10 @@ export default function AuthenticatedLayout({
 
   if (!session && !isDemoReady) {
     return null // Will redirect to login
+  }
+
+  if (isSubscriptionLocked) {
+    return null // Will redirect to billing
   }
 
   return (

@@ -1,6 +1,8 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 
 interface IPlanDefinition {
   plan: 'BASIC' | 'PRO'
@@ -35,9 +37,14 @@ const fetchBillingStatus = async (): Promise<IBillingStatusResponse> => {
 }
 
 export const useBillingStatus = () => {
+  const { data: session } = useSession()
+  const { isDemoMode } = useDemoMode()
+
   return useQuery({
     queryKey: ['billing-status'],
     queryFn: fetchBillingStatus,
+    enabled: Boolean(session?.user?.id) && !isDemoMode,
+    retry: false,
     staleTime: 30_000,
   })
 }

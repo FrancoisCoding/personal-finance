@@ -1,21 +1,61 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useBillingStatus } from '@/hooks/use-billing-status'
+import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useToast } from '@/hooks/use-toast'
 
 const planOrder = ['BASIC', 'PRO'] as const
+const publicPlanCatalog = [
+  {
+    plan: 'BASIC',
+    name: 'Starter',
+    monthlyPriceLabel: '$5/mo',
+    description: 'Core finance tracking with structured monthly planning.',
+    featureList: [
+      'Accounts and transactions',
+      'Budgets and reminders',
+      'Subscription tracking',
+      '7-day free trial',
+    ],
+  },
+  {
+    plan: 'PRO',
+    name: 'Pro',
+    monthlyPriceLabel: '$10/mo',
+    description:
+      'Everything in Starter plus premium AI guidance and power-user features.',
+    featureList: [
+      'Everything in Starter',
+      'Financial Assistant access',
+      'Advanced AI insights',
+      'Priority support',
+      '7-day free trial',
+    ],
+  },
+] as const
 
 export default function BillingPage() {
+  const router = useRouter()
+  const { data: session } = useSession()
+  const searchParams = useSearchParams()
+  const { startDemoMode } = useDemoMode()
   const { toast } = useToast()
   const { data, isLoading, refetch } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
 
   const handleStartCheckout = async (plan: 'BASIC' | 'PRO') => {
+    if (!session?.user?.id) {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent('/billing')}`)
+      return
+    }
+
     setIsSubmittingPlan(plan)
     try {
       const response = await fetch('/api/billing/checkout', {
@@ -45,6 +85,11 @@ export default function BillingPage() {
   }
 
   const handleOpenCustomerPortal = async () => {
+    if (!session?.user?.id) {
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent('/billing')}`)
+      return
+    }
+
     setIsOpeningPortal(true)
     try {
       const response = await fetch('/api/billing/portal', { method: 'POST' })
@@ -69,6 +114,11 @@ export default function BillingPage() {
     }
   }
 
+  const handleStartDemoMode = () => {
+    startDemoMode()
+    router.push('/dashboard?demo=1')
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -80,12 +130,13 @@ export default function BillingPage() {
 
   const currentPlan = data?.currentPlan
   const availablePlans =
-    data?.availablePlans.sort((left, right) => {
+    data?.availablePlans.slice().sort((left, right) => {
       return (
         planOrder.indexOf(left.plan as (typeof planOrder)[number]) -
         planOrder.indexOf(right.plan as (typeof planOrder)[number])
       )
-    }) ?? []
+    }) ?? publicPlanCatalog
+  const isLockedAccess = searchParams.get('locked') === '1'
 
   return (
     <div className="space-y-6">
@@ -95,6 +146,13 @@ export default function BillingPage() {
           Choose between Starter and Pro. Both include a 7-day free trial.
         </p>
       </div>
+
+      {isLockedAccess ? (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
+          Your account is in live-locked mode until you choose a paid plan. You
+          can still continue in demo mode anytime.
+        </div>
+      ) : null}
 
       {data?.currentSubscription ? (
         <Card className="border-border/70 bg-card/90">
@@ -136,7 +194,39 @@ export default function BillingPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="border-border/70 bg-card/90">
+          <CardHeader>
+            <CardTitle className="text-xl">Demo mode</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Explore the full interface with curated sample data before paying.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <span>Instant access, no payment required</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <span>Sample transactions and walkthrough</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <span>Safe environment for trying features</span>
+              </li>
+            </ul>
+            <Button
+              variant="outline"
+              className="min-h-11"
+              onClick={handleStartDemoMode}
+            >
+              Enter demo mode
+            </Button>
+          </CardContent>
+        </Card>
+
         {availablePlans.map((plan) => {
           const isCurrentPlan = currentPlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan

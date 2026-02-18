@@ -129,8 +129,13 @@ export default function LandingPage() {
 
       <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/75 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Logo size="lg" />
+          <div className="flex h-14 items-center justify-between sm:h-16">
+            <div className="sm:hidden">
+              <Logo size="sm" />
+            </div>
+            <div className="hidden sm:block">
+              <Logo size="lg" />
+            </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/support#contact-form"
@@ -151,11 +156,25 @@ export default function LandingPage() {
               </Link>
             </div>
           </div>
+          <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium sm:hidden">
+            <Link
+              href="/support#contact-form"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Support
+            </Link>
+            <Link
+              href="/auth/login"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </nav>
 
       <main id="main-content" tabIndex={-1}>
-        <section className="relative py-20 px-4">
+        <section className="relative px-4 py-14 sm:py-20">
           <Spotlight
             className="-top-48 left-0 hidden md:block"
             fill="hsl(var(--primary))"
@@ -164,7 +183,7 @@ export default function LandingPage() {
             className="-top-32 right-0 hidden lg:block"
             fill="hsl(var(--accent-foreground))"
           />
-          <div className="container mx-auto grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
+          <div className="container mx-auto grid items-center gap-10 sm:gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="flex flex-col gap-8">
               <FadeIn delay={0.05}>
                 <div className="inline-flex w-fit items-center gap-3 rounded-full border border-border/60 bg-card/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground shadow-sm">
@@ -177,11 +196,11 @@ export default function LandingPage() {
                   <TextGenerateEffect
                     as="h1"
                     words="Manage money with calm, confident clarity."
-                    className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight"
+                    className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight"
                   />
                 </FadeIn>
                 <FadeIn delay={0.2}>
-                  <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+                  <p className="max-w-2xl text-base text-muted-foreground sm:text-lg md:text-xl">
                     FinanceFlow blends real-time data, smart categorization, and
                     tailored guidance so you always know what to do next.
                   </p>
@@ -189,17 +208,20 @@ export default function LandingPage() {
               </div>
               <FadeIn delay={0.3}>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/auth/register">
-                    <Button size="lg" className="text-base sm:text-lg">
+                  <Link href="/auth/register" className="w-full sm:w-auto">
+                    <Button
+                      size="lg"
+                      className="w-full text-base sm:w-auto sm:text-lg"
+                    >
                       Start free trial
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href="/auth/login">
+                  <Link href="/auth/login" className="w-full sm:w-auto">
                     <Button
                       variant="outline"
                       size="lg"
-                      className="text-base sm:text-lg"
+                      className="w-full text-base sm:w-auto sm:text-lg"
                     >
                       View live demo
                     </Button>
@@ -247,19 +269,19 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative py-20 px-4">
+        <section className="relative px-4 py-14 sm:py-20">
           <div className="container mx-auto">
-            <FadeIn className="text-center mb-16">
+            <FadeIn className="mb-12 text-center sm:mb-16">
               <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
                 A modern finance workspace that feels effortless.
               </h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg md:text-xl">
                 Every view is crafted to surface what matters now and what
                 matters next. No clutter, just clarity.
               </p>
             </FadeIn>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
               {features.map((feature, index) => {
                 const Icon = feature.icon
                 return (
@@ -291,10 +313,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-20 px-4">
+        <section className="px-4 py-14 sm:py-20">
           <div className="container mx-auto">
-            <FadeIn className="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-10 text-white shadow-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <FadeIn className="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white shadow-2xl sm:p-10">
+              <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:gap-8">
                 <div>
                   <div className="text-4xl font-semibold mb-2">10,000+</div>
                   <div className="text-white/80">Active users</div>
@@ -312,9 +334,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-20 px-4">
+        <section className="px-4 py-14 sm:py-20">
           <div className="container mx-auto">
-            <FadeIn className="text-center mb-16">
+            <FadeIn className="mb-12 text-center sm:mb-16">
               <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
                 Loved by builders, advisors, and founders.
               </h2>
@@ -324,7 +346,7 @@ export default function LandingPage() {
               </p>
             </FadeIn>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
               {testimonials.map((testimonial, index) => (
                 <FadeIn
                   key={testimonial.name}
@@ -361,22 +383,25 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-20 px-4">
+        <section className="px-4 py-14 sm:py-20">
           <div className="container mx-auto">
-            <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-12 text-white shadow-2xl">
+            <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-8 text-white shadow-2xl sm:p-12">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" />
               <div className="relative text-center">
-                <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
+                <h2 className="font-display text-3xl font-semibold mb-4 sm:text-4xl md:text-5xl">
                   Ready for a clearer financial story?
                 </h2>
                 <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
                   Join thousands of teams using FinanceFlow to plan with
                   confidence and move faster every month.
                 </p>
-                <Link href="/auth/register">
+                <Link
+                  href="/auth/register"
+                  className="inline-flex w-full justify-center sm:w-auto"
+                >
                   <Button
                     size="lg"
-                    className="text-base sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
+                    className="w-full text-base sm:w-auto sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
                   >
                     Get started free
                     <ArrowRight className="ml-2 h-5 w-5" />

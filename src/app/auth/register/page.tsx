@@ -152,11 +152,11 @@ export default function RegisterPage() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+        className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
       >
-        <div className="w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-6 sm:space-y-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Create your account
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -180,18 +180,18 @@ export default function RegisterPage() {
               <Button
                 variant="outline"
                 className={
-                  'w-full justify-between gap-3 border-emerald-500/30 bg-emerald-500/5 ' +
+                  'min-h-12 w-full justify-between gap-3 border-emerald-500/30 bg-emerald-500/5 ' +
                   'px-3 py-2 text-emerald-700 transition hover:border-emerald-500/50 ' +
                   'hover:bg-emerald-500/10 disabled:opacity-60 dark:text-emerald-200'
                 }
                 onClick={handleDemoSignIn}
                 disabled={isLoading}
               >
-                <span className="flex items-center gap-3">
+                <span className="flex min-w-0 items-center gap-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                     <Sparkles className="h-4 w-4" />
                   </span>
-                  <span className="text-left">
+                  <span className="min-w-0 text-left">
                     <span className="block text-sm font-semibold">
                       Try the live demo
                     </span>
@@ -200,7 +200,7 @@ export default function RegisterPage() {
                     </span>
                   </span>
                 </span>
-                <span className="text-xs text-emerald-700/70 dark:text-emerald-200/70">
+                <span className="hidden text-xs text-emerald-700/70 dark:text-emerald-200/70 sm:inline">
                   No signup
                 </span>
               </Button>
@@ -321,7 +321,7 @@ export default function RegisterPage() {
       </main>
 
       <Dialog open={isDemoLoading}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Preparing demo workspace</DialogTitle>
             <DialogDescription>

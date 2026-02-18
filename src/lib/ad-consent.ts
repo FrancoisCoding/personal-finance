@@ -2,6 +2,7 @@ export type TAdConsentValue = 'accepted' | 'declined'
 
 export const adConsentStorageKey = 'financeflow.ad-consent.v1'
 export const adConsentChangedEventName = 'financeflow:ad-consent-changed'
+export const defaultAdConsentValue: TAdConsentValue = 'accepted'
 
 export const readAdConsentValue = (): TAdConsentValue | null => {
   if (typeof window === 'undefined') {
@@ -27,4 +28,10 @@ export const writeAdConsentValue = (value: TAdConsentValue) => {
       detail: { value },
     })
   )
+}
+
+export const resolveAdConsentValue = (
+  value: TAdConsentValue | null
+): TAdConsentValue => {
+  return value ?? defaultAdConsentValue
 }

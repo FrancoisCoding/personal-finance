@@ -57,11 +57,12 @@ export function AdConsentBanner() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">
-                Support FinanceFlow with privacy-safe ads
+                Ads are on by default in low-clutter areas
               </p>
               <p className="text-xs leading-5 text-muted-foreground sm:text-sm">
-                We only show ads on public pages and never sell your financial
-                account data. You can change this preference later.
+                We only place ads on public pages with extra whitespace and we
+                never sell your financial account data. You can turn ads off at
+                any time.
               </p>
               <Link
                 href="/privacy"
@@ -79,14 +80,14 @@ export function AdConsentBanner() {
               className="min-h-11"
               onClick={() => handleConsentSelection('declined')}
             >
-              No, thanks
+              Turn ads off
             </Button>
             <Button
               type="button"
               className="min-h-11"
               onClick={() => handleConsentSelection('accepted')}
             >
-              Allow ads
+              Keep enabled
             </Button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   adConsentChangedEventName,
   readAdConsentValue,
+  resolveAdConsentValue,
   TAdConsentValue,
 } from '@/lib/ad-consent'
 
@@ -52,15 +53,16 @@ export function AdSlot({
   const adElementReference = useRef<HTMLElement | null>(null)
 
   const adClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
+  const effectiveConsentValue = resolveAdConsentValue(consentValue)
   const canRenderAd = useMemo(() => {
     return Boolean(
       slotId &&
         adClientId &&
-        consentValue === 'accepted' &&
+        effectiveConsentValue === 'accepted' &&
         !hasAdError &&
         isReadyForAdsense
     )
-  }, [adClientId, consentValue, hasAdError, isReadyForAdsense, slotId])
+  }, [adClientId, effectiveConsentValue, hasAdError, isReadyForAdsense, slotId])
 
   useEffect(() => {
     setConsentValue(readAdConsentValue())
@@ -87,14 +89,14 @@ export function AdSlot({
   }, [])
 
   useEffect(() => {
-    if (!adClientId || consentValue !== 'accepted') {
+    if (!adClientId || effectiveConsentValue !== 'accepted') {
       setIsReadyForAdsense(false)
       return
     }
 
     ensureAdsenseScript(adClientId)
     setIsReadyForAdsense(true)
-  }, [adClientId, consentValue])
+  }, [adClientId, effectiveConsentValue])
 
   useEffect(() => {
     if (!canRenderAd || !adElementReference.current) {
@@ -109,6 +111,10 @@ export function AdSlot({
       setHasAdError(true)
     }
   }, [canRenderAd])
+
+  if (consentValue === 'declined') {
+    return null
+  }
 
   return (
     <aside
@@ -142,7 +148,7 @@ export function AdSlot({
           />
         ) : (
           <div className="flex h-full min-h-[104px] items-center justify-center rounded-lg border border-dashed border-border/70 bg-muted/15 px-4 text-center text-xs text-muted-foreground">
-            Ads appear here after consent and ad network configuration.
+            Ad space is ready and will render when network settings are active.
           </div>
         )}
       </div>

@@ -405,6 +405,358 @@ const translationRows: TTranslationRow[] = [
     'Aller au contenu principal',
     'Main content par jayen',
   ],
+  [
+    'Smart finance',
+    'Financas inteligentes',
+    'Finanzas inteligentes',
+    'Finance intelligente',
+    'Smart finance',
+  ],
+  ['Dashboard', 'Painel', 'Panel', 'Tableau de bord', 'Dashboard'],
+  [
+    "Here's your financial overview for this month",
+    'Aqui esta sua visao financeira deste mes',
+    'Aqui esta tu resumen financiero de este mes',
+    'Voici votre apercu financier de ce mois',
+    'Yah aapka is mahine ka financial overview hai',
+  ],
+  [
+    'Ask a question or jump to a page',
+    'Faca uma pergunta ou va para uma pagina',
+    'Haz una pregunta o ve a una pagina',
+    'Posez une question ou allez a une page',
+    'Sawal puchhen ya kisi page par jayen',
+  ],
+  [
+    'Total Balance',
+    'Saldo total',
+    'Saldo total',
+    'Solde total',
+    'Total balance',
+  ],
+  [
+    'Across all accounts',
+    'Em todas as contas',
+    'En todas las cuentas',
+    'Sur tous les comptes',
+    'Sabhi accounts mein',
+  ],
+  [
+    'Monthly Income',
+    'Receita mensal',
+    'Ingresos mensuales',
+    'Revenu mensuel',
+    'Monthly income',
+  ],
+  [
+    'Monthly Expenses',
+    'Despesas mensais',
+    'Gastos mensuales',
+    'Depenses mensuelles',
+    'Monthly expenses',
+  ],
+  ['Net Income', 'Renda liquida', 'Ingreso neto', 'Revenu net', 'Net income'],
+  ['This month', 'Neste mes', 'Este mes', 'Ce mois-ci', 'Is mahine'],
+  [
+    'Credit Utilization',
+    'Utilizacao de credito',
+    'Utilizacion de credito',
+    'Utilisation du credit',
+    'Credit utilization',
+  ],
+  [
+    'Credit cards',
+    'Cartoes de credito',
+    'Tarjetas de credito',
+    'Cartes de credit',
+    'Credit cards',
+  ],
+  [
+    'Savings Rate',
+    'Taxa de economia',
+    'Tasa de ahorro',
+    'Taux d epargne',
+    'Savings rate',
+  ],
+  [
+    'Of income saved',
+    'Da renda poupada',
+    'Del ingreso ahorrado',
+    'Du revenu epargne',
+    'Income ka bacha hua hissa',
+  ],
+  [
+    'Cash Flow Planning Strip',
+    'Faixa de planejamento de fluxo de caixa',
+    'Franja de planificacion de flujo de caja',
+    'Bande de planification des flux de tresorerie',
+    'Cash flow planning strip',
+  ],
+  [
+    'Projected income and outflows over the next 14 and 30 days.',
+    'Receitas e saidas projetadas para os proximos 14 e 30 dias.',
+    'Ingresos y salidas proyectados para los proximos 14 y 30 dias.',
+    'Entrees et sorties projetees sur les 14 et 30 prochains jours.',
+    'Agle 14 aur 30 dinon ke projected inflow aur outflow.',
+  ],
+  [
+    'Low-cash threshold:',
+    'Limiar de caixa baixo:',
+    'Umbral de efectivo bajo:',
+    'Seuil de tresorerie basse :',
+    'Low-cash threshold:',
+  ],
+  [
+    'Next 14 days',
+    'Proximos 14 dias',
+    'Proximos 14 dias',
+    '14 prochains jours',
+    'Agle 14 din',
+  ],
+  [
+    'Next 30 days',
+    'Proximos 30 dias',
+    'Proximos 30 dias',
+    '30 prochains jours',
+    'Agle 30 din',
+  ],
+  [
+    'Low-cash days',
+    'Dias de caixa baixo',
+    'Dias de efectivo bajo',
+    'Jours de tresorerie basse',
+    'Low-cash days',
+  ],
+  [
+    'Starting cash',
+    'Caixa inicial',
+    'Efectivo inicial',
+    'Tresorerie initiale',
+    'Starting cash',
+  ],
+  [
+    'Upcoming expected cash events',
+    'Proximos eventos de caixa esperados',
+    'Proximos eventos de efectivo esperados',
+    'Prochains evenements de tresorerie attendus',
+    'Aane wale expected cash events',
+  ],
+  ['Today', 'Hoje', 'Hoy', 'Aujourd hui', 'Aaj'],
+  ['Day 14', 'Dia 14', 'Dia 14', 'Jour 14', 'Din 14'],
+  ['Day 30', 'Dia 30', 'Dia 30', 'Jour 30', 'Din 30'],
+  [
+    'Budget Forecast',
+    'Previsao de orcamento',
+    'Pronostico de presupuesto',
+    'Prevision budgetaire',
+    'Budget forecast',
+  ],
+  [
+    'Snapshot only. Open budgets for full analysis.',
+    'Apenas resumo. Abra orcamentos para analise completa.',
+    'Solo resumen. Abre presupuestos para un analisis completo.',
+    'Apercu uniquement. Ouvrez les budgets pour une analyse complete.',
+    'Sirf snapshot. Poori analysis ke liye budgets kholen.',
+  ],
+  ['Over risk', 'Alto risco', 'Riesgo alto', 'Risque eleve', 'High risk'],
+  ['Warning', 'Alerta', 'Advertencia', 'Alerte', 'Warning'],
+  [
+    'Projected overrun',
+    'Estouro projetado',
+    'Exceso proyectado',
+    'Depassement projete',
+    'Projected overrun',
+  ],
+  ['Watch', 'Atencao', 'Vigilar', 'Surveiller', 'Watch'],
+  [
+    'On track',
+    'No caminho certo',
+    'En camino',
+    'Sur la bonne voie',
+    'On track',
+  ],
+  [
+    'Spending Breakdown',
+    'Detalhamento de gastos',
+    'Desglose de gastos',
+    'Repartition des depenses',
+    'Spending breakdown',
+  ],
+  ['Categories', 'Categorias', 'Categorias', 'Categories', 'Categories'],
+  ['of total', 'do total', 'del total', 'du total', 'of total'],
+  [
+    'Spending forecast',
+    'Previsao de gastos',
+    'Pronostico de gastos',
+    'Prevision des depenses',
+    'Spending forecast',
+  ],
+  [
+    '7-day avg',
+    'media de 7 dias',
+    'promedio de 7 dias',
+    'moyenne sur 7 jours',
+    '7-day avg',
+  ],
+  [
+    'Projected month',
+    'mes projetado',
+    'mes proyectado',
+    'mois projete',
+    'Projected month',
+  ],
+  [
+    'Daily range',
+    'faixa diaria',
+    'rango diario',
+    'plage quotidienne',
+    'Daily range',
+  ],
+  [
+    'Last 30 days',
+    'ultimos 30 dias',
+    'ultimos 30 dias',
+    '30 derniers jours',
+    'Last 30 days',
+  ],
+  ['Low', 'Minimo', 'Minimo', 'Faible', 'Low'],
+  ['Typical', 'Tipico', 'Tipico', 'Typique', 'Typical'],
+  ['High', 'Maximo', 'Maximo', 'Eleve', 'High'],
+  [
+    'Recent Transactions',
+    'Transacoes recentes',
+    'Transacciones recientes',
+    'Transactions recentes',
+    'Recent transactions',
+  ],
+  [
+    'Your latest financial activity',
+    'Sua atividade financeira mais recente',
+    'Tu actividad financiera mas reciente',
+    'Votre activite financiere la plus recente',
+    'Aapki latest financial activity',
+  ],
+  [
+    'No transactions yet',
+    'Ainda sem transacoes',
+    'Aun no hay transacciones',
+    'Aucune transaction pour le moment',
+    'Abhi koi transaction nahin hai',
+  ],
+  [
+    'Start tracking your finances by adding your first transaction.',
+    'Comece a acompanhar suas financas adicionando sua primeira transacao.',
+    'Empieza a seguir tus finanzas agregando tu primera transaccion.',
+    'Commencez a suivre vos finances en ajoutant votre premiere transaction.',
+    'Apni pehli transaction jodkar finances track karna shuru karen.',
+  ],
+  [
+    'Budget Progress',
+    'Progresso do orcamento',
+    'Progreso del presupuesto',
+    'Progression du budget',
+    'Budget progress',
+  ],
+  [
+    "This month's spending",
+    'Gastos deste mes',
+    'Gasto de este mes',
+    'Depenses de ce mois',
+    'Is mahine ka spending',
+  ],
+  [
+    'No budgets yet',
+    'Ainda sem orcamentos',
+    'Aun no hay presupuestos',
+    'Aucun budget pour le moment',
+    'Abhi koi budget nahin hai',
+  ],
+  [
+    'Create a budget to track monthly spending.',
+    'Crie um orcamento para acompanhar os gastos mensais.',
+    'Crea un presupuesto para seguir el gasto mensual.',
+    'Creez un budget pour suivre les depenses mensuelles.',
+    'Monthly spending track karne ke liye budget banayen.',
+  ],
+  [
+    'Create budget',
+    'Criar orcamento',
+    'Crear presupuesto',
+    'Creer un budget',
+    'Budget banayen',
+  ],
+  [
+    'Financial Goals',
+    'Metas financeiras',
+    'Metas financieras',
+    'Objectifs financiers',
+    'Financial goals',
+  ],
+  [
+    'Track your progress',
+    'Acompanhe seu progresso',
+    'Sigue tu progreso',
+    'Suivez votre progression',
+    'Apni progress track karen',
+  ],
+  [
+    'No goals yet',
+    'Ainda sem metas',
+    'Aun no hay metas',
+    'Aucun objectif pour le moment',
+    'Abhi koi goal nahin hai',
+  ],
+  [
+    'Add a goal to keep progress visible.',
+    'Adicione uma meta para manter o progresso visivel.',
+    'Agrega una meta para mantener el progreso visible.',
+    'Ajoutez un objectif pour garder la progression visible.',
+    'Progress visible rakhne ke liye goal joden.',
+  ],
+  [
+    'Set a goal',
+    'Definir meta',
+    'Establecer meta',
+    'Definir un objectif',
+    'Goal set karen',
+  ],
+  [
+    'No spending history yet.',
+    'Ainda sem historico de gastos.',
+    'Aun no hay historial de gastos.',
+    'Pas encore d historique de depenses.',
+    'Abhi spending history nahin hai.',
+  ],
+  [
+    'Connect accounts to see your net worth highlights.',
+    'Conecte contas para ver seus destaques de patrimonio liquido.',
+    'Conecta cuentas para ver tus puntos clave de patrimonio neto.',
+    'Connectez des comptes pour voir les points forts de votre patrimoine net.',
+    'Net worth highlights dekhne ke liye accounts connect karen.',
+  ],
+  [
+    'Net worth',
+    'Patrimonio liquido',
+    'Patrimonio neto',
+    'Patrimoine net',
+    'Net worth',
+  ],
+  ['Up', 'Alta', 'Sube', 'Hausse', 'Up'],
+  ['Down', 'Queda', 'Baja', 'Baisse', 'Down'],
+  [
+    '% from last month',
+    '% em relacao ao mes passado',
+    '% vs el mes pasado',
+    '% par rapport au mois dernier',
+    '% pichhle mahine se',
+  ],
+  [
+    '% vs last month',
+    '% em relacao ao mes passado',
+    '% vs el mes pasado',
+    '% par rapport au mois dernier',
+    '% pichhle mahine se',
+  ],
   ['Get Started', 'Comecar', 'Comenzar', 'Commencer', 'Shuru karen'],
   ['Support', 'Suporte', 'Soporte', 'Support', 'Support'],
   ['Privacy', 'Privacidade', 'Privacidad', 'Confidentialite', 'Privacy'],
@@ -449,7 +801,38 @@ export const translateUiText = (text: string, locale: string) => {
   const trimmedText = text.trim()
   if (!trimmedText) return text
 
-  const translatedText =
-    uiTranslationDictionary[normalizedLocale][trimmedText] ?? trimmedText
+  const dictionary = uiTranslationDictionary[normalizedLocale]
+  const translatedText = dictionary[trimmedText] ?? trimmedText
+
+  if (translatedText !== trimmedText) {
+    return `${leadingWhitespace}${translatedText}${trailingWhitespace}`
+  }
+
+  const welcomeBackMatch = trimmedText.match(/^Welcome back,\s*(.+)!$/)
+  if (welcomeBackMatch) {
+    const translatedGreeting = dictionary['Welcome back'] ?? 'Welcome back'
+    return `${leadingWhitespace}${translatedGreeting}, ${welcomeBackMatch[1]}!${trailingWhitespace}`
+  }
+
+  const percentFromLastMonthMatch = trimmedText.match(
+    /^(Up|Down)\s+(\d+(?:[.,]\d+)?)%\s+from\s+last\s+month$/
+  )
+  if (percentFromLastMonthMatch) {
+    const direction =
+      dictionary[percentFromLastMonthMatch[1]] ?? percentFromLastMonthMatch[1]
+    const suffix = dictionary['% from last month'] ?? '% from last month'
+    return `${leadingWhitespace}${direction} ${percentFromLastMonthMatch[2]}${suffix}${trailingWhitespace}`
+  }
+
+  const percentVsLastMonthMatch = trimmedText.match(
+    /^(Up|Down)\s+(\d+(?:[.,]\d+)?)%\s+vs\s+last\s+month$/
+  )
+  if (percentVsLastMonthMatch) {
+    const direction =
+      dictionary[percentVsLastMonthMatch[1]] ?? percentVsLastMonthMatch[1]
+    const suffix = dictionary['% vs last month'] ?? '% vs last month'
+    return `${leadingWhitespace}${direction} ${percentVsLastMonthMatch[2]}${suffix}${trailingWhitespace}`
+  }
+
   return `${leadingWhitespace}${translatedText}${trailingWhitespace}`
 }

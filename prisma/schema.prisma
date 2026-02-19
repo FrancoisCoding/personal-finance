@@ -303,8 +303,10 @@ model User {
   emailVerified     DateTime?
   image             String?
   isSuperUser       Boolean @default(false)
+  locale            String  @default("en-US")
   timezone          String  @default("UTC")
   currency          String  @default("USD")
+  hasManualCurrencyPreference Boolean @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

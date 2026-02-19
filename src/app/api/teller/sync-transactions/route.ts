@@ -12,6 +12,7 @@ import {
   encryptTellerAccessToken,
   isEncryptedTellerAccessToken,
 } from '@/lib/teller-token-crypto'
+import { applyAutoDetectedUserCurrency } from '@/lib/user-preference-service'
 
 export async function POST(request: NextRequest) {
   if (isDemoModeRequest(request)) {
@@ -65,6 +66,10 @@ export async function POST(request: NextRequest) {
         error
       )
     }
+  }
+
+  if (accountsSynced > 0) {
+    await applyAutoDetectedUserCurrency(session.user.id)
   }
 
   invalidateCacheKeys([

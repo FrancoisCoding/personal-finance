@@ -8,6 +8,7 @@ import { syncTellerEnrollment } from '@/lib/teller-sync'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 import { encryptTellerAccessToken } from '@/lib/teller-token-crypto'
+import { applyAutoDetectedUserCurrency } from '@/lib/user-preference-service'
 
 interface TellerEnrollmentPayload {
   accessToken?: string
@@ -127,6 +128,10 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       accessToken,
     })
+
+    if (syncResult.accountsSynced > 0) {
+      await applyAutoDetectedUserCurrency(session.user.id)
+    }
 
     return NextResponse.json({
       message: 'Teller enrollment saved',

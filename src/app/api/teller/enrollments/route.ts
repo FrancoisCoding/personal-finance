@@ -7,6 +7,7 @@ import { getTellerEnvironment } from '@/lib/teller'
 import { syncTellerEnrollment } from '@/lib/teller-sync'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
+import { encryptTellerAccessToken } from '@/lib/teller-token-crypto'
 
 interface TellerEnrollmentPayload {
   accessToken?: string
@@ -67,6 +68,12 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   }
+  if (accessToken.length > 4096 || enrollmentId.length > 255) {
+    return NextResponse.json(
+      { error: 'Invalid enrollment payload values.' },
+      { status: 400 }
+    )
+  }
 
   const institutionName = getInstitutionName(enrollment)
   const environment = getTellerEnvironment()
@@ -75,11 +82,23 @@ export async function POST(request: NextRequest) {
   const hasPrivateKey =
     !!process.env.TELLER_KEY || !!process.env.TELLER_KEY_PATH
   const canSync = environment === 'sandbox' || (hasCertificate && hasPrivateKey)
+  const encryptedAccessToken = encryptTellerAccessToken(accessToken)
+
+  const existingEnrollment = await prisma.tellerEnrollment.findUnique({
+    where: { enrollmentId },
+    select: { userId: true },
+  })
+  if (existingEnrollment && existingEnrollment.userId !== session.user.id) {
+    return NextResponse.json(
+      { error: 'Enrollment already belongs to another account.' },
+      { status: 409 }
+    )
+  }
 
   await prisma.tellerEnrollment.upsert({
     where: { enrollmentId },
     update: {
-      accessToken,
+      accessToken: encryptedAccessToken,
       institutionName,
       environment,
       updatedAt: new Date(),
@@ -87,7 +106,7 @@ export async function POST(request: NextRequest) {
     create: {
       userId: session.user.id,
       enrollmentId,
-      accessToken,
+      accessToken: encryptedAccessToken,
       institutionName,
       environment,
     },

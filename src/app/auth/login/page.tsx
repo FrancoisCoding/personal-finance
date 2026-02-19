@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,9 +28,10 @@ import { Mail, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const { status } = useSession()
-  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [callbackUrl, setCallbackUrl] = useState('/dashboard')
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const [demoProgress, setDemoProgress] = useState(0)
@@ -38,12 +39,6 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { startDemoMode } = useDemoMode()
-  const authError = searchParams.get('error')
-  const callbackUrlParam = searchParams.get('callbackUrl')
-  const callbackUrl =
-    callbackUrlParam && callbackUrlParam.startsWith('/')
-      ? callbackUrlParam
-      : '/dashboard'
   const authErrorMessage =
     authError === 'OAuthAccountNotLinked'
       ? 'This email is linked to a different sign-in method.'
@@ -62,6 +57,18 @@ export default function LoginPage() {
         demoProgressIntervalRef.current = null
       }
     }
+  }, [])
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search)
+    const authErrorValue = queryParams.get('error')
+    const callbackValue = queryParams.get('callbackUrl')
+    setAuthError(authErrorValue)
+    setCallbackUrl(
+      callbackValue && callbackValue.startsWith('/')
+        ? callbackValue
+        : '/dashboard'
+    )
   }, [])
 
   useEffect(() => {

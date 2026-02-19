@@ -7,10 +7,38 @@ import type { Transaction, Budget, Goal } from '@prisma/client'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 import { getUserEntitlements } from '@/lib/user-entitlements'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
-    if (isDemoModeRequest(request)) {
+    const isDemoMode = isDemoModeRequest(request)
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          error: isDemoMode
+            ? 'Sign in is required to use demo AI features.'
+            : 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
+
+    const rateLimit = enforceRateLimit({
+      request,
+      scope: 'ai-insights-get',
+      userId: session.user.id,
+      maxRequests: 12,
+      windowMs: 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(rateLimit)
+    }
+
+    if (isDemoMode) {
       const demoData = buildDemoData()
       const insights = await generateEnhancedInsights(
         demoData.transactions.map((transaction) => ({
@@ -47,10 +75,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     const { hasProAccess } = await getUserEntitlements(session.user.id)
     if (!hasProAccess) {
       return NextResponse.json(
@@ -129,9 +153,35 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (isDemoModeRequest(request)) {
-      const { type, data } = await request.json()
+    const isDemoMode = isDemoModeRequest(request)
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          error: isDemoMode
+            ? 'Sign in is required to use demo AI features.'
+            : 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
 
+    const rateLimit = enforceRateLimit({
+      request,
+      scope: 'ai-insights-post',
+      userId: session.user.id,
+      maxRequests: 20,
+      windowMs: 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(rateLimit)
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const type = typeof body?.type === 'string' ? body.type : ''
+    const data = body?.data ?? {}
+
+    if (isDemoMode) {
       switch (type) {
         case 'spending_analysis':
           return NextResponse.json({
@@ -155,11 +205,6 @@ export async function POST(request: NextRequest) {
           )
       }
     }
-
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     const { hasProAccess } = await getUserEntitlements(session.user.id)
     if (!hasProAccess) {
       return NextResponse.json(
@@ -167,8 +212,6 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
-
-    const { type, data } = await request.json()
 
     // Handle different types of insight requests
     switch (type) {

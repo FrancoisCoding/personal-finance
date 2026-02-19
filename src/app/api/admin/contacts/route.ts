@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   adminSessionCookieName,
+  isSameOriginAdminRequest,
   verifyAdminSessionToken,
 } from '@/lib/admin-auth'
 import { prisma } from '@/lib/prisma'
@@ -91,6 +92,13 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (!isSameOriginAdminRequest(request)) {
+      return NextResponse.json(
+        { error: 'Blocked by origin policy.' },
+        { status: 403 }
+      )
+    }
+
     const adminToken = request.cookies.get(adminSessionCookieName)?.value
     if (!verifyAdminSessionToken(adminToken)) {
       return unauthorizedResponse()

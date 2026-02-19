@@ -5,15 +5,17 @@ import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface IRouteContext {
+  params: Promise<{ id: string }>
+}
+
+export async function PATCH(request: NextRequest, context: IRouteContext) {
   try {
+    const { id: subscriptionId } = await context.params
     if (isDemoModeRequest(request)) {
       const updates = await request.json().catch(() => ({}))
       return NextResponse.json({
-        id: params.id,
+        id: subscriptionId,
         ...updates,
       })
     }
@@ -24,7 +26,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const subscriptionId = params.id
     const existing = await prisma.subscription.findFirst({
       where: {
         id: subscriptionId,
@@ -92,15 +93,13 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, context: IRouteContext) {
   try {
+    const { id: subscriptionId } = await context.params
     if (isDemoModeRequest(request)) {
       return NextResponse.json({
         message: 'Demo subscription deleted successfully',
-        subscriptionId: params.id,
+        subscriptionId,
       })
     }
 
@@ -110,7 +109,6 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const subscriptionId = params.id
     const existing = await prisma.subscription.findFirst({
       where: {
         id: subscriptionId,

@@ -43,11 +43,13 @@ const mapReminder = (reminder: {
   completed: reminder.isCompleted,
 })
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface IRouteContext {
+  params: Promise<{ id: string }>
+}
+
+export async function PATCH(request: NextRequest, context: IRouteContext) {
   try {
+    const { id } = await context.params
     const body = await request.json().catch(() => ({}))
     const updates: {
       title?: string
@@ -95,7 +97,7 @@ export async function PATCH(
 
     if (isDemoModeRequest(request)) {
       return NextResponse.json({
-        id: params.id,
+        id,
         title: updates.title ?? 'Demo reminder',
         description: updates.description ?? '',
         dueAt: (updates.dueAt ?? new Date()).toISOString(),
@@ -112,7 +114,7 @@ export async function PATCH(
 
     const existingReminder = await prisma.reminder.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
     })
@@ -122,7 +124,7 @@ export async function PATCH(
     }
 
     const updatedReminder = await prisma.reminder.update({
-      where: { id: params.id },
+      where: { id },
       data: updates,
     })
 
@@ -136,11 +138,9 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, context: IRouteContext) {
   try {
+    const { id } = await context.params
     if (isDemoModeRequest(request)) {
       return NextResponse.json({ ok: true })
     }
@@ -152,7 +152,7 @@ export async function DELETE(
 
     const deleted = await prisma.reminder.deleteMany({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
     })

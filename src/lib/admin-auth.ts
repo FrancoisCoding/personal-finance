@@ -1,4 +1,5 @@
-import { createHmac, timingSafeEqual } from 'crypto'
+import { createHmac, scryptSync, timingSafeEqual } from 'crypto'
+import type { NextRequest } from 'next/server'
 
 export const adminSessionCookieName = 'financeflow-admin-session'
 
@@ -15,6 +16,7 @@ interface ICookieStore {
 
 const getAdminEmail = () => process.env.ADMIN_EMAIL ?? ''
 const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? ''
+const getAdminPasswordHash = () => process.env.ADMIN_PASSWORD_HASH ?? ''
 const getAdminSessionSecret = () => process.env.ADMIN_SESSION_SECRET ?? ''
 
 const createPayloadSignature = (payload: string, secret: string) => {
@@ -39,12 +41,94 @@ const fromBase64Url = (value: string) => {
 
 export const hasAdminCredentialsConfigured = () => {
   return Boolean(
-    getAdminEmail() && getAdminPassword() && getAdminSessionSecret()
+    getAdminEmail() &&
+      (getAdminPassword() || getAdminPasswordHash()) &&
+      getAdminSessionSecret()
   )
 }
 
+const verifyScryptPasswordHash = (password: string, encodedHash: string) => {
+  const segments = encodedHash.split('$')
+  if (segments.length !== 3 || segments[0] !== 'scrypt') {
+    return false
+  }
+
+  const [, saltBase64, keyBase64] = segments
+
+  try {
+    const salt = Buffer.from(saltBase64, 'base64')
+    const expectedKey = Buffer.from(keyBase64, 'base64')
+    const computedKey = scryptSync(password, salt, expectedKey.length)
+    return timingSafeEqual(computedKey, expectedKey)
+  } catch {
+    return false
+  }
+}
+
+const isValidAdminPassword = (password: string) => {
+  const storedPasswordHash = getAdminPasswordHash().trim()
+  if (storedPasswordHash) {
+    return verifyScryptPasswordHash(password, storedPasswordHash)
+  }
+
+  const configuredPassword = getAdminPassword()
+  if (!configuredPassword) return false
+
+  const providedPasswordBuffer = Buffer.from(password, 'utf8')
+  const configuredPasswordBuffer = Buffer.from(configuredPassword, 'utf8')
+  if (providedPasswordBuffer.length !== configuredPasswordBuffer.length) {
+    return false
+  }
+
+  return timingSafeEqual(providedPasswordBuffer, configuredPasswordBuffer)
+}
+
 export const isValidAdminLogin = (email: string, password: string) => {
-  return email === getAdminEmail() && password === getAdminPassword()
+  const normalizedConfiguredEmail = getAdminEmail().trim().toLowerCase()
+  const normalizedProvidedEmail = email.trim().toLowerCase()
+  if (!normalizedConfiguredEmail || !normalizedProvidedEmail) {
+    return false
+  }
+  if (normalizedConfiguredEmail !== normalizedProvidedEmail) {
+    return false
+  }
+  return isValidAdminPassword(password)
+}
+
+const getAllowedOrigins = () => {
+  const values = [
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : '',
+  ]
+
+  return new Set(
+    values
+      .map((value) => {
+        if (!value) return ''
+        try {
+          return new URL(value).origin
+        } catch {
+          return ''
+        }
+      })
+      .filter(Boolean)
+  )
+}
+
+export const isSameOriginAdminRequest = (request: NextRequest) => {
+  const originHeader = request.headers.get('origin')
+  if (!originHeader) return false
+
+  const requestOrigin = request.nextUrl.origin
+  if (originHeader === requestOrigin) {
+    return true
+  }
+
+  const allowedOrigins = getAllowedOrigins()
+  return allowedOrigins.has(originHeader)
 }
 
 export const createAdminSessionToken = (email: string) => {
@@ -101,4 +185,12 @@ export const verifyAdminSessionToken = (token: string | undefined | null) => {
 export const isAdminAuthenticated = (cookieStore: ICookieStore) => {
   const token = cookieStore.get(adminSessionCookieName)?.value
   return verifyAdminSessionToken(token)
+}
+
+export const adminSessionCookieOptions = {
+  httpOnly: true,
+  sameSite: 'strict' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 60 * 60 * 12,
 }

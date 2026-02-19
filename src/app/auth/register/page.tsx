@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,7 +28,7 @@ import { Mail, Sparkles } from 'lucide-react'
 
 export default function RegisterPage() {
   const { status } = useSession()
-  const searchParams = useSearchParams()
+  const [authError, setAuthError] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -40,7 +40,6 @@ export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { startDemoMode } = useDemoMode()
-  const authError = searchParams.get('error')
   const authErrorMessage =
     authError === 'OAuthAccountNotLinked'
       ? 'This email is linked to a different sign-in method.'
@@ -59,6 +58,11 @@ export default function RegisterPage() {
         demoProgressIntervalRef.current = null
       }
     }
+  }, [])
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search)
+    setAuthError(queryParams.get('error'))
   }, [])
 
   useEffect(() => {

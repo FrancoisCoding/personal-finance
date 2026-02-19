@@ -5,15 +5,18 @@ import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface IRouteContext {
+  params: Promise<{ id: string }>
+}
+
+export async function PATCH(request: NextRequest, context: IRouteContext) {
   try {
+    const { id } = await context.params
+
     if (isDemoModeRequest(request)) {
       const updates = await request.json().catch(() => ({}))
       return NextResponse.json({
-        id: params.id,
+        id,
         ...updates,
       })
     }
@@ -23,7 +26,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
     const updates = await request.json()
 
     // Find the category by name if categoryId is not provided

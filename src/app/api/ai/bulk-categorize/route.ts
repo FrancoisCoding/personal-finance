@@ -6,19 +6,58 @@ import { seedCategories } from '@/lib/seed-categories'
 import { autoCategorizeTransactions } from '@/lib/enhanced-ai'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    if (isDemoModeRequest(request)) {
-      const { transactionIds } = await request.json()
+    const isDemoMode = isDemoModeRequest(request)
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          error: isDemoMode
+            ? 'Sign in is required to use demo AI features.'
+            : 'Unauthorized',
+        },
+        { status: 401 }
+      )
+    }
 
-      if (!transactionIds || !Array.isArray(transactionIds)) {
-        return NextResponse.json(
-          { error: 'Invalid transaction IDs' },
-          { status: 400 }
-        )
-      }
+    const rateLimit = enforceRateLimit({
+      request,
+      scope: 'ai-bulk-categorize',
+      userId: session.user.id,
+      maxRequests: 10,
+      windowMs: 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(rateLimit)
+    }
 
+    const body = await request.json().catch(() => ({}))
+    const parsedTransactionIds: unknown[] = Array.isArray(body?.transactionIds)
+      ? body.transactionIds
+      : []
+    const transactionIds = parsedTransactionIds
+      .filter((id): id is string => typeof id === 'string')
+      .map((id) => id.trim())
+      .filter(Boolean)
+
+    if (
+      transactionIds.length === 0 ||
+      transactionIds.length > 200 ||
+      transactionIds.length !== parsedTransactionIds.length
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid transaction IDs' },
+        { status: 400 }
+      )
+    }
+
+    if (isDemoMode) {
       const demoTransactions = buildDemoData().transactions.filter(
         (transaction) => transactionIds.includes(transaction.id)
       )
@@ -28,7 +67,6 @@ export async function POST(request: NextRequest) {
           message: 'No uncategorized transactions found',
         })
       }
-
       const categorizationResults = await autoCategorizeTransactions(
         demoTransactions.map((transaction) => ({
           id: transaction.id,
@@ -42,11 +80,6 @@ export async function POST(request: NextRequest) {
         message: `Successfully categorized ${categorizationResults.length} transactions`,
         results: categorizationResults,
       })
-    }
-
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     let categories = await prisma.category.findMany({
@@ -67,15 +100,6 @@ export async function POST(request: NextRequest) {
         category.id,
       ])
     )
-
-    const { transactionIds } = await request.json()
-
-    if (!transactionIds || !Array.isArray(transactionIds)) {
-      return NextResponse.json(
-        { error: 'Invalid transaction IDs' },
-        { status: 400 }
-      )
-    }
 
     // Get uncategorized transactions
     const transactions = await prisma.transaction.findMany({

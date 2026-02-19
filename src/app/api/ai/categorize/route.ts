@@ -3,22 +3,51 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { categorizeTransaction } from '@/lib/local-ai'
 import { isDemoModeRequest } from '@/lib/demo-mode'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
     const isDemoMode = isDemoModeRequest(request)
-    if (!isDemoMode) {
-      const session = await getServerSession(authOptions)
-      if (!session?.user?.email) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        {
+          error: isDemoMode
+            ? 'Sign in is required to use demo AI features.'
+            : 'Unauthorized',
+        },
+        { status: 401 }
+      )
     }
 
-    const { description, amount } = await request.json()
+    const rateLimit = enforceRateLimit({
+      request,
+      scope: 'ai-categorize',
+      userId: session.user.id,
+      maxRequests: 40,
+      windowMs: 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(rateLimit)
+    }
 
-    if (!description || amount === undefined) {
+    const body = await request.json().catch(() => ({}))
+    const description =
+      typeof body?.description === 'string' ? body.description.trim() : ''
+    const amount =
+      typeof body?.amount === 'number' && Number.isFinite(body.amount)
+        ? body.amount
+        : null
+
+    if (!description || description.length > 512 || amount === null) {
       return NextResponse.json(
-        { error: 'Description and amount are required' },
+        {
+          error:
+            'Description and amount are required with a valid description length.',
+        },
         { status: 400 }
       )
     }

@@ -1,13 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
+  adminSessionCookieOptions,
   adminSessionCookieName,
   createAdminSessionToken,
   hasAdminCredentialsConfigured,
+  isSameOriginAdminRequest,
   isValidAdminLogin,
 } from '@/lib/admin-auth'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isSameOriginAdminRequest(request)) {
+      return NextResponse.json(
+        { error: 'Blocked by origin policy.' },
+        { status: 403 }
+      )
+    }
+
+    const rateLimit = enforceRateLimit({
+      request,
+      scope: 'admin-login',
+      maxRequests: 6,
+      windowMs: 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(
+        rateLimit,
+        'Too many admin login attempts. Please wait and try again.'
+      )
+    }
+
     if (!hasAdminCredentialsConfigured()) {
       return NextResponse.json(
         { error: 'Admin credentials are not configured.' },
@@ -39,11 +65,7 @@ export async function POST(request: NextRequest) {
       adminSessionCookieName,
       createAdminSessionToken(email),
       {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: 60 * 60 * 12,
+        ...adminSessionCookieOptions,
       }
     )
     return response

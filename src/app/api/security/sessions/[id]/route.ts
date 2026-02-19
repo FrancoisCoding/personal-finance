@@ -4,11 +4,13 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface IRouteContext {
+  params: Promise<{ id: string }>
+}
+
+export async function PATCH(request: NextRequest, context: IRouteContext) {
   try {
+    const { id } = await context.params
     if (isDemoModeRequest(request)) {
       return NextResponse.json({ ok: true })
     }
@@ -31,7 +33,7 @@ export async function PATCH(
 
     const updatedSession = await prisma.accessSession.updateMany({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
       data: {
@@ -53,11 +55,9 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, context: IRouteContext) {
   try {
+    const { id } = await context.params
     if (isDemoModeRequest(request)) {
       return NextResponse.json({ ok: true })
     }
@@ -69,7 +69,7 @@ export async function DELETE(
 
     const deleted = await prisma.accessSession.deleteMany({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
     })

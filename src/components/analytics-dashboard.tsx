@@ -295,7 +295,11 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     if (value === undefined || value === null) {
       return ''
     }
-    const text = String(value)
+    const baseText = String(value)
+    const text =
+      /^[=+\-@]/.test(baseText) || baseText.startsWith('\t')
+        ? `'${baseText}`
+        : baseText
     if (/[",\n]/.test(text)) {
       return `"${text.replace(/"/g, '""')}"`
     }

@@ -5,15 +5,18 @@ import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface IRouteContext {
+  params: Promise<{ id: string }>
+}
+
+export async function DELETE(request: NextRequest, context: IRouteContext) {
   try {
+    const { id: accountId } = await context.params
+
     if (isDemoModeRequest(request)) {
       return NextResponse.json({
         message: 'Demo account deleted',
-        accountId: params.id,
+        accountId,
       })
     }
 
@@ -22,8 +25,6 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const accountId = params.id
 
     // Verify the account belongs to the user
     const account = await prisma.financialAccount.findFirst({

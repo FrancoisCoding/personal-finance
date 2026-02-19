@@ -9,7 +9,9 @@ const unauthorizedResponse = () =>
   NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
 const escapeCsvValue = (value: string) => {
-  const escaped = value.replace(/\"/g, '""')
+  const normalizedValue =
+    /^[=+\-@]/.test(value) || value.startsWith('\t') ? `'${value}` : value
+  const escaped = normalizedValue.replace(/\"/g, '""')
   return `"${escaped}"`
 }
 

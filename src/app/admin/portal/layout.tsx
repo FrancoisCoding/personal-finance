@@ -7,7 +7,7 @@ export default async function AdminPortalLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   if (!isAdminAuthenticated(cookieStore)) {
     redirect('/admin/login')
   }

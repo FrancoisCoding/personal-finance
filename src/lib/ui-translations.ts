@@ -2072,6 +2072,40 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
       'Faca upgrade para Pro para desbloquear orientacoes com IA, prompts avancados e recomendacoes personalizadas.',
     'Upgrade to Pro': 'Fazer upgrade para Pro',
     'Credit Score Lab': 'Laboratorio de Score de Credito',
+    'Card Perks': 'Beneficios de cartao',
+    'Credit Card Perk Insights': 'Insights de beneficios de cartao',
+    'Track monthly credits and benefits for premium cards, with usage detection from your transactions.':
+      'Acompanhe creditos e beneficios mensais de cartoes premium com deteccao de uso pelas suas transacoes.',
+    'Loading card perk insights...':
+      'Carregando insights de beneficios de cartao...',
+    'Card perk insights are available on the Pro plan.':
+      'Insights de beneficios de cartao estao disponiveis no plano Pro.',
+    'Upgrade to Pro to unlock monthly perk tracking, expiration reminders, and merchant-level usage detection.':
+      'Faca upgrade para Pro para desbloquear rastreamento mensal de beneficios, lembretes de expiracao e deteccao por estabelecimento.',
+    'Eligible cards': 'Cartoes elegiveis',
+    'Perks tracked': 'Beneficios monitorados',
+    'Used this month': 'Usado neste mes',
+    'Unused value': 'Valor nao utilizado',
+    'No supported perk cards detected':
+      'Nenhum cartao com beneficios suportados detectado',
+    'Add or rename a credit card account to match supported perk programs such as American Express Gold.':
+      'Adicione ou renomeie uma conta de cartao de credito para corresponder a programas suportados, como American Express Gold.',
+    'Perk usage by card': 'Uso de beneficios por cartao',
+    'Monthly credits and how much value you have already captured.':
+      'Creditos mensais e quanto valor voce ja aproveitou.',
+    Program: 'Programa:',
+    Used: 'Usado',
+    Partial: 'Parcial',
+    Unused: 'Nao utilizado',
+    Merchants: 'Estabelecimentos',
+    'Expires in': 'Expira em',
+    'No eligible transactions yet this month.':
+      'Nenhuma transacao elegivel neste mes.',
+    'expiring soon': 'expirando em breve',
+    'Card perk expiring soon': 'Beneficio de cartao expirando em breve',
+    'Remind when monthly card credits are still unused.':
+      'Lembre quando creditos mensais do cartao ainda nao foram usados.',
+    'Unused credit expiring within': 'Credito nao utilizado expirando em',
     'Pro-only credit health simulation and action plan.':
       'Simulacao de saude de credito e plano de acao exclusivos do Pro.',
     'Manage plan': 'Gerenciar plano',

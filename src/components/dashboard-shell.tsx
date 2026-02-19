@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
+  Gift,
   Gauge,
   LayoutGrid,
   Menu,
@@ -132,6 +133,13 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         keywords: ['credit', 'credit score', 'report', 'utilization', 'pro'],
       },
       {
+        name: 'Card Perks',
+        href: '/card-perks',
+        icon: Gift,
+        description: 'Track premium card credits, usage, and upcoming expiry.',
+        keywords: ['amex', 'card perks', 'credits', 'expiry', 'uber', 'dining'],
+      },
+      {
         name: 'Billing',
         href: '/billing',
         icon: CreditCard,
@@ -201,6 +209,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       assistant: 'Financial Assistant',
       budgets: 'Budgets',
       'credit-score': 'Credit Score',
+      'card-perks': 'Card Perks',
       profile: 'Profile',
     }
 
@@ -214,6 +223,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       assistant: Sparkles,
       budgets: Wallet,
       'credit-score': Gauge,
+      'card-perks': Gift,
       profile: UserCircle2,
     }
 
@@ -320,6 +330,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       {
         text: 'What is my credit card spend this month?',
         keywords: ['credit', 'credit card', 'cards', 'monthly'],
+      },
+      {
+        text: 'Which card perks are unused and expiring this month?',
+        keywords: ['card perks', 'credits', 'unused', 'expiring', 'amex'],
       },
       {
         text: 'Show me my largest transactions over $500.',

@@ -36,6 +36,7 @@ const publicPlanCatalog = [
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',
+      'Credit card perk insights',
       'Priority support',
       '7-day free trial',
     ],

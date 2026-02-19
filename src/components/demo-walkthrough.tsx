@@ -226,6 +226,26 @@ const walkthroughSteps: WalkthroughStep[] = [
     scroll: 'center',
   },
   {
+    id: 'card-perks-header',
+    target: 'demo-card-perks-header',
+    title: 'Card perk insights',
+    description:
+      'Track monthly card credits and see which perks still have unused value.',
+    route: '/card-perks',
+    placement: 'below',
+    scroll: 'center',
+  },
+  {
+    id: 'card-perks-list',
+    target: 'demo-card-perks-list',
+    title: 'Expiry reminders',
+    description:
+      'Review merchant-level usage and identify benefits that are expiring soon.',
+    route: '/card-perks',
+    placement: 'below',
+    scroll: 'center',
+  },
+  {
     id: 'credit-score-header',
     target: 'demo-credit-score-header',
     title: 'Credit Score Lab',

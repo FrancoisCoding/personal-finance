@@ -13,11 +13,16 @@ import {
   useSubscriptions,
   useCreditCardUtilization,
 } from '@/hooks/use-finance-data'
+import { useBillingStatus } from '@/hooks/use-billing-status'
+import { useDemoMode } from '@/hooks/use-demo-mode'
+import { analyzeCreditCardPerks } from '@/lib/credit-card-perks'
 import { formatCurrency } from '@/lib/utils'
 
 /** Background notification triggers for high-signal finance events. */
 const NotificationTriggers = () => {
   const { addNotification, isAlertRuleEnabled } = useNotifications()
+  const { isDemoMode } = useDemoMode()
+  const { data: billingData } = useBillingStatus()
   const { data: accounts = [] } = useAccounts()
   const { data: transactions = [] } = useTransactions()
   const { data: budgets = [] } = useBudgets()
@@ -26,6 +31,7 @@ const NotificationTriggers = () => {
   const { utilization: creditCardUtilization } = useCreditCardUtilization()
   const previousSubscriptionIds = useRef<string[]>([])
   const previousGoalIds = useRef<string[]>([])
+  const hasProPerkAccess = isDemoMode || billingData?.currentPlan === 'PRO'
 
   useEffect(() => {
     if (accounts.length === 0) return
@@ -207,6 +213,44 @@ const NotificationTriggers = () => {
       })
     }
   }, [transactions, addNotification, isAlertRuleEnabled])
+
+  useEffect(() => {
+    if (!hasProPerkAccess) return
+    if (!isAlertRuleEnabled('card-perk-expiry')) return
+
+    const perkInsight = analyzeCreditCardPerks({
+      accounts,
+      transactions,
+      expiryWarningDays: notificationThresholds.perkExpiryLookaheadDays,
+    })
+
+    perkInsight.cards.forEach((card) => {
+      card.perks.forEach((perk) => {
+        if (!perk.isExpiringSoon || perk.remainingAmount <= 0) return
+        const monthKey = perk.cycleStartDate.toISOString().slice(0, 7)
+        addNotification({
+          type: 'info',
+          title: 'Card perk expiring soon',
+          message: `${perk.name} on ${
+            card.cardName
+          } has ${formatCurrency(perk.remainingAmount)} unused with ${
+            perk.daysRemainingInCycle
+          } day${perk.daysRemainingInCycle === 1 ? '' : 's'} left.`,
+          category: 'system',
+          ruleId: 'card-perk-expiry',
+          showToast: false,
+          dedupeKey: `card-perk-expiry-${card.cardId}-${perk.id}-${monthKey}`,
+          throttleMinutes: 1440,
+        })
+      })
+    })
+  }, [
+    accounts,
+    addNotification,
+    hasProPerkAccess,
+    isAlertRuleEnabled,
+    transactions,
+  ])
 
   useEffect(() => {
     if (transactions.length === 0) return

@@ -59,6 +59,7 @@ export const notificationThresholds = {
   largeTransactionMinimum: 500,
   largeTransactionMultiplier: 3,
   subscriptionLookaheadDays: 7,
+  perkExpiryLookaheadDays: 5,
   goalDeadlineDays: 14,
   goalProgressWarning: 0.8,
   incomeDropRatio: 0.8,
@@ -159,6 +160,15 @@ export const alertRules: IAlertRuleDefinition[] = [
     category: 'system',
     severity: 'success',
     detail: 'New recurring charge added.',
+    defaultEnabled: true,
+  },
+  {
+    id: 'card-perk-expiry',
+    title: 'Card perk expiring soon',
+    description: 'Remind when monthly card credits are still unused.',
+    category: 'system',
+    severity: 'info',
+    detail: `Unused credit expiring within ${notificationThresholds.perkExpiryLookaheadDays} days.`,
     defaultEnabled: true,
   },
   {

@@ -14,7 +14,7 @@ describe('ui translations', () => {
       'Previsao de orcamento'
     )
     expect(translateUiText('Cash Flow Planning Strip', 'pt-BR')).toBe(
-      'Faixa de planejamento de fluxo de caixa'
+      'Linha de planejamento de fluxo de caixa'
     )
   })
 
@@ -36,10 +36,17 @@ describe('ui translations', () => {
 
   it('translates month-over-month trend templates', () => {
     expect(translateUiText('Up 5.3% from last month', 'pt-BR')).toBe(
-      'Alta 5.3% em relacao ao mes passado'
+      'Subiu 5.3% em relacao ao mes passado'
     )
     expect(translateUiText('Down 12.0% vs last month', 'pt-BR')).toBe(
-      'Queda 12.0% em relacao ao mes passado'
+      'Caiu 12.0% em relacao ao mes passado'
     )
+  })
+
+  it('uses contextual phrasing for dashboard helper copy', () => {
+    expect(
+      translateUiText("Here's your financial overview for this month", 'es-ES')
+    ).toBe('Aqui tienes tu resumen financiero de este mes')
+    expect(translateUiText('Over risk', 'fr-FR')).toBe('A risque')
   })
 })

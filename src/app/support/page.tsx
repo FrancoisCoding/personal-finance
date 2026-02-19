@@ -6,7 +6,7 @@ const contactOptions = [
   {
     title: 'Email support',
     description:
-      'Send account and billing questions to support@financeflow.app.',
+      'Send account and billing questions to support@financeflow.dev.',
   },
   {
     title: 'In-app chat',

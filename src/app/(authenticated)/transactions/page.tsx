@@ -90,6 +90,11 @@ export default function TransactionsPage() {
         categoryMap.get(transaction.categoryId ?? '')?.name ??
         transaction.category ??
         'Other'
+      const hasExplicitCategory = Boolean(
+        transaction.categoryId ||
+          transaction.categoryRelation?.name ||
+          transaction.category
+      )
       const categoryColor = getCategoryColor(categoryName)
       const categoryIcon = getCategoryIconComponent(categoryName)
       const accountName =
@@ -108,7 +113,7 @@ export default function TransactionsPage() {
         amount: transaction.amount,
         amountLabel: formatCurrency(transaction.amount),
         type: transaction.type,
-        isUncategorized: !transaction.categoryId,
+        isUncategorized: !hasExplicitCategory,
       }
     })
   }, [accounts, categories, filteredTransactions])

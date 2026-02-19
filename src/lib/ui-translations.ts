@@ -1983,6 +1983,387 @@ const uiTranslationDictionary: Record<TUiLocale, Record<string, string>> = {
   'hi-IN': buildLocaleDictionary('hi-IN'),
 }
 
+const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
+  'en-US': {},
+  'pt-BR': {
+    'Subscription plans': 'Planos de assinatura',
+    'Choose between Starter and Pro. Both include a 7-day free trial.':
+      'Escolha entre Starter e Pro. Ambos incluem teste gratis de 7 dias.',
+    'Your account is in live-locked mode until you choose a paid plan. You can still continue in demo mode anytime.':
+      'Sua conta esta bloqueada para modo real ate escolher um plano pago. Voce ainda pode continuar no modo demonstracao a qualquer momento.',
+    'Superuser access is active on this account. Pro features are enabled without billing.':
+      'Acesso superusuario esta ativo nesta conta. Recursos Pro estao habilitados sem cobranca.',
+    'Current subscription': 'Assinatura atual',
+    'Plan:': 'Plano:',
+    'Status:': 'Status:',
+    'Trial ends:': 'Teste termina em:',
+    'Opening portal...': 'Abrindo portal...',
+    'Manage subscription': 'Gerenciar assinatura',
+    'Demo mode': 'Modo demonstracao',
+    'Explore the full interface with curated sample data before paying.':
+      'Explore a interface completa com dados de exemplo antes de pagar.',
+    'Instant access, no payment required':
+      'Acesso imediato, sem pagamento necessario',
+    'Sample transactions and walkthrough':
+      'Transacoes de exemplo e tour guiado',
+    'Safe environment for trying features':
+      'Ambiente seguro para testar recursos',
+    'Enter demo mode': 'Entrar no modo demonstracao',
+    'Core finance tracking with structured monthly planning.':
+      'Controle financeiro essencial com planejamento mensal estruturado.',
+    'Accounts and transactions': 'Contas e transacoes',
+    'Budgets and reminders': 'Orcamentos e lembretes',
+    'Subscription tracking': 'Monitoramento de assinaturas',
+    '7-day free trial': 'Teste gratis de 7 dias',
+    'Everything in Starter plus premium AI guidance and power-user features.':
+      'Tudo do Starter mais orientacao premium com IA e recursos avancados.',
+    'Everything in Starter': 'Tudo do Starter',
+    'Financial Assistant access': 'Acesso ao Assistente Financeiro',
+    'Advanced AI insights': 'Insights avancados de IA',
+    'Priority support': 'Suporte prioritario',
+    'Redirecting...': 'Redirecionando...',
+    'Superuser access enabled': 'Acesso superusuario habilitado',
+    'Current plan': 'Plano atual',
+    'Start Starter trial': 'Iniciar teste do Starter',
+    'Start Pro trial': 'Iniciar teste do Pro',
+    'Billing error': 'Erro de faturamento',
+    'Unable to start checkout.': 'Nao foi possivel iniciar o checkout.',
+    'Unable to open customer portal.':
+      'Nao foi possivel abrir o portal do cliente.',
+    'Checkout session URL was not returned.':
+      'URL da sessao de checkout nao foi retornada.',
+    'Customer portal URL was not returned.':
+      'URL do portal do cliente nao foi retornada.',
+    'Loading plan options...': 'Carregando opcoes de plano...',
+    'Friendly financial guidance, on demand.':
+      'Orientacao financeira amigavel, sob demanda.',
+    'Ask about spending, cash flow, or subscriptions and get clear next steps based on your activity.':
+      'Pergunte sobre gastos, fluxo de caixa ou assinaturas e receba proximos passos claros com base na sua atividade.',
+    'Using the last 90 days of activity.':
+      'Usando os ultimos 90 dias de atividade.',
+    'Ready to help': 'Pronto para ajudar',
+    'Suggested prompts': 'Sugestoes de prompts',
+    'Pick a starting point and I will take it from there.':
+      'Escolha um ponto de partida e eu sigo daqui.',
+    'Spending snapshot': 'Resumo de gastos',
+    'Top categories': 'Principais categorias',
+    'Cash position': 'Posicao de caixa',
+    'Recurring charges': 'Cobrancas recorrentes',
+    'Trend check': 'Verificar tendencia',
+    'Next best step': 'Proximo melhor passo',
+    'Context snapshot': 'Resumo de contexto',
+    'What I can see right now.': 'O que posso ver agora.',
+    'How I can help': 'Como posso ajudar',
+    "Hi, I'm your Financial Assistant.": 'Oi, sou seu Assistente Financeiro.',
+    'I can translate your data into clear, friendly guidance.':
+      'Posso transformar seus dados em orientacoes claras e amigaveis.',
+    'Try a prompt to get started.': 'Experimente um prompt para comecar.',
+    'Press Enter to send, Shift + Enter for a new line.':
+      'Pressione Enter para enviar, Shift + Enter para nova linha.',
+    Send: 'Enviar',
+    Thinking: 'Pensando',
+    'Gathering insights...': 'Coletando insights...',
+    You: 'Voce',
+    Assistant: 'Assistente',
+    'Pro feature': 'Recurso Pro',
+    'Financial Assistant is available on the Pro plan.':
+      'O Assistente Financeiro esta disponivel no plano Pro.',
+    'Upgrade to Pro to unlock AI guidance, advanced insight prompts, and personalized recommendations.':
+      'Faca upgrade para Pro para desbloquear orientacoes com IA, prompts avancados e recomendacoes personalizadas.',
+    'Upgrade to Pro': 'Fazer upgrade para Pro',
+    'Credit Score Lab': 'Laboratorio de Score de Credito',
+    'Pro-only credit health simulation and action plan.':
+      'Simulacao de saude de credito e plano de acao exclusivos do Pro.',
+    'Manage plan': 'Gerenciar plano',
+    'Estimated score': 'Pontuacao estimada',
+    'Educational estimate. Not an official bureau score.':
+      'Estimativa educacional. Nao e uma pontuacao oficial de bureaus.',
+    Excellent: 'Excelente',
+    Good: 'Bom',
+    Fair: 'Razoavel',
+    'Needs attention': 'Requer atencao',
+    Current: 'Atual',
+    'If below 30%': 'Se abaixo de 30%',
+    'If below 10%': 'Se abaixo de 10%',
+    'Target paydown': 'Meta de amortizacao',
+    Utilization: 'Utilizacao',
+    'used of': 'usado de',
+    'Payment load': 'Carga de pagamento',
+    'Estimated monthly card payments against':
+      'Pagamentos mensais estimados de cartao contra',
+    'monthly income.': 'renda mensal.',
+    'Score factors': 'Fatores da pontuacao',
+    'Weighted internal model calibrated for practical decision support.':
+      'Modelo interno ponderado calibrado para suporte pratico a decisoes.',
+    'Utilization impact': 'Impacto da utilizacao',
+    'Add credit limits to generate utilization analysis':
+      'Adicione limites de credito para gerar analise de utilizacao',
+    'Debt-to-income pressure': 'Pressao divida/renda',
+    'Estimated minimum payments': 'Pagamentos minimos estimados',
+    '/ month': '/ mes',
+    'Cashflow reliability': 'Confiabilidade do fluxo de caixa',
+    'monthly net cashflow margin': 'margem mensal de fluxo de caixa liquido',
+    'Payment activity signal': 'Sinal de atividade de pagamento',
+    'potential payment events in the last 90 days':
+      'possiveis eventos de pagamento nos ultimos 90 dias',
+    'Credit mix depth': 'Profundidade do mix de credito',
+    'credit card account connected': 'conta de cartao de credito conectada',
+    'credit card accounts connected': 'contas de cartao de credito conectadas',
+    'Improvement actions': 'Acoes de melhoria',
+    'Highest impact changes to raise your score trajectory.':
+      'Mudancas de maior impacto para elevar sua trajetoria de score.',
+    'This report is informational and should not be treated as an official lending score from Equifax, Experian, or TransUnion.':
+      'Este relatorio e informativo e nao deve ser tratado como score oficial de credito da Equifax, Experian ou TransUnion.',
+    'Account-level utilization report': 'Relatorio de utilizacao por conta',
+    'Identify which cards to pay down first for the fastest score impact.':
+      'Identifique quais cartoes amortizar primeiro para maior impacto no score.',
+    'Add credit cards in Overview to unlock account-level reporting.':
+      'Adicione cartoes de credito na Visao geral para liberar relatorios por conta.',
+    'Current utilization': 'Utilizacao atual',
+    Balance: 'Saldo',
+    Limit: 'Limite',
+    'To 30%': 'Ate 30%',
+    Prioritize: 'Priorizar',
+    'Unlock Pro to access score modeling, utilization simulations, and account-level improvement plans.':
+      'Desbloqueie o Pro para acessar modelagem de score, simulacoes de utilizacao e planos de melhoria por conta.',
+    'Starter covers live tracking. Pro adds deeper credit analytics and strategy guidance.':
+      'O Starter cobre monitoramento em tempo real. O Pro adiciona analise de credito aprofundada e orientacao estrategica.',
+    'Loading your report...': 'Carregando seu relatorio...',
+    'Budget planning': 'Planejamento de orcamento',
+    'Forecast month-end utilization, catch overruns early, and keep each category on track.':
+      'Preveja a utilizacao no fim do mes, antecipe estouros e mantenha cada categoria no caminho certo.',
+    'Active budgets': 'Orcamentos ativos',
+    'Total budgeted': 'Total orcado',
+    'Spent to date': 'Gasto ate agora',
+    'Budget Command Center': 'Central de comando de orcamentos',
+    'Filter the workspace and prioritize highest-risk budgets.':
+      'Filtre o workspace e priorize os orcamentos com maior risco.',
+    'Reset filters': 'Redefinir filtros',
+    'All status': 'Todos os status',
+    Over: 'Estourado',
+    Healthy: 'Saudavel',
+    'All periods': 'Todos os periodos',
+    Daily: 'Diario',
+    Weekly: 'Semanal',
+    Monthly: 'Mensal',
+    Yearly: 'Anual',
+    'Coverage Opportunities': 'Oportunidades de cobertura',
+    'High-spend categories without a matching budget this month.':
+      'Categorias de alto gasto sem orcamento correspondente neste mes.',
+    'No uncovered category spend detected this month.':
+      'Nenhum gasto sem cobertura detectado neste mes.',
+    'Risk Timeline': 'Linha do tempo de risco',
+    'Expected overrun sequence based on current spending pace.':
+      'Sequencia esperada de estouro com base no ritmo atual de gastos.',
+    'Already over': 'Ja estourado',
+    'Projected risk': 'Risco projetado',
+    'Estimated overrun date:': 'Data estimada de estouro:',
+    'Overrun already reached in this window.':
+      'O estouro ja foi atingido nesta janela.',
+    'Projected overrun:': 'Estouro projetado:',
+    'No near-term overruns detected with current filters.':
+      'Nenhum estouro de curto prazo detectado com os filtros atuais.',
+    'Quick Notes': 'Notas rapidas',
+    'Fast interpretation of the current budget posture.':
+      'Interpretacao rapida da situacao atual de orcamento.',
+    'Active filter result:': 'Resultado do filtro ativo:',
+    'Current filter status:': 'Status atual do filtro:',
+    'Current filter period:': 'Periodo atual do filtro:',
+    'Use filters to isolate risk clusters, then adjust budget amounts or category scope.':
+      'Use filtros para isolar grupos de risco e depois ajuste valores ou escopo das categorias.',
+    'Actionable Insights': 'Insights acionaveis',
+    'Highest-impact adjustments based on current budget behavior.':
+      'Ajustes de maior impacto com base no comportamento atual do orcamento.',
+    'Period Mix': 'Mix de periodos',
+    'Allocation across budget cadences.':
+      'Distribuicao entre cadencias de orcamento.',
+    Forecast: 'Previsao',
+    'No budgets match the current filters':
+      'Nenhum orcamento corresponde aos filtros atuais',
+    'Adjust status or period filters to view more forecasts.':
+      'Ajuste os filtros de status ou periodo para ver mais previsoes.',
+    'Current utilization by budget.': 'Utilizacao atual por orcamento.',
+    'Runway Guidance': 'Orientacao de folego',
+    'Daily caps to prevent overruns before the budget window closes.':
+      'Limites diarios para evitar estouros antes do fim da janela do orcamento.',
+    'Remaining:': 'Restante:',
+    'Days left:': 'Dias restantes:',
+    'Daily cap:': 'Limite diario:',
+    'No runway guidance available for current filters.':
+      'Nenhuma orientacao de folego disponivel para os filtros atuais.',
+    'Coverage Quality': 'Qualidade da cobertura',
+    "How much this month's spend is represented by active budgets.":
+      'Quanto do gasto deste mes esta representado por orcamentos ativos.',
+    Coverage: 'Cobertura',
+    'Covered expenses:': 'Despesas cobertas:',
+    'Uncategorized expenses:': 'Despesas sem categoria:',
+    'Category-scoped budgets:': 'Orcamentos com escopo por categoria:',
+    'Unscoped budgets:': 'Orcamentos sem escopo:',
+    'is projected over budget': 'esta projetado para estourar o orcamento',
+    'is nearing its limit': 'esta se aproximando do limite',
+    'Recommended daily cap:': 'Limite diario recomendado:',
+    'Uncategorized expenses are reducing forecast accuracy':
+      'Despesas sem categoria estao reduzindo a precisao da previsao',
+    'is uncategorized this month.': 'esta sem categoria neste mes.',
+    'Some budgets are not category-scoped':
+      'Alguns orcamentos nao estao vinculados a categoria',
+    'budget(s) apply broadly and can overlap reporting.':
+      'orcamento(s) se aplicam de forma ampla e podem sobrepor relatorios.',
+    'Budgets are currently on track': 'Orcamentos estao no caminho certo',
+    'No projected overruns across active budget windows.':
+      'Nenhum estouro projetado nas janelas ativas.',
+    'Create your first budget to unlock forecasting':
+      'Crie seu primeiro orcamento para desbloquear previsoes',
+    'Add category-scoped budgets for the clearest insights.':
+      'Adicione orcamentos por categoria para insights mais claros.',
+    'Likely over around': 'Provavel estouro por volta de',
+    'Remaining runway:': 'Folego restante:',
+    'Active subscriptions only': 'Somente assinaturas ativas',
+    'Projected annual spend': 'Gasto anual projetado',
+    'monthly estimated ·': 'estimativa mensal ·',
+    'high-risk alerts': 'alertas de alto risco',
+    'Next 30 days of renewals.': 'Proximos 30 dias de renovacoes.',
+    'Renewal risk, price changes, and likely-unused subscriptions from recent billing activity.':
+      'Risco de renovacao, mudancas de preco e assinaturas possivelmente nao utilizadas com base na atividade recente.',
+    'High-risk renewals': 'Renovacoes de alto risco',
+    'Price increases': 'Aumentos de preco',
+    'Likely unused': 'Possivelmente nao utilizada',
+    'Estimated monthly savings': 'Economia mensal estimada',
+    'No intelligence alerts right now': 'Nenhum alerta inteligente no momento',
+    'As new charges arrive, this section will highlight risks and optimization opportunities.':
+      'Quando novas cobrancas chegarem, esta secao destacara riscos e oportunidades de otimizacao.',
+    'High risk': 'Alto risco',
+    Stable: 'Estavel',
+    '/month equivalent': '/mes equivalente',
+    'Renews soon': 'Renova em breve',
+    'Upgrade to Pro for cancellation and spend optimization recommendations.':
+      'Faca upgrade para o Pro para recomendacoes de cancelamento e otimizacao de gastos.',
+    'Pro unlocks price-change detection, likely-unused subscriptions, and projected monthly savings recommendations.':
+      'O Pro desbloqueia deteccao de mudanca de preco, assinaturas possivelmente nao utilizadas e recomendacoes de economia mensal.',
+    'Manage the subscriptions you are currently tracking.':
+      'Gerencie as assinaturas que voce esta acompanhando.',
+    'No active subscriptions yet': 'Ainda nao ha assinaturas ativas',
+    'Add a detected subscription to start tracking renewals.':
+      'Adicione uma assinatura detectada para comecar a acompanhar renovacoes.',
+    Paused: 'Pausada',
+    billing: 'cobranca',
+    'Cancel subscription': 'Cancelar assinatura',
+    'We will pause this subscription and guide you to finish cancellation with the provider.':
+      'Vamos pausar esta assinatura e orientar voce a concluir o cancelamento com o provedor.',
+    'Visit the provider billing page.':
+      'Visite a pagina de cobranca do provedor.',
+    'Confirm cancellation and save the confirmation email.':
+      'Confirme o cancelamento e salve o email de confirmacao.',
+    'Remove saved payment methods if required.':
+      'Remova metodos de pagamento salvos se necessario.',
+    'Keep active': 'Manter ativa',
+    'Pause and start cancel': 'Pausar e iniciar cancelamento',
+    'Transaction activity': 'Atividade de transacoes',
+    'Net amount': 'Valor liquido',
+    'Transaction History': 'Historico de transacoes',
+    'All Categories': 'Todas as categorias',
+    'All Types': 'Todos os tipos',
+    Income: 'Receita',
+    Expense: 'Despesa',
+    'Toggle columns': 'Alternar colunas',
+    'No transactions found': 'Nenhuma transacao encontrada',
+    'Try adjusting your filters or search terms.':
+      'Tente ajustar seus filtros ou termos de busca.',
+    Categorizing: 'Categorizando',
+    Categorize: 'Categorizar',
+    'Loading transactions...': 'Carregando transacoes...',
+    'Accounts overview': 'Visao geral de contas',
+    'Manage your bank accounts, credit cards, and balances in one place.':
+      'Gerencie suas contas bancarias, cartoes de credito e saldos em um so lugar.',
+    'Hide Balances': 'Ocultar saldos',
+    'Show Balances': 'Mostrar saldos',
+    'Delete All': 'Excluir tudo',
+    Across: 'Em',
+    accounts: 'contas',
+    'checking account': 'conta corrente',
+    'checking accounts': 'contas correntes',
+    'savings account': 'conta poupanca',
+    'savings accounts': 'contas poupanca',
+    'account connected': 'conta conectada',
+    'accounts connected': 'contas conectadas',
+    'Add New Account': 'Adicionar nova conta',
+    'Add a bank account or credit card to track your finances.':
+      'Adicione uma conta bancaria ou cartao de credito para acompanhar suas financas.',
+    'Account Name': 'Nome da conta',
+    'e.g., Chase Checking, Amex Gold': 'ex.: Conta Chase, Amex Gold',
+    'Account Type': 'Tipo de conta',
+    'Credit Card': 'Cartao de credito',
+    Investment: 'Investimento',
+    'Institution (Optional)': 'Instituicao (Opcional)',
+    'Account Number (Optional)': 'Numero da conta (Opcional)',
+    'Description (Optional)': 'Descricao (Opcional)',
+    'Additional notes...': 'Notas adicionais...',
+    'Your accounts': 'Suas contas',
+    'No accounts yet': 'Ainda nao ha contas',
+    'Add your first account to start tracking your finances.':
+      'Adicione sua primeira conta para comecar a acompanhar suas financas.',
+    'Add Your First Account': 'Adicionar sua primeira conta',
+    'No recent activity': 'Sem atividade recente',
+    'Last Activity': 'Ultima atividade',
+    Showing: 'Mostrando',
+    'Delete Account': 'Excluir conta',
+    'Are you sure you want to delete this account? This action cannot be undone and will also delete all associated transactions.':
+      'Tem certeza de que deseja excluir esta conta? Esta acao nao pode ser desfeita e tambem excluira todas as transacoes associadas.',
+    'Deleting...': 'Excluindo...',
+    'Delete All Accounts': 'Excluir todas as contas',
+    'This is irreversible. All accounts, connected data, and transactions will be permanently deleted.':
+      'Isto e irreversivel. Todas as contas, dados conectados e transacoes serao excluidos permanentemente.',
+    'Missing information': 'Informacoes ausentes',
+    'Please fill in all required fields.':
+      'Preencha todos os campos obrigatorios.',
+    'transactions match your filters':
+      'transacoes correspondem aos seus filtros',
+    'Renews in': 'Renova em',
+    In: 'Em',
+    days: 'dias',
+    Sync: 'Sincronizar',
+    Edit: 'Editar',
+    'AI Financial Insights': 'Insights financeiros com IA',
+    'AI Powered': 'Com IA',
+    'Last analyzed:': 'Ultima analise:',
+    'Analyzing your finances...': 'Analisando suas financas...',
+    'Recommendations:': 'Recomendacoes:',
+    'Refresh Insights': 'Atualizar insights',
+    'Analyze Spending': 'Analisar gastos',
+    'Review Goals': 'Revisar metas',
+    'No insights yet': 'Ainda nao ha insights',
+  },
+  'es-ES': {},
+  'fr-FR': {},
+  'hi-IN': {},
+}
+
+const mergedUiTranslationDictionary: Record<
+  TUiLocale,
+  Record<string, string>
+> = {
+  'en-US': {
+    ...uiTranslationDictionary['en-US'],
+    ...uiTranslationOverrides['en-US'],
+  },
+  'pt-BR': {
+    ...uiTranslationDictionary['pt-BR'],
+    ...uiTranslationOverrides['pt-BR'],
+  },
+  'es-ES': {
+    ...uiTranslationDictionary['es-ES'],
+    ...uiTranslationOverrides['es-ES'],
+  },
+  'fr-FR': {
+    ...uiTranslationDictionary['fr-FR'],
+    ...uiTranslationOverrides['fr-FR'],
+  },
+  'hi-IN': {
+    ...uiTranslationDictionary['hi-IN'],
+    ...uiTranslationOverrides['hi-IN'],
+  },
+}
+
 export const normalizeUiLocale = (locale: string): TUiLocale => {
   return supportedUiLocales.includes(locale as TUiLocale)
     ? (locale as TUiLocale)
@@ -1998,7 +2379,7 @@ export const translateUiText = (text: string, locale: string) => {
   const trimmedText = text.trim()
   if (!trimmedText) return text
 
-  const dictionary = uiTranslationDictionary[normalizedLocale]
+  const dictionary = mergedUiTranslationDictionary[normalizedLocale]
   const translatedText = dictionary[trimmedText] ?? trimmedText
 
   if (translatedText !== trimmedText) {
@@ -2189,6 +2570,83 @@ export const translateUiText = (text: string, locale: string) => {
       dictionary['significantly larger than your average.'] ??
       'significantly larger than your average.'
     return `${leadingWhitespace}${firstPart} ${unusualTransactionsMatch[1]} ${secondPart} ${thirdPart}${trailingWhitespace}`
+  }
+
+  const transactionsMatchFilterMatch = trimmedText.match(
+    /^(\d+)\s+transactions\s+match\s+your\s+filters$/
+  )
+  if (transactionsMatchFilterMatch) {
+    const suffix =
+      dictionary['transactions match your filters'] ??
+      'transactions match your filters'
+    return `${leadingWhitespace}${transactionsMatchFilterMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const accountsAcrossMatch = trimmedText.match(/^Across\s+(\d+)\s+accounts$/)
+  if (accountsAcrossMatch) {
+    const prefix = dictionary['Across'] ?? 'Across'
+    const suffix = dictionary['accounts'] ?? 'accounts'
+    return `${leadingWhitespace}${prefix} ${accountsAcrossMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const checkingAccountsMatch = trimmedText.match(
+    /^(\d+)\s+checking\s+account(?:s)?$/
+  )
+  if (checkingAccountsMatch) {
+    const count = checkingAccountsMatch[1]
+    const singular = dictionary['checking account'] ?? 'checking account'
+    const plural = dictionary['checking accounts'] ?? 'checking accounts'
+    return `${leadingWhitespace}${count} ${
+      count === '1' ? singular : plural
+    }${trailingWhitespace}`
+  }
+
+  const savingsAccountsMatch = trimmedText.match(
+    /^(\d+)\s+savings\s+account(?:s)?$/
+  )
+  if (savingsAccountsMatch) {
+    const count = savingsAccountsMatch[1]
+    const singular = dictionary['savings account'] ?? 'savings account'
+    const plural = dictionary['savings accounts'] ?? 'savings accounts'
+    return `${leadingWhitespace}${count} ${
+      count === '1' ? singular : plural
+    }${trailingWhitespace}`
+  }
+
+  const connectedAccountsMatch = trimmedText.match(
+    /^(\d+)\s+account(?:s)?\s+connected$/
+  )
+  if (connectedAccountsMatch) {
+    const count = connectedAccountsMatch[1]
+    const singular = dictionary['account connected'] ?? 'account connected'
+    const plural = dictionary['accounts connected'] ?? 'accounts connected'
+    return `${leadingWhitespace}${count} ${
+      count === '1' ? singular : plural
+    }${trailingWhitespace}`
+  }
+
+  const renewsInDaysMatch = trimmedText.match(/^Renews in\s+(\d+)\s+days$/)
+  if (renewsInDaysMatch) {
+    const prefix = dictionary['Renews in'] ?? 'Renews in'
+    const suffix = dictionary['days'] ?? 'days'
+    return `${leadingWhitespace}${prefix} ${renewsInDaysMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const inDaysMatch = trimmedText.match(/^In\s+(\d+)\s+days$/)
+  if (inDaysMatch) {
+    const prefix = dictionary['In'] ?? 'In'
+    const suffix = dictionary['days'] ?? 'days'
+    return `${leadingWhitespace}${prefix} ${inDaysMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const lastNinetyDaysSummaryMatch = trimmedText.match(
+    /^Using the last 90 days of activity\.\s+(.+)$/
+  )
+  if (lastNinetyDaysSummaryMatch) {
+    const prefix =
+      dictionary['Using the last 90 days of activity.'] ??
+      'Using the last 90 days of activity.'
+    return `${leadingWhitespace}${prefix} ${lastNinetyDaysSummaryMatch[1]}${trailingWhitespace}`
   }
 
   return `${leadingWhitespace}${translatedText}${trailingWhitespace}`

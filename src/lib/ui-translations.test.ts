@@ -78,4 +78,35 @@ describe('ui translations', () => {
       'Proximo passo: Review Budget'
     )
   })
+
+  it('translates account and transaction count templates', () => {
+    expect(translateUiText('53 transactions match your filters', 'pt-BR')).toBe(
+      '53 transacoes correspondem aos seus filtros'
+    )
+    expect(translateUiText('Across 4 accounts', 'pt-BR')).toBe('Em 4 contas')
+    expect(translateUiText('1 checking account', 'pt-BR')).toBe(
+      '1 conta corrente'
+    )
+    expect(translateUiText('3 savings accounts', 'pt-BR')).toBe(
+      '3 contas poupanca'
+    )
+    expect(translateUiText('2 accounts connected', 'pt-BR')).toBe(
+      '2 contas conectadas'
+    )
+  })
+
+  it('translates renewal and activity summary templates', () => {
+    expect(translateUiText('Renews in 11 days', 'pt-BR')).toBe(
+      'Renova em 11 dias'
+    )
+    expect(translateUiText('In 5 days', 'pt-BR')).toBe('Em 5 dias')
+    expect(
+      translateUiText(
+        'Using the last 90 days of activity. 53 transactions | 1 accounts | 2 subscriptions',
+        'pt-BR'
+      )
+    ).toBe(
+      'Usando os ultimos 90 dias de atividade. 53 transactions | 1 accounts | 2 subscriptions'
+    )
+  })
 })

@@ -39,6 +39,7 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
       'Financial Assistant access',
       'Advanced AI insights',
       'Subscription optimizer',
+      'Credit score lab & report',
       'Priority support',
       '7-day free trial',
     ],
@@ -48,6 +49,7 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
 export const billingFeatureRequirements = {
   financialAssistant: AppPlan.PRO,
   advancedInsights: AppPlan.PRO,
+  creditScoreLab: AppPlan.PRO,
 } as const
 
 export const getStripePriceIdForPlan = (plan: AppPlan) => {

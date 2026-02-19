@@ -49,4 +49,33 @@ describe('ui translations', () => {
     ).toBe('Aqui tienes tu resumen financiero de este mes')
     expect(translateUiText('Over risk', 'fr-FR')).toBe('A risque')
   })
+
+  it('translates reminder and donation dynamic templates', () => {
+    expect(translateUiText('Mortgage is due within 24 hours.', 'pt-BR')).toBe(
+      'Mortgage vence em ate 24 horas.'
+    )
+    expect(translateUiText('Gym is overdue.', 'es-ES')).toBe(
+      'Gym esta vencido.'
+    )
+    expect(translateUiText('2 recipients', 'fr-FR')).toBe('2 destinataires')
+    expect(translateUiText('1 donation · Feb 19, 2026', 'pt-BR')).toBe(
+      '1 doacao · Feb 19, 2026'
+    )
+  })
+
+  it('translates AI insight dynamic templates', () => {
+    expect(translateUiText('High Spending in Housing', 'pt-BR')).toBe(
+      'Gasto elevado em Housing'
+    )
+    expect(
+      translateUiText(
+        'Housing accounts for 71.4% of your total spending.',
+        'es-ES'
+      )
+    ).toBe('Housing representa 71.4% de tu gasto total.')
+    expect(translateUiText('Confidence: 85%', 'fr-FR')).toBe('Confiance : 85%')
+    expect(translateUiText('Next step: Review Budget', 'pt-BR')).toBe(
+      'Proximo passo: Review Budget'
+    )
+  })
 })

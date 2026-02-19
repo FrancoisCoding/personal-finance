@@ -63,6 +63,13 @@ const translationRows: TTranslationRow[] = [
     'Dobara swagat hai',
   ],
   [
+    'Welcome back,',
+    'Bem-vindo de volta,',
+    'Bienvenido de nuevo,',
+    'Bon retour,',
+    'Dobara swagat hai,',
+  ],
+  [
     'Your financial overview is ready.',
     'Sua visao financeira esta pronta.',
     'Tu resumen financiero esta listo.',
@@ -541,6 +548,35 @@ const translationRows: TTranslationRow[] = [
     'Prochains evenements de tresorerie prevus',
     'Upcoming expected cash events',
   ],
+  ['subscription', 'assinatura', 'suscripcion', 'abonnement', 'subscription'],
+  [
+    'predicted pattern',
+    'padrao previsto',
+    'patron previsto',
+    'modele predit',
+    'predicted pattern',
+  ],
+  [
+    'Not enough recurring signal yet',
+    'Ainda nao ha sinal recorrente suficiente',
+    'Aun no hay senal recurrente suficiente',
+    'Pas encore assez de signal recurrent',
+    'Not enough recurring signal yet',
+  ],
+  [
+    'Add recurring transactions or subscriptions to generate forward cash planning.',
+    'Adicione transacoes recorrentes ou assinaturas para gerar previsao de caixa.',
+    'Agrega transacciones recurrentes o suscripciones para generar planificacion futura de efectivo.',
+    'Ajoutez des transactions recurrentes ou des abonnements pour generer une projection de tresorerie.',
+    'Add recurring transactions or subscriptions to generate forward cash planning.',
+  ],
+  [
+    'Refreshing subscription schedule...',
+    'Atualizando agenda de assinaturas...',
+    'Actualizando calendario de suscripciones...',
+    'Actualisation du calendrier des abonnements...',
+    'Refreshing subscription schedule...',
+  ],
   ['Today', 'Hoje', 'Hoy', 'Aujourd hui', 'Aaj'],
   ['Day 14', 'Dia 14', 'Dia 14', 'Jour 14', 'Din 14'],
   ['Day 30', 'Dia 30', 'Dia 30', 'Jour 30', 'Din 30'],
@@ -757,6 +793,1167 @@ const translationRows: TTranslationRow[] = [
     '% par rapport au mois dernier',
     '% vs last month',
   ],
+  ['Reminders', 'Lembretes', 'Recordatorios', 'Rappels', 'Reminders'],
+  [
+    'Reminder due soon',
+    'Lembrete proximo',
+    'Recordatorio proximo',
+    'Rappel imminent',
+    'Reminder due soon',
+  ],
+  [
+    'Reminder overdue',
+    'Lembrete atrasado',
+    'Recordatorio vencido',
+    'Rappel en retard',
+    'Reminder overdue',
+  ],
+  [
+    'is due within 24 hours.',
+    'vence em ate 24 horas.',
+    'vence dentro de 24 horas.',
+    'arrive a echeance dans les 24 heures.',
+    'is due within 24 hours.',
+  ],
+  [
+    'is overdue.',
+    'esta atrasado.',
+    'esta vencido.',
+    'est en retard.',
+    'is overdue.',
+  ],
+  [
+    'Stay ahead of bills, goals, and recurring tasks.',
+    'Fique a frente de contas, metas e tarefas recorrentes.',
+    'Mantente al dia con pagos, metas y tareas recurrentes.',
+    'Gardez une longueur d avance sur les factures, objectifs et taches recurrentes.',
+    'Stay ahead of bills, goals, and recurring tasks.',
+  ],
+  ['Upcoming', 'Proximos', 'Proximos', 'A venir', 'Upcoming'],
+  ['Done', 'Concluido', 'Hecho', 'Termine', 'Done'],
+  [
+    'No upcoming reminders',
+    'Nenhum lembrete proximo',
+    'No hay recordatorios proximos',
+    'Aucun rappel a venir',
+    'No upcoming reminders',
+  ],
+  [
+    'Add a reminder to keep tasks on track.',
+    'Adicione um lembrete para manter suas tarefas em dia.',
+    'Agrega un recordatorio para mantener tus tareas en curso.',
+    'Ajoutez un rappel pour garder vos taches sur la bonne voie.',
+    'Add a reminder to keep tasks on track.',
+  ],
+  ['Completed', 'Concluidos', 'Completados', 'Termines', 'Completed'],
+  [
+    'Clearing...',
+    'Limpando...',
+    'Limpiando...',
+    'Suppression...',
+    'Clearing...',
+  ],
+  [
+    'Clear completed',
+    'Limpar concluidos',
+    'Limpiar completados',
+    'Effacer les termines',
+    'Clear completed',
+  ],
+  ['High', 'Alta', 'Alta', 'Eleve', 'High'],
+  ['Medium', 'Media', 'Media', 'Moyen', 'Medium'],
+  ['Low', 'Baixa', 'Baja', 'Faible', 'Low'],
+  [
+    'Add Reminder',
+    'Adicionar lembrete',
+    'Agregar recordatorio',
+    'Ajouter un rappel',
+    'Add Reminder',
+  ],
+  [
+    'Set a reminder for important financial tasks and deadlines.',
+    'Defina um lembrete para tarefas e prazos financeiros importantes.',
+    'Configura un recordatorio para tareas y plazos financieros importantes.',
+    'Definissez un rappel pour les taches et echeances financieres importantes.',
+    'Set a reminder for important financial tasks and deadlines.',
+  ],
+  ['Title', 'Titulo', 'Titulo', 'Titre', 'Title'],
+  [
+    'e.g., Pay credit card bill',
+    'ex.: Pagar fatura do cartao',
+    'ej.: Pagar factura de tarjeta',
+    'ex.: Payer la facture de carte',
+    'e.g., Pay credit card bill',
+  ],
+  [
+    'Description (Optional)',
+    'Descricao (Opcional)',
+    'Descripcion (Opcional)',
+    'Description (Optionnel)',
+    'Description (Optional)',
+  ],
+  [
+    'Add any additional details...',
+    'Adicione detalhes adicionais...',
+    'Agrega cualquier detalle adicional...',
+    'Ajoutez des details supplementaires...',
+    'Add any additional details...',
+  ],
+  [
+    'Date and time',
+    'Data e hora',
+    'Fecha y hora',
+    'Date et heure',
+    'Date and time',
+  ],
+  ['Schedule', 'Agendamento', 'Horario', 'Horaire', 'Schedule'],
+  [
+    'Select date',
+    'Selecionar data',
+    'Seleccionar fecha',
+    'Selectionner une date',
+    'Select date',
+  ],
+  ['Hour', 'Hora', 'Hora', 'Heure', 'Hour'],
+  ['Minute', 'Minuto', 'Minuto', 'Minute', 'Minute'],
+  ['Period', 'Periodo', 'Periodo', 'Periode', 'Period'],
+  ['Type', 'Tipo', 'Tipo', 'Type', 'Type'],
+  ['Priority', 'Prioridade', 'Prioridad', 'Priorite', 'Priority'],
+  [
+    'Bill Payment',
+    'Pagamento de conta',
+    'Pago de factura',
+    'Paiement de facture',
+    'Bill Payment',
+  ],
+  [
+    'Budget Review',
+    'Revisao de orcamento',
+    'Revision de presupuesto',
+    'Revision de budget',
+    'Budget Review',
+  ],
+  [
+    'Goal Check-in',
+    'Revisao de meta',
+    'Revision de meta',
+    'Suivi d objectif',
+    'Goal Check-in',
+  ],
+  ['Custom', 'Personalizado', 'Personalizado', 'Personnalise', 'Custom'],
+  [
+    'Missing title',
+    'Titulo ausente',
+    'Falta el titulo',
+    'Titre manquant',
+    'Missing title',
+  ],
+  [
+    'Please enter a reminder title.',
+    'Informe um titulo para o lembrete.',
+    'Ingresa un titulo para el recordatorio.',
+    'Veuillez saisir un titre de rappel.',
+    'Please enter a reminder title.',
+  ],
+  [
+    'Invalid date',
+    'Data invalida',
+    'Fecha invalida',
+    'Date invalide',
+    'Invalid date',
+  ],
+  [
+    'Please choose a valid reminder date and time.',
+    'Escolha uma data e hora validas para o lembrete.',
+    'Elige una fecha y hora validas para el recordatorio.',
+    'Veuillez choisir une date et une heure de rappel valides.',
+    'Please choose a valid reminder date and time.',
+  ],
+  [
+    'Reminder added',
+    'Lembrete adicionado',
+    'Recordatorio agregado',
+    'Rappel ajoute',
+    'Reminder added',
+  ],
+  ['Error', 'Erro', 'Error', 'Erreur', 'Error'],
+  [
+    'Failed to add reminder. Please try again.',
+    'Falha ao adicionar lembrete. Tente novamente.',
+    'No se pudo agregar el recordatorio. Intentalo de nuevo.',
+    "Echec de l'ajout du rappel. Veuillez reessayer.",
+    'Failed to add reminder. Please try again.',
+  ],
+  [
+    'AI Financial Insights',
+    'Insights financeiros com IA',
+    'Insights financieros con IA',
+    'Insights financiers IA',
+    'AI Financial Insights',
+  ],
+  ['AI Powered', 'Com IA', 'Con IA', 'Propulse par IA', 'AI Powered'],
+  [
+    'Last analyzed:',
+    'Ultima analise:',
+    'Ultimo analisis:',
+    'Derniere analyse :',
+    'Last analyzed:',
+  ],
+  [
+    'High Spending in',
+    'Gasto elevado em',
+    'Gasto elevado en',
+    'Depenses elevees en',
+    'High Spending in',
+  ],
+  ['accounts for', 'representa', 'representa', 'represente', 'accounts for'],
+  [
+    'of your total spending.',
+    'dos seus gastos totais.',
+    'de tu gasto total.',
+    'de vos depenses totales.',
+    'of your total spending.',
+  ],
+  [
+    'Over Budget:',
+    'Acima do orcamento:',
+    'Sobre presupuesto:',
+    'Hors budget :',
+    'Over Budget:',
+  ],
+  [
+    'Budget Warning:',
+    'Alerta de orcamento:',
+    'Alerta de presupuesto:',
+    'Alerte budget :',
+    'Budget Warning:',
+  ],
+  [
+    "You've exceeded your",
+    'Voce excedeu seu',
+    'Has excedido tu',
+    'Vous avez depasse votre',
+    "You've exceeded your",
+  ],
+  ['budget by', 'orcamento em', 'presupuesto en', 'budget de', 'budget by'],
+  ["You're at", 'Voce esta em', 'Estas en', 'Vous etes a', "You're at"],
+  ['of your', 'do seu', 'de tu', 'de votre', 'of your'],
+  ['budget.', 'orcamento.', 'presupuesto.', 'budget.', 'budget.'],
+  [
+    'Behind on Goal:',
+    'Atrasado na meta:',
+    'Atrasado en la meta:',
+    'Retard sur l objectif :',
+    'Behind on Goal:',
+  ],
+  [
+    'Goal Achieved:',
+    'Meta alcancada:',
+    'Meta alcanzada:',
+    'Objectif atteint :',
+    'Goal Achieved:',
+  ],
+  ['goal.', 'meta.', 'meta.', 'objectif.', 'goal.'],
+  [
+    "Congratulations! You've reached your",
+    'Parabens! Voce alcancou sua',
+    'Felicidades! Alcanzaste tu',
+    'Felicitations ! Vous avez atteint votre',
+    "Congratulations! You've reached your",
+  ],
+  ['Found', 'Encontramos', 'Encontramos', 'Trouve', 'Found'],
+  [
+    'transaction(s)',
+    'transacao(oes)',
+    'transaccion(es)',
+    'transaction(s)',
+    'transaction(s)',
+  ],
+  [
+    'significantly larger than your average.',
+    'significativamente maior(es) que sua media.',
+    'significativamente mayor(es) que tu promedio.',
+    'nettement superieure(s) a votre moyenne.',
+    'significantly larger than your average.',
+  ],
+  [
+    'Analyzing your finances...',
+    'Analisando suas financas...',
+    'Analizando tus finanzas...',
+    'Analyse de vos finances...',
+    'Analyzing your finances...',
+  ],
+  ['Progress', 'Progresso', 'Progreso', 'Progression', 'Progress'],
+  [
+    'Recommendations:',
+    'Recomendacoes:',
+    'Recomendaciones:',
+    'Recommandations :',
+    'Recommendations:',
+  ],
+  ['Confidence:', 'Confianca:', 'Confianza:', 'Confiance :', 'Confidence:'],
+  [
+    'Next step:',
+    'Proximo passo:',
+    'Siguiente paso:',
+    'Prochaine etape :',
+    'Next step:',
+  ],
+  [
+    'No insights available',
+    'Nenhum insight disponivel',
+    'No hay insights disponibles',
+    'Aucun insight disponible',
+    'No insights available',
+  ],
+  [
+    'Add more transactions to get personalized insights.',
+    'Adicione mais transacoes para receber insights personalizados.',
+    'Agrega mas transacciones para obtener insights personalizados.',
+    'Ajoutez plus de transactions pour obtenir des insights personnalises.',
+    'Add more transactions to get personalized insights.',
+  ],
+  [
+    'Analyzing...',
+    'Analisando...',
+    'Analizando...',
+    'Analyse...',
+    'Analyzing...',
+  ],
+  [
+    'Refresh Insights',
+    'Atualizar insights',
+    'Actualizar insights',
+    'Actualiser les insights',
+    'Refresh Insights',
+  ],
+  ['HIGH', 'ALTA', 'ALTA', 'ELEVEE', 'HIGH'],
+  ['MEDIUM', 'MEDIA', 'MEDIA', 'MOYENNE', 'MEDIUM'],
+  ['LOW', 'BAIXA', 'BAJA', 'FAIBLE', 'LOW'],
+  [
+    'Cash Flow',
+    'Fluxo de caixa',
+    'Flujo de caja',
+    'Flux de tresorerie',
+    'Cash Flow',
+  ],
+  [
+    'Net cash flow',
+    'Fluxo de caixa liquido',
+    'Flujo de caja neto',
+    'Flux de tresorerie net',
+    'Net cash flow',
+  ],
+  [
+    'Total Income',
+    'Receita total',
+    'Ingresos totales',
+    'Revenus totaux',
+    'Total Income',
+  ],
+  [
+    'Total Expenses',
+    'Despesas totais',
+    'Gastos totales',
+    'Depenses totales',
+    'Total Expenses',
+  ],
+  ['Net Flow', 'Fluxo liquido', 'Flujo neto', 'Flux net', 'Net Flow'],
+  ['Income', 'Receita', 'Ingresos', 'Revenus', 'Income'],
+  ['Expenses', 'Despesas', 'Gastos', 'Depenses', 'Expenses'],
+  ['Income:', 'Receita:', 'Ingresos:', 'Revenus :', 'Income:'],
+  ['Expenses:', 'Despesas:', 'Gastos:', 'Depenses :', 'Expenses:'],
+  ['Net:', 'Liquido:', 'Neto:', 'Net :', 'Net:'],
+  [
+    'Credit Utilization',
+    'Utilizacao de credito',
+    'Utilizacion de credito',
+    'Utilisation du credit',
+    'Credit Utilization',
+  ],
+  [
+    'Monitor balances, limits, and paydown momentum.',
+    'Monitore saldos, limites e ritmo de quitacao.',
+    'Supervisa saldos, limites y ritmo de pago.',
+    'Surveillez soldes, plafonds et dynamique de remboursement.',
+    'Monitor balances, limits, and paydown momentum.',
+  ],
+  [
+    'No credit cards added',
+    'Nenhum cartao de credito adicionado',
+    'No hay tarjetas de credito agregadas',
+    'Aucune carte de credit ajoutee',
+    'No credit cards added',
+  ],
+  [
+    'Add your credit cards to track utilization.',
+    'Adicione seus cartoes de credito para acompanhar a utilizacao.',
+    'Agrega tus tarjetas de credito para seguir la utilizacion.',
+    "Ajoutez vos cartes de credit pour suivre l'utilisation.",
+    'Add your credit cards to track utilization.',
+  ],
+  [
+    'Overall Utilization',
+    'Utilizacao geral',
+    'Utilizacion general',
+    'Utilisation globale',
+    'Overall Utilization',
+  ],
+  [
+    'Total Balance',
+    'Saldo total',
+    'Saldo total',
+    'Solde total',
+    'Total Balance',
+  ],
+  ['Across', 'Em', 'En', 'Sur', 'Across'],
+  ['cards', 'cartoes', 'tarjetas', 'cartes', 'cards'],
+  [
+    'Available Credit',
+    'Credito disponivel',
+    'Credito disponible',
+    'Credit disponible',
+    'Available Credit',
+  ],
+  ['of', 'de', 'de', 'de', 'of'],
+  [
+    'Monthly Interest Cost',
+    'Custo mensal de juros',
+    'Costo mensual de intereses',
+    "Cout mensuel d'interets",
+    'Monthly Interest Cost',
+  ],
+  ['Based on', 'Com base em', 'Basado en', 'Base sur', 'Based on'],
+  ['average APR', 'APR medio', 'APR promedio', 'TAEG moyen', 'average APR'],
+  [
+    'Individual Cards',
+    'Cartoes individuais',
+    'Tarjetas individuales',
+    'Cartes individuelles',
+    'Individual Cards',
+  ],
+  [
+    'Excellent Credit Utilization',
+    'Excelente utilizacao de credito',
+    'Excelente utilizacion de credito',
+    'Excellente utilisation du credit',
+    'Excellent Credit Utilization',
+  ],
+  [
+    'Your credit utilization is in the excellent range. Keep it up!',
+    'Sua utilizacao de credito esta em nivel excelente. Continue assim!',
+    'Tu utilizacion de credito esta en un nivel excelente. Sigue asi!',
+    'Votre utilisation du credit est excellente. Continuez ainsi !',
+    'Your credit utilization is in the excellent range. Keep it up!',
+  ],
+  [
+    'Good Credit Utilization',
+    'Boa utilizacao de credito',
+    'Buena utilizacion de credito',
+    'Bonne utilisation du credit',
+    'Good Credit Utilization',
+  ],
+  [
+    'Your credit utilization is in a healthy range.',
+    'Sua utilizacao de credito esta em uma faixa saudavel.',
+    'Tu utilizacion de credito esta en un rango saludable.',
+    'Votre utilisation du credit est dans une plage saine.',
+    'Your credit utilization is in a healthy range.',
+  ],
+  [
+    'Fair Credit Utilization',
+    'Utilizacao de credito moderada',
+    'Utilizacion de credito moderada',
+    'Utilisation du credit moyenne',
+    'Fair Credit Utilization',
+  ],
+  [
+    'Your credit utilization is getting high. Consider reducing balances.',
+    'Sua utilizacao de credito esta subindo. Considere reduzir os saldos.',
+    'Tu utilizacion de credito esta subiendo. Considera reducir saldos.',
+    'Votre utilisation du credit augmente. Envisagez de reduire les soldes.',
+    'Your credit utilization is getting high. Consider reducing balances.',
+  ],
+  [
+    'High Credit Utilization',
+    'Utilizacao de credito alta',
+    'Utilizacion de credito alta',
+    'Utilisation du credit elevee',
+    'High Credit Utilization',
+  ],
+  [
+    'Your credit utilization is very high and may hurt your credit score.',
+    'Sua utilizacao de credito esta muito alta e pode prejudicar seu score.',
+    'Tu utilizacion de credito es muy alta y puede perjudicar tu puntaje.',
+    'Votre utilisation du credit est tres elevee et peut nuire a votre score.',
+    'Your credit utilization is very high and may hurt your credit score.',
+  ],
+  [
+    'Consider requesting credit limit increases',
+    'Considere solicitar aumento de limite',
+    'Considera solicitar aumento de limite',
+    'Envisagez de demander une hausse de plafond',
+    'Consider requesting credit limit increases',
+  ],
+  [
+    'Continue paying balances in full',
+    'Continue pagando os saldos integralmente',
+    'Sigue pagando los saldos completos',
+    'Continuez a payer les soldes en totalite',
+    'Continue paying balances in full',
+  ],
+  [
+    'Aim to keep utilization below 30%',
+    'Busque manter a utilizacao abaixo de 30%',
+    'Busca mantener la utilizacion por debajo del 30%',
+    'Visez une utilisation inferieure a 30 %',
+    'Aim to keep utilization below 30%',
+  ],
+  [
+    'Pay balances before statement closing',
+    'Pague os saldos antes do fechamento da fatura',
+    'Paga saldos antes del cierre del estado de cuenta',
+    'Payez les soldes avant la cloture du releve',
+    'Pay balances before statement closing',
+  ],
+  [
+    'Pay down balances to improve credit score',
+    'Reduza saldos para melhorar seu score de credito',
+    'Reduce saldos para mejorar tu puntaje de credito',
+    'Reduisez les soldes pour ameliorer votre score de credit',
+    'Pay down balances to improve credit score',
+  ],
+  [
+    'Avoid new credit applications',
+    'Evite novas solicitacoes de credito',
+    'Evita nuevas solicitudes de credito',
+    'Evitez de nouvelles demandes de credit',
+    'Avoid new credit applications',
+  ],
+  [
+    'Prioritize paying down high balances',
+    'Priorize reduzir saldos altos',
+    'Prioriza reducir saldos altos',
+    'Priorisez la reduction des soldes eleves',
+    'Prioritize paying down high balances',
+  ],
+  [
+    'Consider debt consolidation',
+    'Considere consolidacao de dividas',
+    'Considera consolidacion de deudas',
+    'Envisagez une consolidation de dettes',
+    'Consider debt consolidation',
+  ],
+  [
+    'Avoid new purchases',
+    'Evite novas compras',
+    'Evita nuevas compras',
+    'Evitez de nouveaux achats',
+    'Avoid new purchases',
+  ],
+  [
+    'Financial Analytics',
+    'Analises financeiras',
+    'Analitica financiera',
+    'Analyses financieres',
+    'Financial Analytics',
+  ],
+  [
+    'Snapshot of trends, spending, and budget health.',
+    'Resumo de tendencias, gastos e saude do orcamento.',
+    'Resumen de tendencias, gastos y salud del presupuesto.',
+    'Apercu des tendances, depenses et sante du budget.',
+    'Snapshot of trends, spending, and budget health.',
+  ],
+  ['Advanced', 'Avancado', 'Avanzado', 'Avance', 'Advanced'],
+  [
+    'Avg Daily Spend',
+    'Gasto medio diario',
+    'Gasto diario promedio',
+    'Depense quotidienne moyenne',
+    'Avg Daily Spend',
+  ],
+  [
+    'Spending by Category',
+    'Gastos por categoria',
+    'Gasto por categoria',
+    'Depenses par categorie',
+    'Spending by Category',
+  ],
+  [
+    'No spending data',
+    'Sem dados de gastos',
+    'Sin datos de gasto',
+    'Aucune donnee de depense',
+    'No spending data',
+  ],
+  [
+    'Add expenses to see category breakdowns.',
+    'Adicione despesas para ver o detalhamento por categoria.',
+    'Agrega gastos para ver el desglose por categoria.',
+    'Ajoutez des depenses pour voir la repartition par categorie.',
+    'Add expenses to see category breakdowns.',
+  ],
+  [
+    'Monthly Spending Trend',
+    'Tendencia mensal de gastos',
+    'Tendencia mensual de gastos',
+    'Tendance mensuelle des depenses',
+    'Monthly Spending Trend',
+  ],
+  [
+    'Budget Performance',
+    'Desempenho do orcamento',
+    'Rendimiento del presupuesto',
+    'Performance du budget',
+    'Budget Performance',
+  ],
+  [
+    'Over Budget',
+    'Acima do orcamento',
+    'Sobre presupuesto',
+    'Hors budget',
+    'Over Budget',
+  ],
+  [
+    'On Track',
+    'No caminho certo',
+    'En camino',
+    'Sur la bonne voie',
+    'On Track',
+  ],
+  [
+    'Reporting & Export',
+    'Relatorios e exportacao',
+    'Reportes y exportacion',
+    'Rapports et exportation',
+    'Reporting & Export',
+  ],
+  [
+    'Clean CSV and PDF exports with scheduling built in.',
+    'Exportacoes CSV e PDF com agendamento integrado.',
+    'Exportaciones CSV y PDF con programacion integrada.',
+    'Exports CSV et PDF avec planification integree.',
+    'Clean CSV and PDF exports with scheduling built in.',
+  ],
+  ['Reports', 'Relatorios', 'Reportes', 'Rapports', 'Reports'],
+  ['Exports', 'Exportacoes', 'Exportaciones', 'Exports', 'Exports'],
+  [
+    'Summary, transactions, budgets, and goals in one report.',
+    'Resumo, transacoes, orcamentos e metas em um so relatorio.',
+    'Resumen, transacciones, presupuestos y metas en un solo reporte.',
+    'Resume, transactions, budgets et objectifs dans un seul rapport.',
+    'Summary, transactions, budgets, and goals in one report.',
+  ],
+  ['Export PDF', 'Exportar PDF', 'Exportar PDF', 'Exporter PDF', 'Export PDF'],
+  [
+    'Set Alerts',
+    'Definir alertas',
+    'Configurar alertas',
+    'Definir des alertes',
+    'Set Alerts',
+  ],
+  [
+    'Schedule reports',
+    'Agendar relatorios',
+    'Programar reportes',
+    'Programmer des rapports',
+    'Schedule reports',
+  ],
+  [
+    'Automate weekly or monthly exports.',
+    'Automatize exportacoes semanais ou mensais.',
+    'Automatiza exportaciones semanales o mensuales.',
+    'Automatisez les exports hebdomadaires ou mensuels.',
+    'Automate weekly or monthly exports.',
+  ],
+  ['Paused', 'Pausado', 'Pausado', 'En pause', 'Paused'],
+  ['Pause', 'Pausar', 'Pausar', 'Mettre en pause', 'Pause'],
+  ['Enable', 'Ativar', 'Activar', 'Activer', 'Enable'],
+  ['Frequency', 'Frequencia', 'Frecuencia', 'Frequence', 'Frequency'],
+  [
+    'Select frequency',
+    'Selecione a frequencia',
+    'Selecciona la frecuencia',
+    'Selectionnez la frequence',
+    'Select frequency',
+  ],
+  ['Weekly', 'Semanal', 'Semanal', 'Hebdomadaire', 'Weekly'],
+  ['Monthly', 'Mensal', 'Mensual', 'Mensuel', 'Monthly'],
+  [
+    'Day of week',
+    'Dia da semana',
+    'Dia de la semana',
+    'Jour de la semaine',
+    'Day of week',
+  ],
+  ['Day of month', 'Dia do mes', 'Dia del mes', 'Jour du mois', 'Day of month'],
+  [
+    'Select day',
+    'Selecione o dia',
+    'Selecciona el dia',
+    'Selectionnez le jour',
+    'Select day',
+  ],
+  ['Time', 'Horario', 'Hora', 'Heure', 'Time'],
+  ['Delivery', 'Entrega', 'Entrega', 'Livraison', 'Delivery'],
+  ['Download', 'Baixar', 'Descargar', 'Telecharger', 'Download'],
+  [
+    'Next scheduled report',
+    'Proximo relatorio agendado',
+    'Proximo reporte programado',
+    'Prochain rapport planifie',
+    'Next scheduled report',
+  ],
+  [
+    'Save schedule',
+    'Salvar agendamento',
+    'Guardar programacion',
+    'Enregistrer la planification',
+    'Save schedule',
+  ],
+  [
+    'No data to export',
+    'Sem dados para exportar',
+    'No hay datos para exportar',
+    'Aucune donnee a exporter',
+    'No data to export',
+  ],
+  [
+    'Add transactions, budgets, or goals to generate a report.',
+    'Adicione transacoes, orcamentos ou metas para gerar um relatorio.',
+    'Agrega transacciones, presupuestos o metas para generar un reporte.',
+    'Ajoutez des transactions, budgets ou objectifs pour generer un rapport.',
+    'Add transactions, budgets, or goals to generate a report.',
+  ],
+  [
+    'CSV exported',
+    'CSV exportado',
+    'CSV exportado',
+    'CSV exporte',
+    'CSV exported',
+  ],
+  [
+    'Your analytics report is ready to download.',
+    'Seu relatorio analitico esta pronto para download.',
+    'Tu reporte analitico esta listo para descargar.',
+    'Votre rapport analytique est pret au telechargement.',
+    'Your analytics report is ready to download.',
+  ],
+  [
+    'Popup blocked',
+    'Popup bloqueado',
+    'Popup bloqueado',
+    'Popup bloquee',
+    'Popup blocked',
+  ],
+  [
+    'Enable popups to export the PDF report.',
+    'Ative popups para exportar o relatorio em PDF.',
+    'Habilita popups para exportar el reporte en PDF.',
+    'Activez les popups pour exporter le rapport PDF.',
+    'Enable popups to export the PDF report.',
+  ],
+  ['PDF ready', 'PDF pronto', 'PDF listo', 'PDF pret', 'PDF ready'],
+  [
+    'Your PDF report is open and ready to print or save.',
+    'Seu relatorio PDF esta aberto e pronto para imprimir ou salvar.',
+    'Tu reporte PDF esta abierto y listo para imprimir o guardar.',
+    'Votre rapport PDF est ouvert et pret a etre imprime ou enregistre.',
+    'Your PDF report is open and ready to print or save.',
+  ],
+  [
+    'Schedule disabled',
+    'Agendamento desativado',
+    'Programacion desactivada',
+    'Planification desactivee',
+    'Schedule disabled',
+  ],
+  [
+    'Enable scheduled reports before saving.',
+    'Ative os relatorios agendados antes de salvar.',
+    'Activa los reportes programados antes de guardar.',
+    'Activez les rapports planifies avant de sauvegarder.',
+    'Enable scheduled reports before saving.',
+  ],
+  [
+    'Report schedule updated',
+    'Agendamento de relatorio atualizado',
+    'Programacion de reportes actualizada',
+    'Planification des rapports mise a jour',
+    'Report schedule updated',
+  ],
+  [
+    'Schedule saved',
+    'Agendamento salvo',
+    'Programacion guardada',
+    'Planification enregistree',
+    'Schedule saved',
+  ],
+  [
+    'Spending alert enabled',
+    'Alerta de gastos ativado',
+    'Alerta de gastos activada',
+    'Alerte de depenses activee',
+    'Spending alert enabled',
+  ],
+  [
+    'We will notify you if monthly expenses rise 10% above your recent average.',
+    'Vamos avisar voce se as despesas mensais subirem 10% acima da sua media recente.',
+    'Te avisaremos si los gastos mensuales suben 10% por encima de tu promedio reciente.',
+    'Nous vous informerons si les depenses mensuelles depassent de 10 % votre moyenne recente.',
+    'We will notify you if monthly expenses rise 10% above your recent average.',
+  ],
+  [
+    'View alerts',
+    'Ver alertas',
+    'Ver alertas',
+    'Voir les alertes',
+    'View alerts',
+  ],
+  [
+    'Giving & Donations',
+    'Doacoes e contribuicoes',
+    'Donaciones y aportes',
+    'Dons et contributions',
+    'Giving & Donations',
+  ],
+  [
+    'Track churches, charities, and community support.',
+    'Acompanhe igrejas, caridades e apoio comunitario.',
+    'Sigue iglesias, organizaciones beneficas y apoyo comunitario.',
+    'Suivez les eglises, associations caritatives et le soutien communautaire.',
+    'Track churches, charities, and community support.',
+  ],
+  ['recipient', 'destinatario', 'destinatario', 'destinataire', 'recipient'],
+  [
+    'recipients',
+    'destinatarios',
+    'destinatarios',
+    'destinataires',
+    'recipients',
+  ],
+  ['recurring', 'recorrentes', 'recurrentes', 'recurrents', 'recurring'],
+  ['Last', 'Ultimo', 'Ultimo', 'Dernier', 'Last'],
+  ['Next', 'Proximo', 'Siguiente', 'Prochain', 'Next'],
+  [
+    'Top recipients',
+    'Principais destinatarios',
+    'Principales destinatarios',
+    'Principaux destinataires',
+    'Top recipients',
+  ],
+  ['donation', 'doacao', 'donacion', 'don', 'donation'],
+  ['donations', 'doacoes', 'donaciones', 'dons', 'donations'],
+  [
+    'Cause breakdown',
+    'Detalhamento por causa',
+    'Desglose por causa',
+    'Repartition par cause',
+    'Cause breakdown',
+  ],
+  [
+    'Causes will appear as giving grows.',
+    'As causas aparecerao conforme as doacoes aumentarem.',
+    'Las causas apareceran a medida que crezcan las donaciones.',
+    'Les causes apparaitront a mesure que les dons augmenteront.',
+    'Causes will appear as giving grows.',
+  ],
+  [
+    'Recurring giving',
+    'Doacoes recorrentes',
+    'Donaciones recurrentes',
+    'Dons recurrents',
+    'Recurring giving',
+  ],
+  [
+    'No recurring patterns detected yet.',
+    'Nenhum padrao recorrente detectado ainda.',
+    'Aun no se detectaron patrones recurrentes.',
+    'Aucun modele recurrent detecte pour le moment.',
+    'No recurring patterns detected yet.',
+  ],
+  [
+    'No donations yet',
+    'Nenhuma doacao ainda',
+    'Aun no hay donaciones',
+    'Pas encore de dons',
+    'No donations yet',
+  ],
+  [
+    'Donations will appear here once they are categorized.',
+    'As doacoes aparecerao aqui quando forem categorizadas.',
+    'Las donaciones apareceran aqui cuando se categoricen.',
+    'Les dons apparaitront ici une fois categorises.',
+    'Donations will appear here once they are categorized.',
+  ],
+  [
+    'Data Quality Center',
+    'Central de qualidade de dados',
+    'Centro de calidad de datos',
+    'Centre de qualite des donnees',
+    'Data Quality Center',
+  ],
+  [
+    'Keep transactions accurate before insights and forecasts.',
+    'Mantenha as transacoes corretas antes de gerar insights e previsoes.',
+    'Mantiene las transacciones precisas antes de generar insights y pronosticos.',
+    'Gardez des transactions exactes avant les insights et previsions.',
+    'Keep transactions accurate before insights and forecasts.',
+  ],
+  [
+    'Review data',
+    'Revisar dados',
+    'Revisar datos',
+    'Verifier les donnees',
+    'Review data',
+  ],
+  [
+    'Uncategorized',
+    'Sem categoria',
+    'Sin categoria',
+    'Non categorise',
+    'Uncategorized',
+  ],
+  [
+    'Transactions ready for category review.',
+    'Transacoes prontas para revisao de categoria.',
+    'Transacciones listas para revision de categoria.',
+    'Transactions pretes pour revision de categorie.',
+    'Transactions ready for category review.',
+  ],
+  [
+    'Possible duplicates',
+    'Possiveis duplicadas',
+    'Posibles duplicados',
+    'Doublons possibles',
+    'Possible duplicates',
+  ],
+  [
+    'Similar entries on the same day and amount.',
+    'Lancamentos similares no mesmo dia e valor.',
+    'Entradas similares en el mismo dia e importe.',
+    'Entrees similaires le meme jour et montant.',
+    'Similar entries on the same day and amount.',
+  ],
+  [
+    'Stale accounts',
+    'Contas desatualizadas',
+    'Cuentas desactualizadas',
+    'Comptes obsoletes',
+    'Stale accounts',
+  ],
+  [
+    'Accounts not refreshed in the last 7 days.',
+    'Contas sem atualizacao nos ultimos 7 dias.',
+    'Cuentas no actualizadas en los ultimos 7 dias.',
+    'Comptes non actualises au cours des 7 derniers jours.',
+    'Accounts not refreshed in the last 7 days.',
+  ],
+  [
+    'Food & Dining',
+    'Alimentacao',
+    'Comida y restaurantes',
+    'Alimentation',
+    'Food & Dining',
+  ],
+  [
+    'Food and Dining',
+    'Alimentacao',
+    'Comida y restaurantes',
+    'Alimentation',
+    'Food and Dining',
+  ],
+  ['Transportation', 'Transporte', 'Transporte', 'Transport', 'Transportation'],
+  ['Shopping', 'Compras', 'Compras', 'Achats', 'Shopping'],
+  [
+    'Entertainment',
+    'Entretenimento',
+    'Entretenimiento',
+    'Divertissement',
+    'Entertainment',
+  ],
+  ['Healthcare', 'Saude', 'Salud', 'Sante', 'Healthcare'],
+  [
+    'Utilities',
+    'Servicos basicos',
+    'Servicios basicos',
+    'Services publics',
+    'Utilities',
+  ],
+  ['Housing', 'Moradia', 'Vivienda', 'Logement', 'Housing'],
+  ['Education', 'Educacao', 'Educacion', 'Education', 'Education'],
+  ['Travel', 'Viagens', 'Viajes', 'Voyage', 'Travel'],
+  ['Insurance', 'Seguro', 'Seguro', 'Assurance', 'Insurance'],
+  ['Investment', 'Investimentos', 'Inversion', 'Investissement', 'Investment'],
+  ['Salary', 'Salario', 'Salario', 'Salaire', 'Salary'],
+  ['Freelance', 'Freelance', 'Freelance', 'Freelance', 'Freelance'],
+  ['Gifts', 'Presentes', 'Regalos', 'Cadeaux', 'Gifts'],
+  [
+    'Subscriptions',
+    'Assinaturas',
+    'Suscripciones',
+    'Abonnements',
+    'Subscriptions',
+  ],
+  ['Services', 'Servicos', 'Servicios', 'Services', 'Services'],
+  ['Technology', 'Tecnologia', 'Tecnologia', 'Technologie', 'Technology'],
+  ['Business', 'Negocios', 'Negocios', 'Affaires', 'Business'],
+  [
+    'Personal Care',
+    'Cuidados pessoais',
+    'Cuidado personal',
+    'Soin personnel',
+    'Personal Care',
+  ],
+  [
+    'Fitness',
+    'Condicionamento fisico',
+    'Acondicionamiento fisico',
+    'Fitness',
+    'Fitness',
+  ],
+  ['Pets', 'Pets', 'Mascotas', 'Animaux', 'Pets'],
+  ['Charity', 'Caridade', 'Caridad', 'Charite', 'Charity'],
+  ['Legal', 'Juridico', 'Legal', 'Juridique', 'Legal'],
+  ['Taxes', 'Impostos', 'Impuestos', 'Impots', 'Taxes'],
+  ['Other', 'Outros', 'Otros', 'Autres', 'Other'],
+  [
+    'Review items',
+    'Itens para revisar',
+    'Elementos para revisar',
+    'Elements a examiner',
+    'Review items',
+  ],
+  [
+    'High-value expenses in the last 14 days.',
+    'Despesas de alto valor nos ultimos 14 dias.',
+    'Gastos de alto valor en los ultimos 14 dias.',
+    'Depenses elevees sur les 14 derniers jours.',
+    'High-value expenses in the last 14 days.',
+  ],
+  [
+    'Account connections monitored in one place.',
+    'Conexoes de conta monitoradas em um so lugar.',
+    'Conexiones de cuenta monitorizadas en un solo lugar.',
+    'Connexions de compte suivies en un seul endroit.',
+    'Account connections monitored in one place.',
+  ],
+  [
+    'Credit cards tracked',
+    'Cartoes de credito monitorados',
+    'Tarjetas de credito monitorizadas',
+    'Cartes de credit suivies',
+    'Credit cards tracked',
+  ],
+  [
+    'Cards included in utilization and alert checks.',
+    'Cartoes incluidos nas verificacoes de utilizacao e alerta.',
+    'Tarjetas incluidas en verificaciones de utilizacion y alertas.',
+    "Cartes incluses dans les verifications d'utilisation et d'alerte.",
+    'Cards included in utilization and alert checks.',
+  ],
+  [
+    'Add Credit Card',
+    'Adicionar cartao de credito',
+    'Agregar tarjeta de credito',
+    'Ajouter une carte de credit',
+    'Add Credit Card',
+  ],
+  [
+    'Add a new credit card to track your utilization and payments.',
+    'Adicione um novo cartao de credito para acompanhar utilizacao e pagamentos.',
+    'Agrega una nueva tarjeta de credito para seguir utilizacion y pagos.',
+    "Ajoutez une nouvelle carte de credit pour suivre l'utilisation et les paiements.",
+    'Add a new credit card to track your utilization and payments.',
+  ],
+  [
+    'Card Name',
+    'Nome do cartao',
+    'Nombre de la tarjeta',
+    'Nom de la carte',
+    'Card Name',
+  ],
+  [
+    'Current Balance',
+    'Saldo atual',
+    'Saldo actual',
+    'Solde actuel',
+    'Current Balance',
+  ],
+  [
+    'Credit Limit',
+    'Limite de credito',
+    'Limite de credito',
+    'Plafond de credit',
+    'Credit Limit',
+  ],
+  [
+    'Due Date',
+    'Data de vencimento',
+    'Fecha de vencimiento',
+    "Date d'echeance",
+    'Due Date',
+  ],
+  [
+    'Add Card',
+    'Adicionar cartao',
+    'Agregar tarjeta',
+    'Ajouter une carte',
+    'Add Card',
+  ],
+  [
+    'Credit card added',
+    'Cartao de credito adicionado',
+    'Tarjeta de credito agregada',
+    'Carte de credit ajoutee',
+    'Credit card added',
+  ],
+  [
+    'Failed to add credit card. Please try again.',
+    'Falha ao adicionar cartao de credito. Tente novamente.',
+    'No se pudo agregar la tarjeta de credito. Intentalo de nuevo.',
+    "Echec de l'ajout de la carte de credit. Veuillez reessayer.",
+    'Failed to add credit card. Please try again.',
+  ],
+  [
+    'Ask Financial Assistant',
+    'Perguntar ao Assistente Financeiro',
+    'Preguntar al Asistente Financiero',
+    "Demander a l'Assistant financier",
+    'Ask Financial Assistant',
+  ],
+  ['Navigate', 'Navegar', 'Navegar', 'Naviguer', 'Navigate'],
+  ['Recent', 'Recentes', 'Recientes', 'Recents', 'Recent'],
+  [
+    'Ask again',
+    'Perguntar novamente',
+    'Preguntar de nuevo',
+    'Demander encore',
+    'Ask again',
+  ],
+  [
+    'Suggested questions',
+    'Perguntas sugeridas',
+    'Preguntas sugeridas',
+    'Questions suggerees',
+    'Suggested questions',
+  ],
+  ['Ask', 'Perguntar', 'Preguntar', 'Demander', 'Ask'],
+  [
+    'Credit Score',
+    'Pontuacao de credito',
+    'Puntaje de credito',
+    'Score de credit',
+    'Credit Score',
+  ],
+  [
+    'Credit score lab & report',
+    'Laboratorio de score de credito e relatorio',
+    'Laboratorio de puntaje de credito e informe',
+    'Laboratoire de score de credit et rapport',
+    'Credit score lab & report',
+  ],
   ['Get Started', 'Comecar', 'Comenzar', 'Commencer', 'Shuru karen'],
   ['Support', 'Suporte', 'Soporte', 'Support', 'Support'],
   ['Privacy', 'Privacidade', 'Privacidad', 'Confidentialite', 'Privacy'],
@@ -832,6 +2029,166 @@ export const translateUiText = (text: string, locale: string) => {
       dictionary[percentVsLastMonthMatch[1]] ?? percentVsLastMonthMatch[1]
     const suffix = dictionary['% vs last month'] ?? '% vs last month'
     return `${leadingWhitespace}${direction} ${percentVsLastMonthMatch[2]}${suffix}${trailingWhitespace}`
+  }
+
+  const reminderDueSoonMatch = trimmedText.match(
+    /^(.+)\s+is due within 24 hours\.$/
+  )
+  if (reminderDueSoonMatch) {
+    const suffix =
+      dictionary['is due within 24 hours.'] ?? 'is due within 24 hours.'
+    return `${leadingWhitespace}${reminderDueSoonMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const reminderOverdueMatch = trimmedText.match(/^(.+)\s+is overdue\.$/)
+  if (reminderOverdueMatch) {
+    const suffix = dictionary['is overdue.'] ?? 'is overdue.'
+    return `${leadingWhitespace}${reminderOverdueMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const recipientCountMatch = trimmedText.match(/^(\d+)\s+recipient(?:s)?$/)
+  if (recipientCountMatch) {
+    const count = recipientCountMatch[1]
+    const singular = dictionary['recipient'] ?? 'recipient'
+    const plural = dictionary['recipients'] ?? 'recipients'
+    const nextLabel = count === '1' ? singular : plural
+    return `${leadingWhitespace}${count} ${nextLabel}${trailingWhitespace}`
+  }
+
+  const recurringCountMatch = trimmedText.match(/^(\d+)\s+recurring$/)
+  if (recurringCountMatch) {
+    const recurringLabel = dictionary['recurring'] ?? 'recurring'
+    return `${leadingWhitespace}${recurringCountMatch[1]} ${recurringLabel}${trailingWhitespace}`
+  }
+
+  const donationCountDateMatch = trimmedText.match(
+    /^(\d+)\s+donation(?:s)?\s+·\s+(.+)$/
+  )
+  if (donationCountDateMatch) {
+    const count = donationCountDateMatch[1]
+    const singular = dictionary['donation'] ?? 'donation'
+    const plural = dictionary['donations'] ?? 'donations'
+    const donationLabel = count === '1' ? singular : plural
+    return `${leadingWhitespace}${count} ${donationLabel} · ${donationCountDateMatch[2]}${trailingWhitespace}`
+  }
+
+  const lastDateMatch = trimmedText.match(/^Last\s+(.+)$/)
+  if (lastDateMatch) {
+    const label = dictionary['Last'] ?? 'Last'
+    return `${leadingWhitespace}${label} ${lastDateMatch[1]}${trailingWhitespace}`
+  }
+
+  const nextDateMatch = trimmedText.match(/^Next\s+(?!step:)(.+)$/i)
+  if (nextDateMatch) {
+    const label = dictionary['Next'] ?? 'Next'
+    return `${leadingWhitespace}${label} ${nextDateMatch[1]}${trailingWhitespace}`
+  }
+
+  const confidenceMatch = trimmedText.match(
+    /^Confidence:\s*(\d+(?:[.,]\d+)?)%$/
+  )
+  if (confidenceMatch) {
+    const label = dictionary['Confidence:'] ?? 'Confidence:'
+    return `${leadingWhitespace}${label} ${confidenceMatch[1]}%${trailingWhitespace}`
+  }
+
+  const nextStepMatch = trimmedText.match(/^Next step:\s+(.+)$/)
+  if (nextStepMatch) {
+    const label = dictionary['Next step:'] ?? 'Next step:'
+    return `${leadingWhitespace}${label} ${nextStepMatch[1]}${trailingWhitespace}`
+  }
+
+  const highSpendingMatch = trimmedText.match(/^High Spending in\s+(.+)$/)
+  if (highSpendingMatch) {
+    const label = dictionary['High Spending in'] ?? 'High Spending in'
+    return `${leadingWhitespace}${label} ${highSpendingMatch[1]}${trailingWhitespace}`
+  }
+
+  const accountsForMatch = trimmedText.match(
+    /^(.+)\s+accounts for\s+(\d+(?:[.,]\d+)?)%\s+of your total spending\.$/
+  )
+  if (accountsForMatch) {
+    const accountsForLabel = dictionary['accounts for'] ?? 'accounts for'
+    const suffix =
+      dictionary['of your total spending.'] ?? 'of your total spending.'
+    return `${leadingWhitespace}${accountsForMatch[1]} ${accountsForLabel} ${accountsForMatch[2]}% ${suffix}${trailingWhitespace}`
+  }
+
+  const overBudgetTitleMatch = trimmedText.match(/^Over Budget:\s+(.+)$/)
+  if (overBudgetTitleMatch) {
+    const label = dictionary['Over Budget:'] ?? 'Over Budget:'
+    return `${leadingWhitespace}${label} ${overBudgetTitleMatch[1]}${trailingWhitespace}`
+  }
+
+  const budgetWarningTitleMatch = trimmedText.match(/^Budget Warning:\s+(.+)$/)
+  if (budgetWarningTitleMatch) {
+    const label = dictionary['Budget Warning:'] ?? 'Budget Warning:'
+    return `${leadingWhitespace}${label} ${budgetWarningTitleMatch[1]}${trailingWhitespace}`
+  }
+
+  const exceededBudgetMatch = trimmedText.match(
+    /^You've exceeded your\s+(.+)\s+budget by\s+(.+)\.$/
+  )
+  if (exceededBudgetMatch) {
+    const firstPart =
+      dictionary["You've exceeded your"] ?? "You've exceeded your"
+    const secondPart = dictionary['budget by'] ?? 'budget by'
+    return `${leadingWhitespace}${firstPart} ${exceededBudgetMatch[1]} ${secondPart} ${exceededBudgetMatch[2]}.${trailingWhitespace}`
+  }
+
+  const budgetProgressMatch = trimmedText.match(
+    /^You're at\s+(\d+(?:[.,]\d+)?)%\s+of your\s+(.+)\s+budget\.$/
+  )
+  if (budgetProgressMatch) {
+    const firstPart = dictionary["You're at"] ?? "You're at"
+    const middle = dictionary['of your'] ?? 'of your'
+    const suffix = dictionary['budget.'] ?? 'budget.'
+    return `${leadingWhitespace}${firstPart} ${budgetProgressMatch[1]}% ${middle} ${budgetProgressMatch[2]} ${suffix}${trailingWhitespace}`
+  }
+
+  const behindGoalMatch = trimmedText.match(/^Behind on Goal:\s+(.+)$/)
+  if (behindGoalMatch) {
+    const label = dictionary['Behind on Goal:'] ?? 'Behind on Goal:'
+    return `${leadingWhitespace}${label} ${behindGoalMatch[1]}${trailingWhitespace}`
+  }
+
+  const achievedGoalMatch = trimmedText.match(/^Goal Achieved:\s+(.+)$/)
+  if (achievedGoalMatch) {
+    const label = dictionary['Goal Achieved:'] ?? 'Goal Achieved:'
+    return `${leadingWhitespace}${label} ${achievedGoalMatch[1]}${trailingWhitespace}`
+  }
+
+  const goalProgressMatch = trimmedText.match(
+    /^You're at\s+(\d+(?:[.,]\d+)?)%\s+of your\s+(.+)\s+goal\.$/
+  )
+  if (goalProgressMatch) {
+    const firstPart = dictionary["You're at"] ?? "You're at"
+    const middle = dictionary['of your'] ?? 'of your'
+    const suffix = dictionary['goal.'] ?? 'goal.'
+    return `${leadingWhitespace}${firstPart} ${goalProgressMatch[1]}% ${middle} ${goalProgressMatch[2]} ${suffix}${trailingWhitespace}`
+  }
+
+  const goalCompletedDescriptionMatch = trimmedText.match(
+    /^Congratulations!\s+You've reached your\s+(.+)\s+goal\.$/
+  )
+  if (goalCompletedDescriptionMatch) {
+    const firstPart =
+      dictionary["Congratulations! You've reached your"] ??
+      "Congratulations! You've reached your"
+    const suffix = dictionary['goal.'] ?? 'goal.'
+    return `${leadingWhitespace}${firstPart} ${goalCompletedDescriptionMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const unusualTransactionsMatch = trimmedText.match(
+    /^Found\s+(\d+)\s+transaction\(s\)\s+significantly larger than your average\.$/
+  )
+  if (unusualTransactionsMatch) {
+    const firstPart = dictionary['Found'] ?? 'Found'
+    const secondPart = dictionary['transaction(s)'] ?? 'transaction(s)'
+    const thirdPart =
+      dictionary['significantly larger than your average.'] ??
+      'significantly larger than your average.'
+    return `${leadingWhitespace}${firstPart} ${unusualTransactionsMatch[1]} ${secondPart} ${thirdPart}${trailingWhitespace}`
   }
 
   return `${leadingWhitespace}${translatedText}${trailingWhitespace}`

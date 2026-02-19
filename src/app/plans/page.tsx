@@ -37,6 +37,7 @@ const publicPlanCatalog = [
       'Financial Assistant access',
       'Advanced AI insights',
       'Subscription optimizer',
+      'Credit score lab & report',
       'Priority support',
       '7-day free trial',
     ],

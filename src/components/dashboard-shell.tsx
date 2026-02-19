@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
+  Gauge,
   LayoutGrid,
   Menu,
   Search,
@@ -124,6 +125,13 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         keywords: ['budgets', 'forecast', 'limits', 'spending', 'overrun'],
       },
       {
+        name: 'Credit Score',
+        href: '/credit-score',
+        icon: Gauge,
+        description: 'Pro credit score estimate, report, and improvement plan.',
+        keywords: ['credit', 'credit score', 'report', 'utilization', 'pro'],
+      },
+      {
         name: 'Billing',
         href: '/billing',
         icon: CreditCard,
@@ -192,6 +200,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       security: 'Security & Privacy',
       assistant: 'Financial Assistant',
       budgets: 'Budgets',
+      'credit-score': 'Credit Score',
       profile: 'Profile',
     }
 
@@ -204,6 +213,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       security: ShieldCheck,
       assistant: Sparkles,
       budgets: Wallet,
+      'credit-score': Gauge,
       profile: UserCircle2,
     }
 

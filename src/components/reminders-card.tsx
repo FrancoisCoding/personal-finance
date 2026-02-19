@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useNotifications } from '@/components/notification-system'
+import { getDisplayPreferences } from '@/lib/display-preferences'
 
 interface Reminder {
   id: string
@@ -34,6 +35,7 @@ export function RemindersCard({
   className = '',
 }: RemindersCardProps) {
   const { addNotification } = useNotifications()
+  const displayLocale = getDisplayPreferences().locale
   const upcomingReminders = reminders
     .filter((reminder) => !reminder.completed)
     .sort((firstReminder, secondReminder) => {
@@ -80,7 +82,7 @@ export function RemindersCard({
   const formatReminderDateTime = (value: string) => {
     const parsedDate = new Date(value)
     if (Number.isNaN(parsedDate.getTime())) return value
-    return parsedDate.toLocaleString('en-US', {
+    return parsedDate.toLocaleString(displayLocale, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',

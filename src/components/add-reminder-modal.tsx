@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { CalendarIcon, Clock3 } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import {
@@ -30,6 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
+import { getDisplayPreferences } from '@/lib/display-preferences'
 import { cn } from '@/lib/utils'
 
 interface AddReminderModalProps {
@@ -85,6 +85,7 @@ export function AddReminderModal({
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
+  const displayLocale = getDisplayPreferences().locale
   const defaultDueAtValues = getDefaultDueAtValue()
 
   const [formData, setFormData] = useState({
@@ -105,6 +106,13 @@ export function AddReminderModal({
     String(index * 5).padStart(2, '0')
   )
   const selectedDueDate = formData.dueDate ? new Date(formData.dueDate) : null
+  const formattedSelectedDate = selectedDueDate
+    ? new Intl.DateTimeFormat(displayLocale, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(selectedDueDate)
+    : null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -259,8 +267,8 @@ export function AddReminderModal({
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDueDate ? (
-                        format(selectedDueDate, 'PPP')
+                      {formattedSelectedDate ? (
+                        formattedSelectedDate
                       ) : (
                         <span>Select date</span>
                       )}

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { useNotifications } from '@/components/notification-system'
 import { useToast } from '@/hooks/use-toast'
+import { getDisplayPreferences } from '@/lib/display-preferences'
 import { formatCurrency } from '@/lib/utils'
 import {
   BarChart,
@@ -96,6 +97,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
 }: AnalyticsDashboardProps) {
   const { addNotification, setShowNotificationCenter } = useNotifications()
   const { toast } = useToast()
+  const displayLocale = getDisplayPreferences().locale
   const [reportSchedule, setReportSchedule] = useState<{
     enabled: boolean
     frequency: ReportFrequency
@@ -184,13 +186,13 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
         .reduce((sum, t) => sum + t.amount, 0)
 
       return {
-        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        month: date.toLocaleDateString(displayLocale, { month: 'short' }),
         expenses,
         income,
         net: income - expenses,
       }
     }).reverse()
-  }, [transactions])
+  }, [displayLocale, transactions])
 
   // Calculate budget performance
   const budgetPerformance = useMemo(() => {
@@ -243,7 +245,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     }
     const displayDate = new Date()
     displayDate.setHours(hours, minutes, 0, 0)
-    return displayDate.toLocaleTimeString('en-US', {
+    return displayDate.toLocaleTimeString(displayLocale, {
       hour: 'numeric',
       minute: '2-digit',
     })
@@ -283,13 +285,13 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       }
     }
 
-    return nextRun.toLocaleString('en-US', {
+    return nextRun.toLocaleString(displayLocale, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
     })
-  }, [reportSchedule])
+  }, [displayLocale, reportSchedule])
 
   const escapeCsv = (value: string | number | undefined) => {
     if (value === undefined || value === null) {
@@ -318,7 +320,10 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
   const buildReportPayload = () => {
     const reportDate = new Date()
     const summary = [
-      { label: 'Report date', value: reportDate.toLocaleDateString('en-US') },
+      {
+        label: 'Report date',
+        value: reportDate.toLocaleDateString(displayLocale),
+      },
       { label: 'Avg daily spend', value: formatCurrency(avgDailySpend) },
       {
         label: 'Savings rate',
@@ -335,7 +340,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           : transaction.amount
 
       return {
-        date: new Date(transaction.date).toLocaleDateString('en-US'),
+        date: new Date(transaction.date).toLocaleDateString(displayLocale),
         description: transaction.description,
         category: transaction.category || 'Other',
         type: transaction.type === 'EXPENSE' ? 'Expense' : 'Income',
@@ -365,7 +370,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
         current: goal.currentAmount,
         remaining,
         targetDate: goal.targetDate
-          ? new Date(goal.targetDate).toLocaleDateString('en-US')
+          ? new Date(goal.targetDate).toLocaleDateString(displayLocale)
           : '—',
         progress,
       }
@@ -501,7 +506,8 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     }
 
     const reportPayload = buildReportPayload()
-    const reportDateStamp = reportPayload.reportDate.toLocaleDateString('en-US')
+    const reportDateStamp =
+      reportPayload.reportDate.toLocaleDateString(displayLocale)
 
     const buildPdfTable = (headers: string[], rows: string[][]) => {
       if (rows.length === 0) {
@@ -535,7 +541,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       <!DOCTYPE html>
       <html lang="en">
         <head>
-          <meta charset="UTF-8" />
+                <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Financial report</title>
           <style>

@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { getDisplayPreferences } from '@/lib/display-preferences'
 import { formatCurrency, getCategoryColor } from '@/lib/utils'
 import { getCategoryIconComponent } from '@/lib/category-icons'
 import { TellerLink } from '@/components/teller-link'
@@ -176,6 +177,7 @@ const AnalyticsDashboard = dynamic(
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { isDemoMode } = useDemoMode()
+  const displayLocale = getDisplayPreferences().locale
   const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const queryClient = useQueryClient()
   const [, setIsWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
@@ -906,7 +908,7 @@ export default function DashboardPage() {
       const recipientName = normalizeDonationRecipient(transaction.description)
       const existing = recipientMap.get(recipientName)
       const transactionDate = new Date(transaction.date)
-      const formattedDate = transactionDate.toLocaleDateString('en-US')
+      const formattedDate = transactionDate.toLocaleDateString(displayLocale)
       const timestamp = transactionDate.getTime()
       const updatedTotal = Math.abs(transaction.amount)
 
@@ -1024,8 +1026,8 @@ export default function DashboardPage() {
           name,
           average,
           cadence: cadence.label,
-          lastDate: lastDate.toLocaleDateString('en-US'),
-          nextDate: nextDate.toLocaleDateString('en-US'),
+          lastDate: lastDate.toLocaleDateString(displayLocale),
+          nextDate: nextDate.toLocaleDateString(displayLocale),
         }
       })
       .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
@@ -1040,6 +1042,7 @@ export default function DashboardPage() {
       hasData: recentDonations.length > 0,
     }
   }, [
+    displayLocale,
     getMedian,
     inferDonationCause,
     normalizeDonationRecipient,
@@ -1077,7 +1080,7 @@ export default function DashboardPage() {
       ).padStart(2, '0')}`
       return {
         monthKey,
-        label: date.toLocaleDateString('en-US', { month: 'short' }),
+        label: date.toLocaleDateString(displayLocale, { month: 'short' }),
       }
     })
 
@@ -1113,7 +1116,7 @@ export default function DashboardPage() {
         net: income - expenses,
       }
     })
-  }, [transactionDateEntries])
+  }, [displayLocale, transactionDateEntries])
 
   const expenseTotalsByDay = useMemo(() => {
     const totals = new Map<string, number>()
@@ -1616,7 +1619,7 @@ export default function DashboardPage() {
                                 ? 'bg-amber-500/80'
                                 : 'bg-muted'
                         }`}
-                        title={`${day.day.toLocaleDateString('en-US')}: ${formatCurrency(
+                        title={`${day.day.toLocaleDateString(displayLocale)}: ${formatCurrency(
                           day.endingBalance
                         )}`}
                       />
@@ -1645,7 +1648,7 @@ export default function DashboardPage() {
                               {event.title}
                             </p>
                             <p className="text-[11px] text-muted-foreground">
-                              {event.date.toLocaleDateString('en-US')} ·{' '}
+                              {event.date.toLocaleDateString(displayLocale)} ·{' '}
                               {event.source === 'subscription'
                                 ? 'subscription'
                                 : 'predicted pattern'}

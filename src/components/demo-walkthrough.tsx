@@ -216,6 +216,46 @@ const walkthroughSteps: WalkthroughStep[] = [
     scroll: 'center',
   },
   {
+    id: 'subscriptions-optimizer',
+    target: 'demo-subscriptions-intelligence',
+    title: 'Subscription optimizer',
+    description:
+      'Review consolidation opportunities, annual projections, and savings levers.',
+    route: '/subscriptions',
+    placement: 'below',
+    scroll: 'center',
+  },
+  {
+    id: 'credit-score-header',
+    target: 'demo-credit-score-header',
+    title: 'Credit Score Lab',
+    description:
+      'Open a Pro-grade score simulation with utilization and payment impact.',
+    route: '/credit-score',
+    placement: 'below',
+    scroll: 'center',
+  },
+  {
+    id: 'credit-score-factors',
+    target: 'demo-credit-score-factors',
+    title: 'Score factor breakdown',
+    description:
+      'See the weighted components driving your score trend and risk profile.',
+    route: '/credit-score',
+    placement: 'right',
+    scroll: 'center',
+  },
+  {
+    id: 'credit-score-accounts',
+    target: 'demo-credit-score-accounts',
+    title: 'Account-level paydown plan',
+    description:
+      'Prioritize cards with the biggest score upside based on utilization.',
+    route: '/credit-score',
+    placement: 'above',
+    scroll: 'center',
+  },
+  {
     id: 'assistant-header',
     target: 'demo-assistant-header',
     title: 'Financial Assistant',

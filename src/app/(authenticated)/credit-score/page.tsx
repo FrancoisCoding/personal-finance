@@ -286,7 +286,7 @@ export default function CreditScorePage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
+        <div className="space-y-1" data-demo-step="demo-credit-score-header">
           <h1 className="text-2xl font-semibold">Credit Score Lab</h1>
           <p className="text-sm text-muted-foreground">
             Pro-only credit health simulation and action plan.
@@ -371,7 +371,10 @@ export default function CreditScorePage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">
-        <Card className="border-border/70 bg-card/90 lg:col-span-3">
+        <Card
+          className="border-border/70 bg-card/90 lg:col-span-3"
+          data-demo-step="demo-credit-score-factors"
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Score factors</CardTitle>
             <CardDescription>
@@ -396,7 +399,10 @@ export default function CreditScorePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/90 lg:col-span-2">
+        <Card
+          className="border-border/70 bg-card/90 lg:col-span-2"
+          data-demo-step="demo-credit-score-actions"
+        >
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Improvement actions</CardTitle>
             <CardDescription>
@@ -426,7 +432,10 @@ export default function CreditScorePage() {
         </Card>
       </div>
 
-      <Card className="border-border/70 bg-card/90">
+      <Card
+        className="border-border/70 bg-card/90"
+        data-demo-step="demo-credit-score-accounts"
+      >
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">
             Account-level utilization report

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       request,
       scope: 'ai-categorize',
       userId: session.user.id,
-      maxRequests: 40,
+      maxRequests: 240,
       windowMs: 60_000,
     })
     if (rateLimit.isLimited) {

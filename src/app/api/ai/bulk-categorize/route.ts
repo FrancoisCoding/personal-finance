@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       request,
       scope: 'ai-bulk-categorize',
       userId: session.user.id,
-      maxRequests: 10,
+      maxRequests: 90,
       windowMs: 60_000,
     })
     if (rateLimit.isLimited) {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     if (
       transactionIds.length === 0 ||
-      transactionIds.length > 200 ||
+      transactionIds.length > 500 ||
       transactionIds.length !== parsedTransactionIds.length
     ) {
       return NextResponse.json(

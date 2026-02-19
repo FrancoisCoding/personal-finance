@@ -5,15 +5,16 @@ import { ContactForm } from '@/components/support/contact-form'
 const contactOptions = [
   {
     title: 'Email support',
-    description: 'Reach us at support@financeflow.app for account help.',
+    description:
+      'Send account and billing questions to support@financeflow.app.',
   },
   {
     title: 'In-app chat',
-    description: 'Chat with a specialist during business hours.',
+    description: 'Chat with a specialist during business hours for quick help.',
   },
   {
-    title: 'Status updates',
-    description: 'View service status and maintenance notices.',
+    title: 'Service updates',
+    description: 'Review live platform status and maintenance notices.',
   },
 ]
 
@@ -21,16 +22,16 @@ const faqItems = [
   {
     question: 'How do I connect a new account?',
     answer:
-      'Go to Dashboard, select Connect Account, and follow the secure prompt.',
+      'Go to Dashboard, select Connect Bank Account, and complete the secure prompt.',
   },
   {
     question: 'How do I update my subscription?',
     answer:
-      'Open Settings, then Billing to change plans, payment methods, or cancel.',
+      'Open Billing to change plans, update payment methods, or cancel your subscription.',
   },
   {
     question: 'How can I export my data?',
-    answer: 'Use the Export option in Settings to download your transactions.',
+    answer: 'Use Export in Transactions to download your filtered activity.',
   },
 ]
 
@@ -55,11 +56,11 @@ export default function SupportPage() {
             Support
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-semibold">
-            How can we help?
+            Support that keeps you moving.
           </h1>
           <p className="text-muted-foreground max-w-2xl">
-            Find quick answers, reach the support team, or explore
-            troubleshooting steps for common workflows.
+            Get fast answers, contact support, and resolve common issues without
+            breaking your workflow.
           </p>
         </div>
 

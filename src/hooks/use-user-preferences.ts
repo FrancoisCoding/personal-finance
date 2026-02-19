@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
 
+import { setDisplayPreferences } from '@/lib/display-preferences'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useToast } from '@/hooks/use-toast'
 
@@ -25,7 +26,12 @@ const fetchUserPreferences = async (): Promise<IUserPreferences> => {
   if (!response.ok) {
     throw new Error('Failed to load preferences')
   }
-  return response.json()
+  const preferences = (await response.json()) as IUserPreferences
+  setDisplayPreferences({
+    locale: preferences.locale,
+    currency: preferences.currency,
+  })
+  return preferences
 }
 
 export const useUserPreferences = () => {
@@ -62,10 +68,15 @@ export const useUpdateUserPreferences = () => {
       return response.json() as Promise<IUserPreferences>
     },
     onSuccess: (updatedPreferences) => {
+      setDisplayPreferences({
+        locale: updatedPreferences.locale,
+        currency: updatedPreferences.currency,
+      })
       queryClient.setQueryData(userPreferencesQueryKey, updatedPreferences)
       toast({
         title: 'Preferences updated',
-        description: 'Language and currency preferences have been saved.',
+        description:
+          'Language and currency settings were updated across your workspace.',
       })
     },
     onError: (error) => {

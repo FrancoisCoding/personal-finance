@@ -165,13 +165,17 @@ export default function ProfilePage() {
 
       <Card className="border-border/60 bg-card/80 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Language and currency</CardTitle>
+          <CardTitle className="text-lg">Regional preferences</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            These settings update date, time, and currency formatting across
+            your workspace.
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Language
+                Display language
               </label>
               <Select
                 value={selectedLocale}
@@ -195,7 +199,7 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Currency
+                Display currency
               </label>
               <Select
                 value={selectedCurrency}
@@ -255,7 +259,7 @@ export default function ProfilePage() {
               Use connected account currency
             </Button>
             <p className="text-xs text-muted-foreground">
-              By default, currency follows your latest synced Teller account.
+              Default behavior follows your latest synced Teller account.
             </p>
           </div>
         </CardContent>

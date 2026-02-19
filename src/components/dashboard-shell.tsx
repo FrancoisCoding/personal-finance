@@ -84,6 +84,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const displayName = isMounted ? session?.user?.name || 'User' : 'User'
   const displayEmail = isMounted ? session?.user?.email || '' : ''
   const displayInitial = displayName.charAt(0) || 'U'
+  const currentYear = new Date().getFullYear()
 
   const navigation = useMemo(
     () => [
@@ -770,6 +771,9 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                   Sign out
                 </Button>
               )}
+            </div>
+            <div className="mt-4 border-t border-border/50 pt-4 text-[11px] text-muted-foreground">
+              <p>© {currentYear} FrancoisCoding</p>
             </div>
           </aside>
 

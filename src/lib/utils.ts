@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { getDisplayPreferences } from '@/lib/display-preferences'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -7,17 +8,21 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(
   amount: number,
-  currency: string = 'USD'
+  currency?: string,
+  locale?: string
 ): string {
-  return new Intl.NumberFormat('en-US', {
+  const displayPreferences = getDisplayPreferences()
+
+  return new Intl.NumberFormat(locale ?? displayPreferences.locale, {
     style: 'currency',
-    currency: currency,
+    currency: currency ?? displayPreferences.currency,
   }).format(amount)
 }
 
 export function formatDate(date: Date | string): string {
+  const displayPreferences = getDisplayPreferences()
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(displayPreferences.locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -25,8 +30,9 @@ export function formatDate(date: Date | string): string {
 }
 
 export function formatDateTime(date: Date | string): string {
+  const displayPreferences = getDisplayPreferences()
   const d = typeof date === 'string' ? new Date(date) : date
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(displayPreferences.locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

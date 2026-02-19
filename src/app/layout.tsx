@@ -4,6 +4,7 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth-provider'
 import { QueryProvider } from '@/components/query-provider'
+import { DisplayPreferencesProvider } from '@/components/display-preferences-provider'
 import { Toaster } from '@/components/ui/toaster'
 import {
   NotificationProvider,
@@ -64,12 +65,14 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <NotificationProvider>
-                {children}
-                <AdConsentBanner />
-                <ToastContainer />
-                <Toaster />
-              </NotificationProvider>
+              <DisplayPreferencesProvider>
+                <NotificationProvider>
+                  {children}
+                  <AdConsentBanner />
+                  <ToastContainer />
+                  <Toaster />
+                </NotificationProvider>
+              </DisplayPreferencesProvider>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

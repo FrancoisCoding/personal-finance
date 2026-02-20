@@ -14,13 +14,14 @@ const planOrder = ['BASIC', 'PRO'] as const
 const publicPlanCatalog = [
   {
     plan: 'BASIC',
-    name: 'Starter',
+    name: 'Basic',
     monthlyPriceLabel: '$5/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
+      'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
       '7-day free trial',
     ],
   },
@@ -29,10 +30,10 @@ const publicPlanCatalog = [
     name: 'Pro',
     monthlyPriceLabel: '$10/mo',
     description:
-      'Everything in Starter plus premium AI guidance and power-user features.',
+      'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
-      'Everything in Starter',
-      'Financial Assistant access',
+      'Everything in Basic',
+      'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).',
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',
@@ -52,6 +53,7 @@ export default function BillingPage() {
   const { data, isLoading, refetch } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
+  const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
 
   const handleStartCheckout = async (plan: 'BASIC' | 'PRO') => {
     if (!session?.user?.id) {
@@ -122,6 +124,31 @@ export default function BillingPage() {
     router.push('/dashboard?demo=1')
   }
 
+  const handleRefreshBillingStatus = async () => {
+    setIsRefreshingStatus(true)
+    try {
+      const result = await refetch()
+      if (result.error) {
+        throw result.error
+      }
+      toast({
+        title: 'Plan status updated',
+        description: 'Plan details have been refreshed.',
+      })
+    } catch (error) {
+      toast({
+        title: 'Billing error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Unable to refresh plan status.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsRefreshingStatus(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -147,7 +174,7 @@ export default function BillingPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Subscription plans</h1>
         <p className="text-sm text-muted-foreground">
-          Choose between Starter and Pro. Both include a 7-day free trial.
+          Choose between Basic and Pro. Both include a 7-day free trial.
         </p>
       </div>
 
@@ -227,6 +254,10 @@ export default function BillingPage() {
                 <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
                 <span>Safe environment for trying features</span>
               </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <span>AI Assistant chat is disabled in demo mode</span>
+              </li>
             </ul>
             <Button
               variant="outline"
@@ -291,8 +322,19 @@ export default function BillingPage() {
                       `Start ${plan.name} trial`
                     )}
                   </Button>
-                  <Button variant="outline" onClick={() => refetch()}>
-                    Refresh
+                  <Button
+                    variant="outline"
+                    onClick={handleRefreshBillingStatus}
+                    disabled={isRefreshingStatus}
+                  >
+                    {isRefreshingStatus ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Refreshing...
+                      </>
+                    ) : (
+                      'Refresh status'
+                    )}
                   </Button>
                 </div>
               </CardContent>

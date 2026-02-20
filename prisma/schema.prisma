@@ -8,6 +8,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("PRISMA_DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 // NextAuth.js required models (must come before Account model)
@@ -296,10 +297,26 @@ model AppSubscription {
   @@map("app_subscriptions")
 }
 
+model PasswordResetToken {
+  id                String   @id @default(cuid())
+  userId            String
+  tokenHash         String   @unique
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime @default(now())
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
 model User {
   id                String  @id @default(cuid())
   name              String?
   email             String  @unique
+  hashedPassword    String?
   emailVerified     DateTime?
   image             String?
   isSuperUser       Boolean @default(false)
@@ -327,6 +344,7 @@ model User {
   accessSessions    AccessSession[]
   contactSubmissions ContactSubmission[]
   appSubscriptions  AppSubscription[]
+  passwordResetTokens PasswordResetToken[]
   tellerEnrollments TellerEnrollment[]
 
   @@map("users")

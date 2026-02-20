@@ -115,6 +115,16 @@ export interface Reminder {
   completed: boolean
 }
 
+export interface CreditCardSummary {
+  id: string
+  name: string
+  balance: number
+  limit: number
+  apr: number
+  dueDate: string
+  lastStatement: string
+}
+
 // Query Keys
 export const queryKeys = {
   accounts: ['accounts'] as const,
@@ -1178,7 +1188,7 @@ export function useCreditCards() {
   const { isDemoMode } = useDemoMode()
   return useQuery({
     queryKey: ['credit-cards'],
-    queryFn: async () => {
+    queryFn: async (): Promise<CreditCardSummary[]> => {
       const response = await fetch('/api/credit-cards')
       if (!response.ok) {
         throw new Error('Failed to fetch credit cards')
@@ -1187,5 +1197,49 @@ export function useCreditCards() {
     },
     enabled: !!session?.user?.id || isDemoMode,
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useCreateCreditCard() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (payload: {
+      name: string
+      balance: number
+      limit: number
+    }) => {
+      const response = await fetch('/api/credit-cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create credit card')
+      }
+
+      return response.json() as Promise<CreditCardSummary>
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+      toast({
+        title: 'Credit card added',
+        description: 'Your credit card was added successfully.',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Card setup failed',
+        description: error.message || 'Failed to add credit card.',
+        variant: 'destructive',
+      })
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-cards'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.accounts })
+    },
   })
 }

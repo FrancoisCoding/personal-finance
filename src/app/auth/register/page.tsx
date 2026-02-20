@@ -86,17 +86,54 @@ export default function RegisterPage() {
     }
 
     try {
-      // In a real app, you would make an API call to register the user
-      // For now, we'll simulate registration and redirect to login
+      const registerResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      })
+      const registerPayload = await registerResponse.json().catch(() => ({}))
+
+      if (!registerResponse.ok) {
+        throw new Error(
+          registerPayload?.error ||
+            'Failed to create account. Please try again.'
+        )
+      }
+
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        callbackUrl: '/dashboard',
+        redirect: false,
+      })
+
+      if (signInResult?.error) {
+        toast({
+          title: 'Success',
+          description: 'Account created successfully! Please sign in.',
+        })
+        router.push('/auth/login')
+        return
+      }
+
       toast({
         title: 'Success',
-        description: 'Account created successfully! Please sign in.',
+        description: 'Account created successfully!',
       })
-      router.push('/auth/login')
+      router.push('/dashboard')
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to create account. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create account. Please try again.',
         variant: 'destructive',
       })
     } finally {

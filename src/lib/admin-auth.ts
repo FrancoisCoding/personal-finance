@@ -65,13 +65,7 @@ const verifyScryptPasswordHash = (password: string, encodedHash: string) => {
   }
 }
 
-const isValidAdminPassword = (password: string) => {
-  const storedPasswordHash = getAdminPasswordHash().trim()
-  if (storedPasswordHash) {
-    return verifyScryptPasswordHash(password, storedPasswordHash)
-  }
-
-  const configuredPassword = getAdminPassword()
+const verifyRawPassword = (password: string, configuredPassword: string) => {
   if (!configuredPassword) return false
 
   const providedPasswordBuffer = Buffer.from(password, 'utf8')
@@ -81,6 +75,20 @@ const isValidAdminPassword = (password: string) => {
   }
 
   return timingSafeEqual(providedPasswordBuffer, configuredPasswordBuffer)
+}
+
+const isValidAdminPassword = (password: string) => {
+  const storedPasswordHash = getAdminPasswordHash().trim()
+  const configuredPassword = getAdminPassword()
+
+  if (storedPasswordHash) {
+    const isHashMatch = verifyScryptPasswordHash(password, storedPasswordHash)
+    if (isHashMatch) {
+      return true
+    }
+  }
+
+  return verifyRawPassword(password, configuredPassword)
 }
 
 export const isValidAdminLogin = (email: string, password: string) => {

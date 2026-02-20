@@ -36,6 +36,8 @@ export interface ChatContext {
   accounts?: ChatAccount[]
   subscriptions?: ChatSubscription[]
   generatedAt?: string
+  locale?: string
+  currency?: string
 }
 
 export interface CategorizationResult {
@@ -69,18 +71,65 @@ const OPENROUTER_MODEL = sanitizeEnvValue(process.env.OPENROUTER_MODEL)
 const OPENROUTER_SITE_URL = sanitizeEnvValue(process.env.OPENROUTER_SITE_URL)
 const OPENROUTER_SITE_NAME = sanitizeEnvValue(process.env.OPENROUTER_SITE_NAME)
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
+const formatCurrency = (value: number, locale: string, currency: string) =>
+  new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency,
     maximumFractionDigits: 2,
   }).format(value)
 
-const formatShortDate = (date: Date) =>
-  date.toLocaleDateString('en-US', {
+const formatShortDate = (date: Date, locale: string) =>
+  date.toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
   })
+
+const normalizeChatLocale = (locale?: string) => {
+  const fallbackLocale = 'en-US'
+  if (!locale) return fallbackLocale
+  return /^[a-z]{2}-[A-Z]{2}$/.test(locale) ? locale : fallbackLocale
+}
+
+const normalizeChatCurrency = (currency?: string) => {
+  const fallbackCurrency = 'USD'
+  if (!currency) return fallbackCurrency
+  return /^[A-Z]{3}$/.test(currency) ? currency : fallbackCurrency
+}
+
+const getLocalizedNoDataMessage = (locale: string) => {
+  if (locale === 'pt-BR') {
+    return (
+      'Ainda nao tenho dados recentes suficientes para responder. ' +
+      'Conecte contas ou adicione transacoes para receber um resumo em tempo real.'
+    )
+  }
+
+  if (locale === 'es-ES') {
+    return (
+      'Aun no tengo datos recientes suficientes para responder. ' +
+      'Conecta cuentas o agrega transacciones para recibir un resumen en tiempo real.'
+    )
+  }
+
+  if (locale === 'fr-FR') {
+    return (
+      "Je n'ai pas encore assez de donnees recentes pour repondre. " +
+      'Connectez des comptes ou ajoutez des transactions pour obtenir un resume en temps reel.'
+    )
+  }
+
+  if (locale === 'hi-IN') {
+    return (
+      'Mere paas abhi itna recent data nahin hai ki main sahi jawab de sakun. ' +
+      'Real-time summary ke liye accounts connect karen ya transactions add karen.'
+    )
+  }
+
+  return (
+    'I do not have enough recent data to answer that yet. ' +
+    'Connect accounts or add transactions to get a real-time summary.'
+  )
+}
 
 const parseDate = (value?: string | Date) => {
   if (!value) return null
@@ -417,6 +466,8 @@ const buildSnapshotTail = (context: ChatContext) => {
   const transactions = context.transactions ?? []
   const accounts = context.accounts ?? []
   const subscriptions = context.subscriptions ?? []
+  const locale = normalizeChatLocale(context.locale)
+  const currency = normalizeChatCurrency(context.currency)
 
   if (transactions.length === 0 && accounts.length === 0) {
     return ''
@@ -426,34 +477,193 @@ const buildSnapshotTail = (context: ChatContext) => {
   const cashFlowSnapshot = buildCashFlowSnapshot(transactions, 30)
   const cashSnapshot = buildCashSnapshot(accounts)
   const subscriptionSnapshot = buildSubscriptionSnapshot(subscriptions)
+  const isPortuguese = locale === 'pt-BR'
+  const isSpanish = locale === 'es-ES'
+  const isFrench = locale === 'fr-FR'
+  const isHindi = locale === 'hi-IN'
+
+  const quickDataLabel = isPortuguese
+    ? 'Resumo rapido dos dados:'
+    : isSpanish
+      ? 'Resumen rapido de datos:'
+      : isFrench
+        ? 'Resume rapide des donnees :'
+        : isHindi
+          ? 'Tez data summary:'
+          : 'Quick data snapshot:'
+  const spendingLabel = isPortuguese
+    ? `Gasto dos ultimos 30 dias: ${formatCurrency(
+        spendingSnapshot.totalSpending,
+        locale,
+        currency
+      )}.`
+    : isSpanish
+      ? `Gasto de los ultimos 30 dias: ${formatCurrency(
+          spendingSnapshot.totalSpending,
+          locale,
+          currency
+        )}.`
+      : isFrench
+        ? `Depenses des 30 derniers jours : ${formatCurrency(
+            spendingSnapshot.totalSpending,
+            locale,
+            currency
+          )}.`
+        : isHindi
+          ? `Pichhle 30 din ka kharcha: ${formatCurrency(
+              spendingSnapshot.totalSpending,
+              locale,
+              currency
+            )}.`
+          : `30-day spending: ${formatCurrency(
+              spendingSnapshot.totalSpending,
+              locale,
+              currency
+            )}.`
+
+  const netCashFlowLabel = isPortuguese
+    ? `Fluxo de caixa liquido: ${formatCurrency(
+        cashFlowSnapshot.netCashFlow,
+        locale,
+        currency
+      )}.`
+    : isSpanish
+      ? `Flujo de caja neto: ${formatCurrency(
+          cashFlowSnapshot.netCashFlow,
+          locale,
+          currency
+        )}.`
+      : isFrench
+        ? `Flux de tresorerie net : ${formatCurrency(
+            cashFlowSnapshot.netCashFlow,
+            locale,
+            currency
+          )}.`
+        : isHindi
+          ? `Net cash flow: ${formatCurrency(
+              cashFlowSnapshot.netCashFlow,
+              locale,
+              currency
+            )}.`
+          : `Net cash flow: ${formatCurrency(
+              cashFlowSnapshot.netCashFlow,
+              locale,
+              currency
+            )}.`
+
+  const cashOnHandLabel = isPortuguese
+    ? `Caixa disponivel: ${formatCurrency(
+        cashSnapshot.totalCash,
+        locale,
+        currency
+      )}.`
+    : isSpanish
+      ? `Efectivo disponible: ${formatCurrency(
+          cashSnapshot.totalCash,
+          locale,
+          currency
+        )}.`
+      : isFrench
+        ? `Tresorerie disponible : ${formatCurrency(
+            cashSnapshot.totalCash,
+            locale,
+            currency
+          )}.`
+        : isHindi
+          ? `Cash on hand: ${formatCurrency(
+              cashSnapshot.totalCash,
+              locale,
+              currency
+            )}.`
+          : `Cash on hand: ${formatCurrency(
+              cashSnapshot.totalCash,
+              locale,
+              currency
+            )}.`
+
+  const subscriptionsLabel = isPortuguese
+    ? `Assinaturas (mensal): ${formatCurrency(
+        subscriptionSnapshot.monthlyTotal,
+        locale,
+        currency
+      )}.`
+    : isSpanish
+      ? `Suscripciones (mensual): ${formatCurrency(
+          subscriptionSnapshot.monthlyTotal,
+          locale,
+          currency
+        )}.`
+      : isFrench
+        ? `Abonnements (mensuel) : ${formatCurrency(
+            subscriptionSnapshot.monthlyTotal,
+            locale,
+            currency
+          )}.`
+        : isHindi
+          ? `Subscriptions (monthly): ${formatCurrency(
+              subscriptionSnapshot.monthlyTotal,
+              locale,
+              currency
+            )}.`
+          : `Subscriptions (monthly): ${formatCurrency(
+              subscriptionSnapshot.monthlyTotal,
+              locale,
+              currency
+            )}.`
+
+  const topCategoryLine = spendingSnapshot.topCategories[0]
+    ? isPortuguese
+      ? `Principal categoria: ${spendingSnapshot.topCategories[0].name} (${formatCurrency(
+          spendingSnapshot.topCategories[0].total,
+          locale,
+          currency
+        )}).`
+      : isSpanish
+        ? `Categoria principal: ${spendingSnapshot.topCategories[0].name} (${formatCurrency(
+            spendingSnapshot.topCategories[0].total,
+            locale,
+            currency
+          )}).`
+        : isFrench
+          ? `Categorie principale : ${
+              spendingSnapshot.topCategories[0].name
+            } (${formatCurrency(
+              spendingSnapshot.topCategories[0].total,
+              locale,
+              currency
+            )}).`
+          : isHindi
+            ? `Top category: ${spendingSnapshot.topCategories[0].name} (${formatCurrency(
+                spendingSnapshot.topCategories[0].total,
+                locale,
+                currency
+              )}).`
+            : `Top category: ${spendingSnapshot.topCategories[0].name} (${formatCurrency(
+                spendingSnapshot.topCategories[0].total,
+                locale,
+                currency
+              )}).`
+    : null
 
   const lines = [
-    'Quick data snapshot:',
-    `30-day spending: ${formatCurrency(spendingSnapshot.totalSpending)}.`,
+    quickDataLabel,
+    spendingLabel,
     cashFlowSnapshot.incomeTotal > 0 || cashFlowSnapshot.expenseTotal > 0
-      ? `Net cash flow: ${formatCurrency(cashFlowSnapshot.netCashFlow)}.`
+      ? netCashFlowLabel
       : null,
-    `Cash on hand: ${formatCurrency(cashSnapshot.totalCash)}.`,
-    `Subscriptions (monthly): ${formatCurrency(
-      subscriptionSnapshot.monthlyTotal
-    )}.`,
-    spendingSnapshot.topCategories[0]
-      ? `Top category: ${spendingSnapshot.topCategories[0].name} (${formatCurrency(
-          spendingSnapshot.topCategories[0].total
-        )}).`
-      : null,
+    cashOnHandLabel,
+    subscriptionsLabel,
+    topCategoryLine,
   ]
 
   return lines.filter(Boolean).join('\n')
 }
 
 const buildFallbackSummary = (context: ChatContext) => {
+  const locale = normalizeChatLocale(context.locale)
   const summary = buildSnapshotTail(context)
   if (!summary) {
-    return (
-      'I do not have enough recent data to answer that yet. ' +
-      'Connect accounts or add transactions to get a real-time summary.'
-    )
+    return getLocalizedNoDataMessage(locale)
   }
   return summary
 }
@@ -463,6 +673,10 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
   const transactions = context.transactions ?? []
   const accounts = context.accounts ?? []
   const subscriptions = context.subscriptions ?? []
+  const locale = normalizeChatLocale(context.locale)
+  const currency = normalizeChatCurrency(context.currency)
+  const formatMoney = (value: number) => formatCurrency(value, locale, currency)
+  const formatDay = (date: Date) => formatShortDate(date, locale)
 
   const spendingSnapshot = buildSpendingSnapshot(transactions, accounts, 30)
   const cashFlowSnapshot = buildCashFlowSnapshot(transactions, 30)
@@ -504,9 +718,9 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     }
 
     return [
-      `Net worth estimate: ${formatCurrency(netWorthSnapshot.netWorth)}.`,
-      `Assets: ${formatCurrency(netWorthSnapshot.assets)}.`,
-      `Liabilities: ${formatCurrency(netWorthSnapshot.liabilities)}.`,
+      `Net worth estimate: ${formatMoney(netWorthSnapshot.netWorth)}.`,
+      `Assets: ${formatMoney(netWorthSnapshot.assets)}.`,
+      `Liabilities: ${formatMoney(netWorthSnapshot.liabilities)}.`,
     ].join('\n')
   }
 
@@ -521,9 +735,9 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       )}% across ${creditUtilizationSnapshot.accountCount} card${
         creditUtilizationSnapshot.accountCount === 1 ? '' : 's'
       }.`,
-      `Balances: ${formatCurrency(
+      `Balances: ${formatMoney(
         creditUtilizationSnapshot.totalBalance
-      )} of ${formatCurrency(creditUtilizationSnapshot.totalLimit)}.`,
+      )} of ${formatMoney(creditUtilizationSnapshot.totalLimit)}.`,
     ].join('\n')
   }
 
@@ -537,7 +751,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       `Spending trend: ${direction} ${Math.abs(change).toFixed(
         0
       )}% over the last 7 days.`,
-      `Recent: ${formatCurrency(spikeSnapshot.recentTotal)} vs previous ${formatCurrency(
+      `Recent: ${formatMoney(spikeSnapshot.recentTotal)} vs previous ${formatMoney(
         spikeSnapshot.previousTotal
       )}.`,
     ].join('\n')
@@ -555,9 +769,9 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     const items = largestSnapshot.expenses
       .map(
         (expense) =>
-          `${expense.description} (${formatCurrency(
+          `${expense.description} (${formatMoney(
             expense.amount
-          )} on ${formatShortDate(expense.date)})`
+          )} on ${formatDay(expense.date)})`
       )
       .join(', ')
     return `Largest expenses (last 30 days): ${items}.`
@@ -567,7 +781,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     if (donationSnapshot.count === 0) {
       return 'No donation-related expenses found in the last 30 days.'
     }
-    return `Donations in the last 30 days: ${formatCurrency(
+    return `Donations in the last 30 days: ${formatMoney(
       donationSnapshot.total
     )} across ${donationSnapshot.count} transaction${
       donationSnapshot.count === 1 ? '' : 's'
@@ -581,18 +795,18 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     ) {
       return 'I do not see income or expense activity in the last 30 days.'
     }
-    const range = `${formatShortDate(
+    const range = `${formatDay(
       cashFlowSnapshot.startDate
-    )} - ${formatShortDate(cashFlowSnapshot.endDate)}`
+    )} - ${formatDay(cashFlowSnapshot.endDate)}`
     return [
       `Cash flow (last 30 days, ${range}):`,
-      `Income: ${formatCurrency(
+      `Income: ${formatMoney(
         cashFlowSnapshot.incomeTotal
       )} across ${cashFlowSnapshot.incomeCount} deposits.`,
-      `Expenses: ${formatCurrency(
+      `Expenses: ${formatMoney(
         cashFlowSnapshot.expenseTotal
       )} across ${cashFlowSnapshot.expenseCount} transactions.`,
-      `Net: ${formatCurrency(cashFlowSnapshot.netCashFlow)}.`,
+      `Net: ${formatMoney(cashFlowSnapshot.netCashFlow)}.`,
     ].join('\n')
   }
 
@@ -604,27 +818,29 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       )
     }
 
-    const range = `${formatShortDate(
+    const range = `${formatDay(
       spendingSnapshot.startDate
-    )} - ${formatShortDate(spendingSnapshot.endDate)}`
+    )} - ${formatDay(spendingSnapshot.endDate)}`
     const summaryLines = [
-      `Last 30 days (${range}) total spending: ${formatCurrency(
+      `Last 30 days (${range}) total spending: ${formatMoney(
         spendingSnapshot.totalSpending
       )}.`,
     ]
 
     if (spendingSnapshot.creditCardCount > 0) {
       summaryLines.push(
-        `Credit cards: ${formatCurrency(
+        `Credit cards: ${formatMoney(
           spendingSnapshot.creditCardSpending
         )} across ${spendingSnapshot.creditCardCount} transactions.`
       )
     } else {
-      summaryLines.push('Credit cards: $0.00 (no credit card expenses found).')
+      summaryLines.push(
+        `Credit cards: ${formatMoney(0)} (no credit card expenses found).`
+      )
     }
 
     summaryLines.push(
-      `Other accounts: ${formatCurrency(
+      `Other accounts: ${formatMoney(
         spendingSnapshot.otherSpending
       )} across ${spendingSnapshot.otherCount} transactions.`
     )
@@ -633,7 +849,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       summaryLines.push(
         `Top categories: ${spendingSnapshot.topCategories
           .map(
-            (category) => `${category.name} (${formatCurrency(category.total)})`
+            (category) => `${category.name} (${formatMoney(category.total)})`
           )
           .join(', ')}.`
       )
@@ -647,7 +863,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       return 'I do not see any recent expense data to rank categories yet.'
     }
     return `Top categories (last 30 days): ${spendingSnapshot.topCategories
-      .map((category) => `${category.name} (${formatCurrency(category.total)})`)
+      .map((category) => `${category.name} (${formatMoney(category.total)})`)
       .join(', ')}.`
   }
 
@@ -655,7 +871,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     if (cashSnapshot.accountCount === 0) {
       return 'No checking or savings accounts are connected yet.'
     }
-    return `Checking + savings cash on hand: ${formatCurrency(
+    return `Checking + savings cash on hand: ${formatMoney(
       cashSnapshot.totalCash
     )} across ${cashSnapshot.accountCount} accounts.`
   }
@@ -673,7 +889,7 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
       const upcoming = subscriptionSnapshot.upcoming
         .map((subscription) => {
           const date = subscription.nextBillingDate
-            ? subscription.nextBillingDate.toLocaleDateString('en-US')
+            ? subscription.nextBillingDate.toLocaleDateString(locale)
             : 'TBD'
           return `${subscription.name} on ${date}`
         })
@@ -684,16 +900,16 @@ const buildDeterministicAnswer = (message: string, context: ChatContext) => {
     const upcoming = subscriptionSnapshot.upcoming
       .map((subscription) => {
         const date = subscription.nextBillingDate
-          ? subscription.nextBillingDate.toLocaleDateString('en-US')
+          ? subscription.nextBillingDate.toLocaleDateString(locale)
           : 'TBD'
-        return `${subscription.name} (${formatCurrency(
+        return `${subscription.name} (${formatMoney(
           subscription.amount
         )} ${subscription.billingCycle.toLowerCase()}, next ${date})`
       })
       .join(', ')
 
     return [
-      `Estimated monthly subscriptions total: ${formatCurrency(
+      `Estimated monthly subscriptions total: ${formatMoney(
         subscriptionSnapshot.monthlyTotal
       )}.`,
       upcoming ? `Upcoming: ${upcoming}.` : null,
@@ -1179,7 +1395,12 @@ export async function chatWithAI(
   try {
     console.log('💬 AI chat request:', message)
 
-    const deterministicAnswer = buildDeterministicAnswer(message, context)
+    const locale = normalizeChatLocale(context.locale)
+    const currency = normalizeChatCurrency(context.currency)
+    const shouldUseDeterministic = locale === 'en-US'
+    const deterministicAnswer = shouldUseDeterministic
+      ? buildDeterministicAnswer(message, context)
+      : null
     if (deterministicAnswer) {
       return deterministicAnswer
     }
@@ -1199,6 +1420,8 @@ export async function chatWithAI(
           'You are a financial assistant inside a personal finance app. ' +
           'Use ONLY the provided data snapshot to answer. If data is missing, ' +
           'say what is missing. Keep responses under 150 words and avoid generic advice.' +
+          `\nRespond in locale ${locale}.` +
+          `\nUse ${currency} as the default currency unless the user requests another currency.` +
           `\nData snapshot: ${JSON.stringify(snapshotSummary)}`,
       },
       {
@@ -1212,7 +1435,7 @@ export async function chatWithAI(
     if (!trimmed) {
       return fallbackSummary
     }
-    if (snapshotTail) {
+    if (snapshotTail && locale === 'en-US') {
       return `${trimmed}\n\n${snapshotTail}`
     }
     return trimmed

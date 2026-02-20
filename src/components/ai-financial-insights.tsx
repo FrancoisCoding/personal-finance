@@ -419,11 +419,9 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
                     )}
 
                   <div className="space-y-1 text-xs text-muted-foreground">
-                    <span>
-                      Confidence: {Math.round(insight.confidence * 100)}%
-                    </span>
+                    <p>Confidence: {Math.round(insight.confidence * 100)}%</p>
                     {insight.actionable && insight.action && (
-                      <span>Next step: {insight.action}</span>
+                      <p>Next step: {insight.action}</p>
                     )}
                   </div>
                 </div>

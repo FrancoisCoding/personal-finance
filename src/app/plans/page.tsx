@@ -16,13 +16,14 @@ const planOrder = ['BASIC', 'PRO'] as const
 const publicPlanCatalog = [
   {
     plan: 'BASIC',
-    name: 'Starter',
+    name: 'Basic',
     monthlyPriceLabel: '$5/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
+      'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
       '7-day free trial',
     ],
   },
@@ -31,10 +32,10 @@ const publicPlanCatalog = [
     name: 'Pro',
     monthlyPriceLabel: '$10/mo',
     description:
-      'Everything in Starter plus premium AI guidance and power-user features.',
+      'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
-      'Everything in Starter',
-      'Financial Assistant access',
+      'Everything in Basic',
+      'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).',
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',
@@ -117,8 +118,8 @@ export default function PlansPage() {
             Choose how you want to use FinanceFlow
           </h1>
           <p className="max-w-2xl text-muted-foreground">
-            Start in demo mode, or unlock live account features with Starter or
-            Pro. You can always sign in if you already have an account.
+            Start in demo mode, or unlock live account features with Basic or
+            Pro. AI chat is available on paid plans only.
           </p>
           {currentPlan ? (
             <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
@@ -157,6 +158,10 @@ export default function PlansPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
                   <span>Ideal for evaluation and recruiting demos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                  <span>AI Assistant chat is disabled in demo mode</span>
                 </li>
               </ul>
               <Button

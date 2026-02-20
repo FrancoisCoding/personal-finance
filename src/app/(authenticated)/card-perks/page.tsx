@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 import { Clock3, Gift, Sparkles, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreditCardOnboarding } from '@/components/credit-card-onboarding'
 import {
   Card,
   CardContent,
@@ -84,9 +85,12 @@ export default function CardPerksPage() {
             Upgrade to Pro to unlock monthly perk tracking, expiration
             reminders, and merchant-level usage detection.
           </p>
-          <Button asChild>
-            <Link href="/billing">Upgrade to Pro</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <CreditCardOnboarding />
+            <Button asChild>
+              <Link href="/billing">Upgrade to Pro</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     )
@@ -105,9 +109,12 @@ export default function CardPerksPage() {
             detection from your transactions.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/billing">Manage plan</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <CreditCardOnboarding />
+          <Button asChild variant="outline">
+            <Link href="/billing">Manage plan</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -168,6 +175,9 @@ export default function CardPerksPage() {
               programs such as American Express Gold.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <CreditCardOnboarding />
+          </CardContent>
         </Card>
       ) : (
         <Card

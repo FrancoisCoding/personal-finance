@@ -84,6 +84,107 @@ const translationRows: TTranslationRow[] = [
     'Transactions khojen',
   ],
   [
+    'All Categories',
+    'Todas as categorias',
+    'Todas las categorias',
+    'Toutes les categories',
+    'Sabhi categories',
+  ],
+  [
+    'All Types',
+    'Todos os tipos',
+    'Todos los tipos',
+    'Tous les types',
+    'Sabhi types',
+  ],
+  ['Type', 'Tipo', 'Tipo', 'Type', 'Type'],
+  ['Income', 'Receita', 'Ingresos', 'Revenus', 'Income'],
+  ['Expense', 'Despesa', 'Gasto', 'Depense', 'Expense'],
+  ['Columns', 'Colunas', 'Columnas', 'Colonnes', 'Columns'],
+  [
+    'Toggle columns',
+    'Alternar colunas',
+    'Alternar columnas',
+    'Basculer les colonnes',
+    'Columns toggle karen',
+  ],
+  ['Export', 'Exportar', 'Exportar', 'Exporter', 'Export'],
+  ['Description', 'Descricao', 'Descripcion', 'Description', 'Description'],
+  ['Category', 'Categoria', 'Categoria', 'Categorie', 'Category'],
+  ['Account', 'Conta', 'Cuenta', 'Compte', 'Account'],
+  ['Amount', 'Valor', 'Importe', 'Montant', 'Amount'],
+  ['Action', 'Acao', 'Accion', 'Action', 'Action'],
+  [
+    'Categorizing',
+    'Categorizando',
+    'Categorizando',
+    'Categorisation',
+    'Categorizing',
+  ],
+  ['Categorize', 'Categorizar', 'Categorizar', 'Categoriser', 'Categorize'],
+  [
+    'Loading transactions...',
+    'Carregando transacoes...',
+    'Cargando transacciones...',
+    'Chargement des transactions...',
+    'Transactions load ho rahi hain...',
+  ],
+  [
+    'No transactions found',
+    'Nenhuma transacao encontrada',
+    'No se encontraron transacciones',
+    'Aucune transaction trouvee',
+    'Koi transaction nahin mili',
+  ],
+  [
+    'Try adjusting your filters or search terms.',
+    'Tente ajustar seus filtros ou termos de busca.',
+    'Intenta ajustar tus filtros o terminos de busqueda.',
+    'Essayez d ajuster vos filtres ou termes de recherche.',
+    'Apne filters ya search terms samayojit karen.',
+  ],
+  [
+    'Rows per page:',
+    'Linhas por pagina:',
+    'Filas por pagina:',
+    'Lignes par page :',
+    'Rows per page:',
+  ],
+  [
+    'Rows per page',
+    'Linhas por pagina',
+    'Filas por pagina',
+    'Lignes par page',
+    'Rows per page',
+  ],
+  [
+    'Previous page',
+    'Pagina anterior',
+    'Pagina anterior',
+    'Page precedente',
+    'Previous page',
+  ],
+  [
+    'Next page',
+    'Proxima pagina',
+    'Pagina siguiente',
+    'Page suivante',
+    'Next page',
+  ],
+  ['Showing', 'Mostrando', 'Mostrando', 'Affichage', 'Showing'],
+  ['Page', 'Pagina', 'Pagina', 'Page', 'Page'],
+  ['of', 'de', 'de', 'de', 'of'],
+  ['to', 'a', 'a', 'a', 'to'],
+  ['result', 'resultado', 'resultado', 'resultat', 'result'],
+  ['results', 'resultados', 'resultados', 'resultats', 'results'],
+  [
+    'No data available.',
+    'Nenhum dado disponivel.',
+    'No hay datos disponibles.',
+    'Aucune donnee disponible.',
+    'No data available.',
+  ],
+  [
     'Add Transaction',
     'Adicionar transacao',
     'Agregar transaccion',
@@ -307,6 +408,54 @@ const translationRows: TTranslationRow[] = [
     'Frequently asked questions',
   ],
   [
+    'Alerts center',
+    'Central de alertas',
+    'Centro de alertas',
+    'Centre des alertes',
+    'Alerts center',
+  ],
+  [
+    'You are all caught up.',
+    'Voce esta em dia com tudo.',
+    'Estas al dia con todo.',
+    'Vous etes a jour.',
+    'You are all caught up.',
+  ],
+  ['History', 'Historico', 'Historial', 'Historique', 'History'],
+  ['Rules', 'Regras', 'Reglas', 'Regles', 'Rules'],
+  [
+    'Mark all read',
+    'Marcar todas como lidas',
+    'Marcar todo como leido',
+    'Tout marquer comme lu',
+    'Mark all read',
+  ],
+  [
+    'Clear read',
+    'Limpar lidas',
+    'Limpiar leidas',
+    'Effacer les lues',
+    'Clear read',
+  ],
+  ['Clear all', 'Limpar tudo', 'Limpiar todo', 'Tout effacer', 'Clear all'],
+  ['All', 'Todos', 'Todos', 'Tous', 'All'],
+  ['Unread', 'Nao lidas', 'No leidas', 'Non lues', 'Unread'],
+  ['Read', 'Lidas', 'Leidas', 'Lues', 'Read'],
+  [
+    'No notifications',
+    'Sem notificacoes',
+    'Sin notificaciones',
+    'Aucune notification',
+    'No notifications',
+  ],
+  [
+    'Everything is up to date.',
+    'Tudo esta atualizado.',
+    'Todo esta actualizado.',
+    'Tout est a jour.',
+    'Everything is up to date.',
+  ],
+  [
     'Regional preferences',
     'Preferencias regionais',
     'Preferencias regionales',
@@ -321,12 +470,71 @@ const translationRows: TTranslationRow[] = [
     'Display language',
   ],
   [
+    'Choose language',
+    'Escolher idioma',
+    'Elegir idioma',
+    'Choisir la langue',
+    'Choose language',
+  ],
+  [
     'Display currency',
     'Moeda de exibicao',
     'Moneda de visualizacion',
     'Devise d affichage',
     'Display currency',
   ],
+  [
+    'Choose currency',
+    'Escolher moeda',
+    'Elegir moneda',
+    'Choisir la devise',
+    'Choose currency',
+  ],
+  ['Email', 'Email', 'Correo', 'E-mail', 'Email'],
+  [
+    'Display name',
+    'Nome de exibicao',
+    'Nombre para mostrar',
+    'Nom d affichage',
+    'Display name',
+  ],
+  [
+    'Security center',
+    'Central de seguranca',
+    'Centro de seguridad',
+    'Centre de securite',
+    'Security center',
+  ],
+  [
+    'Open security center',
+    'Abrir central de seguranca',
+    'Abrir centro de seguridad',
+    'Ouvrir le centre de securite',
+    'Open security center',
+  ],
+  ['Add', 'Adicionar', 'Agregar', 'Ajouter', 'Add'],
+  [
+    'These settings update date, time, and currency formatting across your workspace.',
+    'Essas configuracoes atualizam a formatacao de data, hora e moeda em todo o seu workspace.',
+    'Estos ajustes actualizan el formato de fecha, hora y moneda en todo tu espacio de trabajo.',
+    'Ces reglages mettent a jour le format de date, d heure et de devise dans tout votre espace.',
+    'Yeh settings poore workspace mein date, time aur currency formatting update karti hain.',
+  ],
+  [
+    'Default behavior follows your latest synced Teller account.',
+    'O comportamento padrao segue sua conta Teller sincronizada mais recente.',
+    'El comportamiento predeterminado sigue tu cuenta Teller sincronizada mas reciente.',
+    'Le comportement par defaut suit votre compte Teller synchronise le plus recent.',
+    'Default behavior aapke latest synced Teller account ko follow karta hai.',
+  ],
+  [
+    'No email on file',
+    'Nenhum email cadastrado',
+    'No hay correo registrado',
+    'Aucun e-mail enregistre',
+    'No email on file',
+  ],
+  ['User', 'Usuario', 'Usuario', 'Utilisateur', 'User'],
   [
     'Use connected account currency',
     'Usar moeda da conta conectada',
@@ -1987,10 +2195,14 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
   'en-US': {},
   'pt-BR': {
     'Subscription plans': 'Planos de assinatura',
+    'Choose between Basic and Pro. Both include a 7-day free trial.':
+      'Escolha entre Basico e Pro. Ambos incluem teste gratis de 7 dias.',
     'Choose between Starter and Pro. Both include a 7-day free trial.':
       'Escolha entre Starter e Pro. Ambos incluem teste gratis de 7 dias.',
     'Your account is in live-locked mode until you choose a paid plan. You can still continue in demo mode anytime.':
       'Sua conta esta bloqueada para modo real ate escolher um plano pago. Voce ainda pode continuar no modo demonstracao a qualquer momento.',
+    'Start in demo mode, or unlock live account features with Basic or Pro. AI chat is available on paid plans only.':
+      'Comece no modo demonstracao ou desbloqueie recursos reais com Basico ou Pro. O chat de IA esta disponivel apenas em planos pagos.',
     'Superuser access is active on this account. Pro features are enabled without billing.':
       'Acesso superusuario esta ativo nesta conta. Recursos Pro estao habilitados sem cobranca.',
     'Current subscription': 'Assinatura atual',
@@ -2014,16 +2226,28 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     'Accounts and transactions': 'Contas e transacoes',
     'Budgets and reminders': 'Orcamentos e lembretes',
     'Subscription tracking': 'Monitoramento de assinaturas',
+    'AI Assistant access with standard request limits (up to 40 req/min).':
+      'Acesso ao Assistente de IA com limites padrao de requisicoes (ate 40 req/min).',
+    'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).':
+      'Acesso ao Assistente de IA com limites protegidos (30 req/min, 150 mensagens a cada 4 horas, reset automatico).',
     '7-day free trial': 'Teste gratis de 7 dias',
+    'Everything in Basic plus premium AI guidance and power-user features.':
+      'Tudo do Basico mais orientacao premium com IA e recursos avancados.',
+    'Everything in Basic': 'Tudo do Basico',
     'Everything in Starter plus premium AI guidance and power-user features.':
       'Tudo do Starter mais orientacao premium com IA e recursos avancados.',
     'Everything in Starter': 'Tudo do Starter',
     'Financial Assistant access': 'Acesso ao Assistente Financeiro',
+    'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).':
+      'Acesso de alta capacidade ao Assistente de IA com protecoes de uso justo (200 req/min, 5.000 mensagens a cada 4 horas).',
+    'High-throughput AI Assistant access with soft fair-use safeguards.':
+      'Acesso de alta capacidade ao Assistente de IA com protecoes de uso justo.',
     'Advanced AI insights': 'Insights avancados de IA',
     'Priority support': 'Suporte prioritario',
     'Redirecting...': 'Redirecionando...',
     'Superuser access enabled': 'Acesso superusuario habilitado',
     'Current plan': 'Plano atual',
+    'Start Basic trial': 'Iniciar teste do Basico',
     'Start Starter trial': 'Iniciar teste do Starter',
     'Start Pro trial': 'Iniciar teste do Pro',
     'Billing error': 'Erro de faturamento',
@@ -2035,6 +2259,13 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     'Customer portal URL was not returned.':
       'URL do portal do cliente nao foi retornada.',
     'Loading plan options...': 'Carregando opcoes de plano...',
+    'Refresh status': 'Atualizar status',
+    'Refreshing...': 'Atualizando...',
+    'Plan status updated': 'Status do plano atualizado',
+    'Plan details have been refreshed.':
+      'Os detalhes do plano foram atualizados.',
+    'Unable to refresh plan status.':
+      'Nao foi possivel atualizar o status do plano.',
     'Friendly financial guidance, on demand.':
       'Orientacao financeira amigavel, sob demanda.',
     'Ask about spending, cash flow, or subscriptions and get clear next steps based on your activity.':
@@ -2066,10 +2297,20 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     You: 'Voce',
     Assistant: 'Assistente',
     'Pro feature': 'Recurso Pro',
+    'Paid feature': 'Recurso pago',
     'Financial Assistant is available on the Pro plan.':
       'O Assistente Financeiro esta disponivel no plano Pro.',
+    'Financial Assistant is available on Basic and Pro plans.':
+      'O Assistente Financeiro esta disponivel nos planos Basico e Pro.',
+    'Financial Assistant is available on Starter and Pro plans.':
+      'O Assistente Financeiro esta disponivel nos planos Starter e Pro.',
+    'Basic includes guarded AI usage limits, and Pro includes high-throughput access with fair-use safeguards.':
+      'O Basico inclui limites protegidos de uso de IA e o Pro inclui acesso de alta capacidade com protecoes de uso justo.',
     'Upgrade to Pro to unlock AI guidance, advanced insight prompts, and personalized recommendations.':
       'Faca upgrade para Pro para desbloquear orientacoes com IA, prompts avancados e recomendacoes personalizadas.',
+    'Starter includes standard AI usage limits, and Pro includes high-throughput access with soft fair-use safeguards.':
+      'O Starter inclui limites padrao de uso de IA e o Pro inclui acesso de alta capacidade com protecoes de uso justo.',
+    'Choose a plan': 'Escolher um plano',
     'Upgrade to Pro': 'Fazer upgrade para Pro',
     'Credit Score Lab': 'Laboratorio de Score de Credito',
     'Card Perks': 'Beneficios de cartao',
@@ -2160,6 +2401,8 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     Prioritize: 'Priorizar',
     'Unlock Pro to access score modeling, utilization simulations, and account-level improvement plans.':
       'Desbloqueie o Pro para acessar modelagem de score, simulacoes de utilizacao e planos de melhoria por conta.',
+    'Basic covers live tracking. Pro adds deeper credit analytics and strategy guidance.':
+      'O Basico cobre monitoramento em tempo real. O Pro adiciona analise de credito aprofundada e orientacao estrategica.',
     'Starter covers live tracking. Pro adds deeper credit analytics and strategy guidance.':
       'O Starter cobre monitoramento em tempo real. O Pro adiciona analise de credito aprofundada e orientacao estrategica.',
     'Loading your report...': 'Carregando seu relatorio...',
@@ -2347,7 +2590,26 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     'Delete All Accounts': 'Excluir todas as contas',
     'This is irreversible. All accounts, connected data, and transactions will be permanently deleted.':
       'Isto e irreversivel. Todas as contas, dados conectados e transacoes serao excluidos permanentemente.',
+    'Create a Budget': 'Criar um orcamento',
+    'Set spending limits for different categories':
+      'Defina limites de gastos para diferentes categorias',
+    'Create Budget': 'Criar orcamento',
+    'Create Budge': 'Criar orcamento',
+    'Budget Name': 'Nome do orcamento',
+    'e.g., Groceries, Entertainment, Transportation':
+      'ex.: Mercado, Entretenimento, Transporte',
+    'Budget Amount': 'Valor do orcamento',
+    'Category (Optional)': 'Categoria (Opcional)',
+    'No specific category': 'Nenhuma categoria especifica',
+    'Recurring Budget': 'Orcamento recorrente',
+    'Start Date': 'Data de inicio',
+    'End Date (Optional)': 'Data de termino (Opcional)',
     'Missing information': 'Informacoes ausentes',
+    'Please enter a budget name.': 'Digite um nome para o orcamento.',
+    'Please enter a valid budget amount.':
+      'Digite um valor de orcamento valido.',
+    'Missing date': 'Data ausente',
+    'Please select a start date.': 'Selecione uma data de inicio.',
     'Please fill in all required fields.':
       'Preencha todos os campos obrigatorios.',
     'transactions match your filters':
@@ -2366,6 +2628,258 @@ const uiTranslationOverrides: Record<TUiLocale, Record<string, string>> = {
     'Analyze Spending': 'Analisar gastos',
     'Review Goals': 'Revisar metas',
     'No insights yet': 'Ainda nao ha insights',
+    'No insights available': 'Nenhum insight disponivel',
+    'Add more transactions to get personalized insights.':
+      'Adicione mais transacoes para receber insights personalizados.',
+    'Track and manage your transaction history with smart categorization.':
+      'Acompanhe e gerencie seu historico de transacoes com categorizacao inteligente.',
+    'Detected subscriptions': 'Assinaturas detectadas',
+    'Upcoming renewals': 'Proximas renovacoes',
+    'No recurring patterns detected yet':
+      'Nenhum padrao recorrente detectado ainda',
+    'Add more transactions to improve detection accuracy.':
+      'Adicione mais transacoes para melhorar a precisao da deteccao.',
+    'Confirmed recurring charges': 'Cobrancas recorrentes confirmadas',
+    'Review security activity, control access sessions, and manage data handling preferences.':
+      'Revise atividade de seguranca, controle sessoes de acesso e gerencie preferencias de dados.',
+    'Audit activity, access sessions, and data controls.':
+      'Audite atividade, sessoes de acesso e controles de dados.',
+    'Get fast answers, contact support, and resolve common issues without breaking your workflow.':
+      'Obtenha respostas rapidas, contate o suporte e resolva problemas comuns sem interromper seu fluxo.',
+    'Email support': 'Suporte por email',
+    'Send account and billing questions to support@financeflow.dev.':
+      'Envie duvidas de conta e cobranca para support@financeflow.dev.',
+    'In-app chat': 'Chat no app',
+    'Chat with a specialist during business hours for quick help.':
+      'Converse com um especialista no horario comercial para ajuda rapida.',
+    'Service updates': 'Atualizacoes do servico',
+    'Review live platform status and maintenance notices.':
+      'Revise o status da plataforma em tempo real e avisos de manutencao.',
+    'How do I connect a new account?': 'Como conecto uma nova conta?',
+    'Go to Dashboard, select Connect Bank Account, and complete the secure prompt.':
+      'Va para o Dashboard, selecione Conectar conta bancaria e conclua o fluxo seguro.',
+    'How do I update my subscription?': 'Como atualizo minha assinatura?',
+    'Open Billing to change plans, update payment methods, or cancel your subscription.':
+      'Abra Faturamento para trocar de plano, atualizar formas de pagamento ou cancelar sua assinatura.',
+    'How can I export my data?': 'Como posso exportar meus dados?',
+    'Use Export in Transactions to download your filtered activity.':
+      'Use Exportar em Transacoes para baixar sua atividade filtrada.',
+    'Your name': 'Seu nome',
+    'you@example.com': 'voce@exemplo.com',
+    'What do you need help with?': 'Com o que voce precisa de ajuda?',
+    'Share the issue, your browser, and what you already tried.':
+      'Descreva o problema, seu navegador e o que voce ja tentou.',
+    'We usually reply within one business day.':
+      'Normalmente respondemos em ate um dia util.',
+    'Message sent successfully.': 'Mensagem enviada com sucesso.',
+    'Unable to submit your message.': 'Nao foi possivel enviar sua mensagem.',
+    'Sponsored tools': 'Ferramentas patrocinadas',
+    'Add Account': 'Adicionar conta',
+    'No credit cards connected': 'Nenhum cartao de credito conectado',
+    'Current Balance': 'Saldo atual',
+    'Credit Limit': 'Limite de credito',
+    'Not scheduled': 'Nao agendado',
+    'Add another low-fee card over time to improve your credit mix profile.':
+      'Adicione outro cartao de baixa tarifa ao longo do tempo para melhorar seu mix de credito.',
+    'Your savings rate is': 'Sua taxa de poupanca e',
+    'Financial experts recommend saving at least':
+      'Especialistas financeiros recomendam guardar pelo menos',
+    'of your income.': 'da sua renda.',
+    'Friendly, clear answers from your real data.':
+      'Respostas claras e amigaveis com base nos seus dados reais.',
+    'Supported popular cards': 'Cartoes populares suportados',
+    'Pick a popular card template, then adjust values before saving.':
+      'Escolha um modelo de cartao popular e ajuste os valores antes de salvar.',
+    'Add credit card': 'Adicionar cartao de credito',
+    'Add a card here to activate perk tracking and credit report analysis.':
+      'Adicione um cartao aqui para ativar o rastreio de beneficios e a analise de credito.',
+    'Card name': 'Nome do cartao',
+    'Credit limit': 'Limite de credito',
+    'Current balance': 'Saldo atual',
+    'Adding card...': 'Adicionando cartao...',
+    'Add card': 'Adicionar cartao',
+    'Supported cards': 'Cartoes suportados',
+    'Use this card': 'Usar este cartao',
+    'Suggested limit:': 'Limite sugerido:',
+    'Add credit cards here to unlock account-level reporting and utilization tracking.':
+      'Adicione cartoes de credito aqui para liberar relatorios por conta e acompanhamento de utilizacao.',
+    Basic: 'Basico',
+    Starter: 'Inicial',
+    Pro: 'Pro',
+    'AI Assistant chat is disabled in demo mode':
+      'O chat do Assistente de IA esta desativado no modo demonstracao',
+    'AI chat is available on paid plans only.':
+      'O chat de IA esta disponivel apenas em planos pagos.',
+    'AI Assistant is unavailable in Starter/demo mode. Upgrade to Basic or Pro.':
+      'O Assistente de IA nao esta disponivel no modo Starter/demonstracao. Faca upgrade para Basico ou Pro.',
+    'A paid Basic or Pro subscription is required.':
+      'E necessario um plano pago Basico ou Pro.',
+    'Basic AI message window reached. Please wait for reset and try again.':
+      'A janela de mensagens de IA do Basico foi atingida. Aguarde o reset e tente novamente.',
+    'AI fair-use window reached. Please wait for reset and retry.':
+      'A janela de uso justo da IA foi atingida. Aguarde o reset e tente novamente.',
+    'Basic daily AI limit reached. Please try again after reset.':
+      'O limite diario de IA do Basico foi atingido. Tente novamente apos o reset.',
+    'Daily AI fair-use safeguard reached. Please try again after reset.':
+      'A protecao diaria de uso justo da IA foi atingida. Tente novamente apos o reset.',
+    'Low Savings Rate': 'Baixa taxa de poupanca',
+    'Set up automatic transfers to savings account':
+      'Configure transferencias automaticas para a conta de poupanca',
+    'Review and reduce non-essential expenses':
+      'Revise e reduza despesas nao essenciais',
+    'Ask about spending, cash flow, or subscriptions...':
+      'Pergunte sobre gastos, fluxo de caixa ou assinaturas...',
+    'Rows per page:': 'Linhas por pagina:',
+    'Rows per page': 'Linhas por pagina',
+    Columns: 'Colunas',
+    Export: 'Exportar',
+    Previous: 'Anterior',
+    Next: 'Proximo',
+    'Previous page': 'Pagina anterior',
+    'Next page': 'Proxima pagina',
+    '0 results': '0 resultados',
+    Description: 'Descricao',
+    Category: 'Categoria',
+    Account: 'Conta',
+    Amount: 'Valor',
+    Action: 'Acao',
+    'Total income': 'Receita total',
+    'Total expenses': 'Despesas totais',
+    'Filtered transactions': 'Transacoes filtradas',
+    'Outflows this view': 'Saidas nesta visualizacao',
+    'Income minus expenses': 'Receita menos despesas',
+    'Auto-detected subscriptions': 'Assinaturas detectadas automaticamente',
+    'We detect recurring charges from your transactions and suggest subscriptions to track.':
+      'Detectamos cobrancas recorrentes nas suas transacoes e sugerimos assinaturas para acompanhar.',
+    'Active subscriptions': 'Assinaturas ativas',
+    'Monthly cost': 'Custo mensal',
+    'Yearly cost': 'Custo anual',
+    'Detected candidates': 'Candidatos detectados',
+    'Review these recurring charges and add the ones you want to track.':
+      'Revise essas cobrancas recorrentes e adicione as assinaturas que deseja acompanhar.',
+    'Subscription optimizer': 'Otimizador de assinaturas',
+    'No recurring patterns detected yet.':
+      'Nenhum padrao recorrente detectado ainda.',
+    'At risk': 'Em risco',
+    'Projected month-end utilization and overrun risk.':
+      'Utilizacao projetada para o fim do mes e risco de estouro.',
+    spent: 'gasto',
+    budget: 'orcamento',
+    Page: 'Pagina',
+    of: 'de',
+    to: 'a',
+    'Projected:': 'Projetado:',
+    result: 'resultado',
+    results: 'resultados',
+    'recent transactions': 'transacoes recentes',
+    Hide: 'Ocultar',
+    Show: 'Mostrar',
+    'Last 4 digits': 'Ultimos 4 digitos',
+    'e.g., Chase Bank, American Express': 'ex.: Chase Bank, American Express',
+    Activate: 'Ativar',
+    'Save changes': 'Salvar alteracoes',
+    'Detected from recurring transactions':
+      'Detectado de transacoes recorrentes',
+    'Detected subscriptions are up to date.':
+      'As assinaturas detectadas estao atualizadas.',
+    'Scan complete': 'Verificacao concluida',
+    'Subscription added': 'Assinatura adicionada',
+    'Renewal reminder set': 'Lembrete de renovacao definido',
+    'Renews within 24h': 'Renova em ate 24h',
+    'Create Subscription': 'Criar assinatura',
+    'Create a Subscription': 'Criar uma assinatura',
+    'Track your recurring payments and subscriptions':
+      'Acompanhe seus pagamentos e assinaturas recorrentes',
+    'Add any additional notes about this subscription...':
+      'Adicione notas adicionais sobre esta assinatura...',
+    'Increase Savings': 'Aumentar poupanca',
+    'Review Budget': 'Revisar orcamento',
+    'Monitor Spending': 'Monitorar gastos',
+    'Adjust Budget': 'Ajustar orcamento',
+    'Review Transactions': 'Revisar transacoes',
+    'Unusual Spending Detected': 'Gasto incomum detectado',
+    'Consider setting a specific budget for this category':
+      'Considere definir um orcamento especifico para esta categoria',
+    'Look for ways to reduce spending in this area':
+      'Procure formas de reduzir os gastos nesta area',
+    'Review if this spending aligns with your financial goals':
+      'Revise se este gasto esta alinhado com seus objetivos financeiros',
+    'Consider the 50/30/20 budgeting rule':
+      'Considere a regra de orcamento 50/30/20',
+    'Review recent transactions in this category':
+      'Revise transacoes recentes nesta categoria',
+    'Consider increasing your budget for next month':
+      'Considere aumentar seu orcamento para o proximo mes',
+    'Monitor your spending closely for the rest of the month':
+      'Monitore seus gastos de perto no restante do mes',
+    'Consider reducing non-essential purchases':
+      'Considere reduzir compras nao essenciais',
+    'Review your budget allocation': 'Revise a alocacao do seu orcamento',
+    'Increase your monthly savings contribution':
+      'Aumente sua contribuicao mensal de poupanca',
+    'Look for additional income opportunities':
+      'Procure oportunidades adicionais de renda',
+    'Review your goal timeline': 'Revise o cronograma da sua meta',
+    'Consider setting a new financial goal':
+      'Considere definir uma nova meta financeira',
+    'Celebrate your achievement!': 'Comemore sua conquista!',
+    'Review your next financial priorities':
+      'Revise suas proximas prioridades financeiras',
+    "Review these transactions to ensure they're legitimate":
+      'Revise estas transacoes para garantir que sejam legitimas',
+    'Consider if these are one-time expenses or recurring':
+      'Considere se sao despesas pontuais ou recorrentes',
+    'Update your budget if these are expected expenses':
+      'Atualize seu orcamento se estas despesas forem esperadas',
+    'No response generated.': 'Nenhuma resposta gerada.',
+    'Assistant error': 'Erro do assistente',
+    'Failed to get a response. Please check your OpenRouter setup.':
+      'Nao foi possivel obter resposta. Verifique sua configuracao do OpenRouter.',
+    'Failed to get a response. Please try again.':
+      'Nao foi possivel obter resposta. Tente novamente.',
+    'Track alerts, rules, and financial signals.':
+      'Acompanhe alertas, regras e sinais financeiros.',
+    'No alerts yet': 'Ainda nao ha alertas',
+    'Not triggered yet': 'Ainda nao acionado',
+    'New subscription added': 'Nova assinatura adicionada',
+    'New recurring charge added.': 'Nova cobranca recorrente adicionada.',
+    'Alert when a new recurring charge is detected.':
+      'Alerta quando uma nova cobranca recorrente e detectada.',
+    'Subscription due soon': 'Assinatura vence em breve',
+    'Remind you before a subscription renews.':
+      'Lembrar voce antes de uma assinatura renovar.',
+    'Budget exceeded': 'Orcamento excedido',
+    'Critical alert when a budget is overspent.':
+      'Alerta critico quando um orcamento e ultrapassado.',
+    'Budget nearing limit': 'Orcamento perto do limite',
+    'Heads-up when a budget is close to its cap.':
+      'Aviso quando um orcamento estiver perto do limite.',
+    'Low cash balance': 'Saldo em caixa baixo',
+    'Warn when combined checking and savings dip too low.':
+      'Avisar quando conta corrente e poupanca combinadas ficarem muito baixas.',
+    'Income trending down': 'Renda em queda',
+    'Warn when income dips compared to last month.':
+      'Avisar quando a renda cair em relacao ao mes passado.',
+    'Spending spike detected': 'Pico de gastos detectado',
+    'Detect unusual week-over-week spending increases.':
+      'Detectar aumentos incomuns de gastos semana a semana.',
+    'Large transaction': 'Transacao grande',
+    'Flag unusually large expenses that need review.':
+      'Sinalizar despesas incomuns de alto valor que precisam de revisao.',
+    'Credit utilization elevated': 'Utilizacao de credito elevada',
+    'Alert when credit card utilization stays high.':
+      'Alerta quando a utilizacao do cartao de credito permanecer alta.',
+    'Goal achieved': 'Meta alcancada',
+    'Goal hits 100% funding.': 'Meta atinge 100% de financiamento.',
+    'Goal deadline approaching': 'Prazo da meta se aproximando',
+    'Prompt when goals are behind schedule.':
+      'Alertar quando metas estiverem atrasadas.',
+    'New goal added': 'Nova meta adicionada',
+    'New goal created.': 'Nova meta criada.',
+    'Confirm new goals are set up correctly.':
+      'Confirme se novas metas foram configuradas corretamente.',
+    'Close notifications': 'Fechar notificacoes',
+    'Dismiss notification': 'Dispensar notificacao',
   },
   'es-ES': {},
   'fr-FR': {},
@@ -2414,10 +2928,36 @@ export const translateUiText = (text: string, locale: string) => {
   if (!trimmedText) return text
 
   const dictionary = mergedUiTranslationDictionary[normalizedLocale]
+  const applyLocalizedPercentSpacing = (value: string) =>
+    value.replace(/(\d+(?:[.,]\d+)?)%/g, '$1 %')
+  const escapeForRegex = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const translatedText = dictionary[trimmedText] ?? trimmedText
 
   if (translatedText !== trimmedText) {
-    return `${leadingWhitespace}${translatedText}${trailingWhitespace}`
+    return `${leadingWhitespace}${applyLocalizedPercentSpacing(
+      translatedText
+    )}${trailingWhitespace}`
+  }
+
+  const normalizedWhitespaceText = trimmedText.replace(/\s+/g, ' ').trim()
+  const normalizedWhitespaceTranslation = dictionary[normalizedWhitespaceText]
+  if (normalizedWhitespaceTranslation) {
+    return `${leadingWhitespace}${applyLocalizedPercentSpacing(
+      normalizedWhitespaceTranslation
+    )}${trailingWhitespace}`
+  }
+
+  const detectRecurringSubscriptionsMatch = trimmedText.match(
+    /^We detect recurring charges from your transactions and suggest\s+subscriptions to track\.?$/
+  )
+  if (detectRecurringSubscriptionsMatch) {
+    const sentence =
+      dictionary[
+        'We detect recurring charges from your transactions and suggest subscriptions to track.'
+      ] ??
+      'We detect recurring charges from your transactions and suggest subscriptions to track.'
+    return `${leadingWhitespace}${sentence}${trailingWhitespace}`
   }
 
   const welcomeBackMatch = trimmedText.match(/^Welcome back,\s*(.+)!$/)
@@ -2487,6 +3027,20 @@ export const translateUiText = (text: string, locale: string) => {
     return `${leadingWhitespace}${count} ${donationLabel} · ${donationCountDateMatch[2]}${trailingWhitespace}`
   }
 
+  const cadenceLastNextMatch = trimmedText.match(
+    /^(.+)\s+[·\u00b7]\s+Last\s+(.+?)(?:\s+[·\u00b7]\s+Next\s+(.+))?$/
+  )
+  if (cadenceLastNextMatch) {
+    const cadence =
+      dictionary[cadenceLastNextMatch[1]] ?? cadenceLastNextMatch[1]
+    const lastLabel = dictionary['Last'] ?? 'Last'
+    const nextLabel = dictionary['Next'] ?? 'Next'
+    if (cadenceLastNextMatch[3]) {
+      return `${leadingWhitespace}${cadence} · ${lastLabel} ${cadenceLastNextMatch[2]} · ${nextLabel} ${cadenceLastNextMatch[3]}${trailingWhitespace}`
+    }
+    return `${leadingWhitespace}${cadence} · ${lastLabel} ${cadenceLastNextMatch[2]}${trailingWhitespace}`
+  }
+
   const lastDateMatch = trimmedText.match(/^Last\s+(.+)$/)
   if (lastDateMatch) {
     const label = dictionary['Last'] ?? 'Last'
@@ -2504,13 +3058,58 @@ export const translateUiText = (text: string, locale: string) => {
   )
   if (confidenceMatch) {
     const label = dictionary['Confidence:'] ?? 'Confidence:'
-    return `${leadingWhitespace}${label} ${confidenceMatch[1]}%${trailingWhitespace}`
+    return `${leadingWhitespace}${label} ${applyLocalizedPercentSpacing(
+      `${confidenceMatch[1]}%`
+    )}${trailingWhitespace}`
+  }
+
+  const confidenceWithNextStepMatch = trimmedText.match(
+    /^Confidence:\s*(\d+(?:[.,]\d+)?)%\s*Next step:\s*(.+)$/
+  )
+  if (confidenceWithNextStepMatch) {
+    const confidenceLabel = dictionary['Confidence:'] ?? 'Confidence:'
+    const nextStepLabel = dictionary['Next step:'] ?? 'Next step:'
+    const localizedNextStep =
+      dictionary[confidenceWithNextStepMatch[2]] ??
+      confidenceWithNextStepMatch[2]
+    const confidenceValue = applyLocalizedPercentSpacing(
+      `${confidenceWithNextStepMatch[1]}%`
+    )
+    return `${leadingWhitespace}${confidenceLabel} ${confidenceValue} ${nextStepLabel} ${localizedNextStep}${trailingWhitespace}`
+  }
+
+  const localizedConfidenceLabel = dictionary['Confidence:'] ?? 'Confidence:'
+  const localizedNextStepLabel = dictionary['Next step:'] ?? 'Next step:'
+  const localizedConfidenceWithNextStepMatch = trimmedText.match(
+    new RegExp(
+      `^${escapeForRegex(localizedConfidenceLabel)}\\s*(\\d+(?:[.,]\\d+)?)%\\s*${escapeForRegex(localizedNextStepLabel)}\\s*(.+)$`,
+      'i'
+    )
+  )
+  if (localizedConfidenceWithNextStepMatch) {
+    const localizedNextStep =
+      dictionary[localizedConfidenceWithNextStepMatch[2]] ??
+      localizedConfidenceWithNextStepMatch[2]
+    const confidenceValue = applyLocalizedPercentSpacing(
+      `${localizedConfidenceWithNextStepMatch[1]}%`
+    )
+    return `${leadingWhitespace}${localizedConfidenceLabel} ${confidenceValue} ${localizedNextStepLabel} ${localizedNextStep}${trailingWhitespace}`
   }
 
   const nextStepMatch = trimmedText.match(/^Next step:\s+(.+)$/)
   if (nextStepMatch) {
     const label = dictionary['Next step:'] ?? 'Next step:'
-    return `${leadingWhitespace}${label} ${nextStepMatch[1]}${trailingWhitespace}`
+    const localizedNextStep = dictionary[nextStepMatch[1]] ?? nextStepMatch[1]
+    return `${leadingWhitespace}${label} ${localizedNextStep}${trailingWhitespace}`
+  }
+
+  const localizedNextStepMatch = trimmedText.match(
+    new RegExp(`^${escapeForRegex(localizedNextStepLabel)}\\s+(.+)$`, 'i')
+  )
+  if (localizedNextStepMatch) {
+    const localizedNextStep =
+      dictionary[localizedNextStepMatch[1]] ?? localizedNextStepMatch[1]
+    return `${leadingWhitespace}${localizedNextStepLabel} ${localizedNextStep}${trailingWhitespace}`
   }
 
   const highSpendingMatch = trimmedText.match(/^High Spending in\s+(.+)$/)
@@ -2526,7 +3125,10 @@ export const translateUiText = (text: string, locale: string) => {
     const accountsForLabel = dictionary['accounts for'] ?? 'accounts for'
     const suffix =
       dictionary['of your total spending.'] ?? 'of your total spending.'
-    return `${leadingWhitespace}${accountsForMatch[1]} ${accountsForLabel} ${accountsForMatch[2]}% ${suffix}${trailingWhitespace}`
+    const percentageValue = applyLocalizedPercentSpacing(
+      `${accountsForMatch[2]}%`
+    )
+    return `${leadingWhitespace}${accountsForMatch[1]} ${accountsForLabel} ${percentageValue} ${suffix}${trailingWhitespace}`
   }
 
   const overBudgetTitleMatch = trimmedText.match(/^Over Budget:\s+(.+)$/)
@@ -2558,7 +3160,10 @@ export const translateUiText = (text: string, locale: string) => {
     const firstPart = dictionary["You're at"] ?? "You're at"
     const middle = dictionary['of your'] ?? 'of your'
     const suffix = dictionary['budget.'] ?? 'budget.'
-    return `${leadingWhitespace}${firstPart} ${budgetProgressMatch[1]}% ${middle} ${budgetProgressMatch[2]} ${suffix}${trailingWhitespace}`
+    const percentageValue = applyLocalizedPercentSpacing(
+      `${budgetProgressMatch[1]}%`
+    )
+    return `${leadingWhitespace}${firstPart} ${percentageValue} ${middle} ${budgetProgressMatch[2]} ${suffix}${trailingWhitespace}`
   }
 
   const behindGoalMatch = trimmedText.match(/^Behind on Goal:\s+(.+)$/)
@@ -2580,7 +3185,10 @@ export const translateUiText = (text: string, locale: string) => {
     const firstPart = dictionary["You're at"] ?? "You're at"
     const middle = dictionary['of your'] ?? 'of your'
     const suffix = dictionary['goal.'] ?? 'goal.'
-    return `${leadingWhitespace}${firstPart} ${goalProgressMatch[1]}% ${middle} ${goalProgressMatch[2]} ${suffix}${trailingWhitespace}`
+    const percentageValue = applyLocalizedPercentSpacing(
+      `${goalProgressMatch[1]}%`
+    )
+    return `${leadingWhitespace}${firstPart} ${percentageValue} ${middle} ${goalProgressMatch[2]} ${suffix}${trailingWhitespace}`
   }
 
   const goalCompletedDescriptionMatch = trimmedText.match(
@@ -2614,6 +3222,145 @@ export const translateUiText = (text: string, locale: string) => {
       dictionary['transactions match your filters'] ??
       'transactions match your filters'
     return `${leadingWhitespace}${transactionsMatchFilterMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const recentTransactionsMatch = trimmedText.match(
+    /^(\d+)\s+recent\s+transactions$/
+  )
+  if (recentTransactionsMatch) {
+    const count = recentTransactionsMatch[1]
+    const suffix = dictionary['recent transactions'] ?? 'recent transactions'
+    return `${leadingWhitespace}${count} ${suffix}${trailingWhitespace}`
+  }
+
+  const pageCountMatch = trimmedText.match(/^Page\s+(\d+)\s+of\s+(\d+)$/)
+  if (pageCountMatch) {
+    const pageLabel = dictionary['Page'] ?? 'Page'
+    const ofLabel = dictionary['of'] ?? 'of'
+    return `${leadingWhitespace}${pageLabel} ${pageCountMatch[1]} ${ofLabel} ${pageCountMatch[2]}${trailingWhitespace}`
+  }
+
+  const showingResultsMatch = trimmedText.match(
+    /^Showing\s+(\d+)\s+to\s+(\d+)\s+of\s+(\d+)\s+results$/
+  )
+  if (showingResultsMatch) {
+    const showingLabel = dictionary['Showing'] ?? 'Showing'
+    const toLabel = dictionary['to'] ?? 'to'
+    const ofLabel = dictionary['of'] ?? 'of'
+    const resultsLabel = dictionary['results'] ?? 'results'
+    return `${leadingWhitespace}${showingLabel} ${showingResultsMatch[1]} ${toLabel} ${showingResultsMatch[2]} ${ofLabel} ${showingResultsMatch[3]} ${resultsLabel}${trailingWhitespace}`
+  }
+
+  const compactRangeResultsMatch = trimmedText.match(
+    /^(\d+)-(\d+)\s+of\s+(\d+)$/
+  )
+  if (compactRangeResultsMatch) {
+    const ofLabel = dictionary['of'] ?? 'of'
+    return `${leadingWhitespace}${compactRangeResultsMatch[1]}-${compactRangeResultsMatch[2]} ${ofLabel} ${compactRangeResultsMatch[3]}${trailingWhitespace}`
+  }
+
+  const resultCountMatch = trimmedText.match(/^(\d+)\s+result(?:s)?$/)
+  if (resultCountMatch) {
+    const count = resultCountMatch[1]
+    const singular = dictionary['result'] ?? 'result'
+    const plural = dictionary['results'] ?? 'results'
+    return `${leadingWhitespace}${count} ${count === '1' ? singular : plural}${trailingWhitespace}`
+  }
+
+  const statusCountMatch = trimmedText.match(
+    /^(Over|Warning|Healthy)\s+\((\d+)\)$/
+  )
+  if (statusCountMatch) {
+    const label = dictionary[statusCountMatch[1]] ?? statusCountMatch[1]
+    return `${leadingWhitespace}${label} (${statusCountMatch[2]})${trailingWhitespace}`
+  }
+
+  const monthlyEstimateMatch = trimmedText.match(
+    /^(.+)\s+monthly estimated(?:\s+[·\u00b7]\s+(\d+)\s+high-risk alerts)?$/
+  )
+  if (monthlyEstimateMatch) {
+    const monthlyLabel =
+      dictionary['monthly estimated ·'] ?? 'monthly estimated ·'
+    if (monthlyEstimateMatch[2]) {
+      const highRiskLabel = dictionary['high-risk alerts'] ?? 'high-risk alerts'
+      return `${leadingWhitespace}${monthlyEstimateMatch[1]} ${monthlyLabel} ${monthlyEstimateMatch[2]} ${highRiskLabel}${trailingWhitespace}`
+    }
+    const monthlyWithoutDot = monthlyLabel.replace(/\s*[·\u00b7]\s*$/, '')
+    return `${leadingWhitespace}${monthlyEstimateMatch[1]} ${monthlyWithoutDot}${trailingWhitespace}`
+  }
+
+  const spentBudgetMatch = trimmedText.match(
+    /^(.+)\s+spent\s+[·\u00b7]\s+(.+)\s+budget$/
+  )
+  if (spentBudgetMatch) {
+    const spentLabel = dictionary['spent'] ?? 'spent'
+    const budgetLabel = dictionary['budget'] ?? 'budget'
+    return `${leadingWhitespace}${spentBudgetMatch[1]} ${spentLabel} · ${spentBudgetMatch[2]} ${budgetLabel}${trailingWhitespace}`
+  }
+
+  const projectedUtilizationMatch = trimmedText.match(
+    /^Projected:\s+(.+)\s+\((\d+(?:[.,]\d+)?)%\)$/
+  )
+  if (projectedUtilizationMatch) {
+    const projectedLabel = dictionary['Projected:'] ?? 'Projected:'
+    const percentageValue = applyLocalizedPercentSpacing(
+      `${projectedUtilizationMatch[2]}%`
+    )
+    return `${leadingWhitespace}${projectedLabel} ${projectedUtilizationMatch[1]} (${percentageValue})${trailingWhitespace}`
+  }
+
+  const remainingRunwayMatch = trimmedText.match(
+    /^Remaining runway:\s+(.+)\.?$/
+  )
+  if (remainingRunwayMatch) {
+    const label = dictionary['Remaining runway:'] ?? 'Remaining runway:'
+    return `${leadingWhitespace}${label} ${remainingRunwayMatch[1]}.${trailingWhitespace}`
+  }
+
+  const minimumPaymentsMatch = trimmedText.match(
+    /^Estimated minimum payments\s+(.+)\s+\/\s*month$/
+  )
+  if (minimumPaymentsMatch) {
+    const label =
+      dictionary['Estimated minimum payments'] ?? 'Estimated minimum payments'
+    const suffix = dictionary['/ month'] ?? '/ month'
+    return `${leadingWhitespace}${label} ${minimumPaymentsMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const monthlyCashflowMarginMatch = trimmedText.match(
+    /^(\d+(?:[.,]\d+)?)%\s+monthly net cashflow margin$/
+  )
+  if (monthlyCashflowMarginMatch) {
+    const suffix =
+      dictionary['monthly net cashflow margin'] ?? 'monthly net cashflow margin'
+    const percentageValue = applyLocalizedPercentSpacing(
+      `${monthlyCashflowMarginMatch[1]}%`
+    )
+    return `${leadingWhitespace}${percentageValue} ${suffix}${trailingWhitespace}`
+  }
+
+  const paymentEventsMatch = trimmedText.match(
+    /^(\d+)\s+potential payment events in the last 90 days$/
+  )
+  if (paymentEventsMatch) {
+    const suffix =
+      dictionary['potential payment events in the last 90 days'] ??
+      'potential payment events in the last 90 days'
+    return `${leadingWhitespace}${paymentEventsMatch[1]} ${suffix}${trailingWhitespace}`
+  }
+
+  const creditCardAccountsConnectedMatch = trimmedText.match(
+    /^(\d+)\s+credit card account(?:s)?\s+connected$/
+  )
+  if (creditCardAccountsConnectedMatch) {
+    const count = creditCardAccountsConnectedMatch[1]
+    const singular =
+      dictionary['credit card account connected'] ??
+      'credit card account connected'
+    const plural =
+      dictionary['credit card accounts connected'] ??
+      'credit card accounts connected'
+    return `${leadingWhitespace}${count} ${count === '1' ? singular : plural}${trailingWhitespace}`
   }
 
   const accountsAcrossMatch = trimmedText.match(/^Across\s+(\d+)\s+accounts$/)
@@ -2683,5 +3430,35 @@ export const translateUiText = (text: string, locale: string) => {
     return `${leadingWhitespace}${prefix} ${lastNinetyDaysSummaryMatch[1]}${trailingWhitespace}`
   }
 
-  return `${leadingWhitespace}${translatedText}${trailingWhitespace}`
+  const monthlyLastNextMatch = trimmedText.match(
+    /^Monthly\s+[·\u00b7]\s+Last\s+(.+)\s+[·\u00b7]\s+Next\s+(.+)$/
+  )
+  if (monthlyLastNextMatch) {
+    const monthlyLabel = dictionary['Monthly'] ?? 'Monthly'
+    const lastLabel = dictionary['Last'] ?? 'Last'
+    const nextLabel = dictionary['Next'] ?? 'Next'
+    return `${leadingWhitespace}${monthlyLabel} · ${lastLabel} ${monthlyLastNextMatch[1]} · ${nextLabel} ${monthlyLastNextMatch[2]}${trailingWhitespace}`
+  }
+
+  const savingsRateSentenceMatch = trimmedText.match(
+    /^Your savings rate is\s+(\d+(?:[.,]\d+)?)%\.\s+Financial experts recommend saving at least\s+(\d+(?:[.,]\d+)?)%\s+of your income\.$/
+  )
+  if (savingsRateSentenceMatch) {
+    const prefix = dictionary['Your savings rate is'] ?? 'Your savings rate is'
+    const middle =
+      dictionary['Financial experts recommend saving at least'] ??
+      'Financial experts recommend saving at least'
+    const suffix = dictionary['of your income.'] ?? 'of your income.'
+    const currentRate = applyLocalizedPercentSpacing(
+      `${savingsRateSentenceMatch[1]}%`
+    )
+    const targetRate = applyLocalizedPercentSpacing(
+      `${savingsRateSentenceMatch[2]}%`
+    )
+    return `${leadingWhitespace}${prefix} ${currentRate}. ${middle} ${targetRate} ${suffix}${trailingWhitespace}`
+  }
+
+  return `${leadingWhitespace}${applyLocalizedPercentSpacing(
+    translatedText
+  )}${trailingWhitespace}`
 }

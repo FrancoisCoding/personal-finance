@@ -674,7 +674,7 @@ export default function AdminPortalPage() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
-                      <span className="text-muted-foreground">Starter</span>
+                      <span className="text-muted-foreground">Basic</span>
                       <span>
                         {analytics?.subscriptionMetrics.basicSubscribers ?? 0}
                       </span>

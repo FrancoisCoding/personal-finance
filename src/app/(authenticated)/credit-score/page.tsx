@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useMemo } from 'react'
 import { ArrowUpRight, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreditCardOnboarding } from '@/components/credit-card-onboarding'
 import {
   Card,
   CardContent,
@@ -263,12 +264,15 @@ export default function CreditScorePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Starter covers live tracking. Pro adds deeper credit analytics and
+            Basic covers live tracking. Pro adds deeper credit analytics and
             strategy guidance.
           </p>
-          <Button asChild>
-            <Link href="/billing">Upgrade to Pro</Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <CreditCardOnboarding />
+            <Button asChild>
+              <Link href="/billing">Upgrade to Pro</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     )
@@ -292,9 +296,12 @@ export default function CreditScorePage() {
             Pro-only credit health simulation and action plan.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/billing">Manage plan</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <CreditCardOnboarding />
+          <Button asChild variant="outline">
+            <Link href="/billing">Manage plan</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
@@ -447,7 +454,13 @@ export default function CreditScorePage() {
         <CardContent className="space-y-2">
           {normalizedCreditCards.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 px-4 py-5 text-sm text-muted-foreground">
-              Add credit cards in Overview to unlock account-level reporting.
+              <p>
+                Add credit cards here to unlock account-level reporting and
+                utilization tracking.
+              </p>
+              <div className="mt-4">
+                <CreditCardOnboarding />
+              </div>
             </div>
           ) : (
             normalizedCreditCards.map((card) => {

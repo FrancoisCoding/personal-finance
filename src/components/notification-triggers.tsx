@@ -368,7 +368,7 @@ const NotificationTriggers = () => {
         )} per cycle.`,
         category: 'system',
         ruleId: 'subscription-new',
-        showToast: true,
+        showToast: false,
         dedupeKey: `subscription-new-${subscription.id}`,
         throttleMinutes: 1440,
       })

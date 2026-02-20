@@ -20,6 +20,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useBillingStatus } from '@/hooks/use-billing-status'
@@ -152,6 +155,14 @@ const getSubscriptionMonthlyEquivalent = (
   return amount
 }
 
+const toDateInputValue = (value: string | Date) => {
+  const parsed = new Date(value)
+  const year = String(parsed.getFullYear())
+  const month = String(parsed.getMonth() + 1).padStart(2, '0')
+  const day = String(parsed.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function SubscriptionsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -171,6 +182,22 @@ export default function SubscriptionsPage() {
 
   const [addingDetected, setAddingDetected] = useState<Set<string>>(new Set())
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null)
+  const [editTarget, setEditTarget] = useState<Subscription | null>(null)
+  const [editFormData, setEditFormData] = useState<{
+    name: string
+    amount: string
+    billingCycle: Subscription['billingCycle']
+    nextBillingDate: string
+    categoryId: string
+    notes: string
+  }>({
+    name: '',
+    amount: '',
+    billingCycle: 'MONTHLY',
+    nextBillingDate: '',
+    categoryId: '',
+    notes: '',
+  })
 
   useEffect(() => {
     if (status === 'unauthenticated' && !isDemoMode) {
@@ -631,7 +658,6 @@ export default function SubscriptionsPage() {
         nextBillingDate: detected.nextBillingDate,
         categoryId: detected.categoryId,
         notes: 'Detected from recurring transactions',
-        suppressSuccessToast: true,
       },
       {
         onSuccess: () => {
@@ -640,6 +666,10 @@ export default function SubscriptionsPage() {
             title: 'Subscription added',
             message: `"${detected.name}" is now tracked in your subscriptions.`,
             category: 'system',
+            showToast: false,
+            ruleId: 'subscription-new',
+            dedupeKey: `subscription-new-${detected.id}`,
+            throttleMinutes: 1440,
           })
         },
         onSettled: () => {
@@ -664,6 +694,82 @@ export default function SubscriptionsPage() {
       id: subscriptionId,
       updates: { isActive: !subscription.isActive },
     })
+  }
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    setEditTarget(subscription)
+    setEditFormData({
+      name: subscription.name,
+      amount: String(subscription.amount),
+      billingCycle: subscription.billingCycle,
+      nextBillingDate: toDateInputValue(subscription.nextBillingDate),
+      categoryId: subscription.categoryId ?? '',
+      notes: subscription.notes ?? '',
+    })
+  }
+
+  const handleCloseEditDialog = () => {
+    setEditTarget(null)
+    setEditFormData({
+      name: '',
+      amount: '',
+      billingCycle: 'MONTHLY',
+      nextBillingDate: '',
+      categoryId: '',
+      notes: '',
+    })
+  }
+
+  const handleSaveEditedSubscription = () => {
+    if (!editTarget) return
+
+    const normalizedName = editFormData.name.trim()
+    if (!normalizedName) {
+      toast({
+        title: 'Missing information',
+        description: 'Please enter a subscription name.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const parsedAmount = Number(editFormData.amount)
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      toast({
+        title: 'Invalid amount',
+        description: 'Please enter a valid subscription amount.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!editFormData.nextBillingDate) {
+      toast({
+        title: 'Missing date',
+        description: 'Please select the next billing date.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    updateSubscriptionMutation.mutate(
+      {
+        id: editTarget.id,
+        updates: {
+          name: normalizedName,
+          amount: parsedAmount,
+          billingCycle: editFormData.billingCycle,
+          nextBillingDate: new Date(editFormData.nextBillingDate),
+          categoryId: editFormData.categoryId || undefined,
+          notes: editFormData.notes.trim() || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          handleCloseEditDialog()
+        },
+      }
+    )
   }
 
   const handleRenewalReminder = (
@@ -1429,7 +1535,12 @@ export default function SubscriptionsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditSubscription(subscription)}
+                      disabled={isUpdatingSubscription}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
@@ -1450,6 +1561,154 @@ export default function SubscriptionsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={Boolean(editTarget)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            handleCloseEditDialog()
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>Edit subscription</DialogTitle>
+            <DialogDescription>
+              Update billing details and tracking metadata for this
+              subscription.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-subscription-name">Subscription name</Label>
+              <Input
+                id="edit-subscription-name"
+                value={editFormData.name}
+                onChange={(event) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    name: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-subscription-amount">Amount</Label>
+                <Input
+                  id="edit-subscription-amount"
+                  type="number"
+                  value={editFormData.amount}
+                  onChange={(event) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      amount: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-subscription-cycle">Billing cycle</Label>
+                <select
+                  id="edit-subscription-cycle"
+                  value={editFormData.billingCycle}
+                  onChange={(event) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      billingCycle: event.target
+                        .value as Subscription['billingCycle'],
+                    }))
+                  }
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="QUARTERLY">Quarterly</option>
+                  <option value="YEARLY">Yearly</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-subscription-date">
+                  Next billing date
+                </Label>
+                <Input
+                  id="edit-subscription-date"
+                  type="date"
+                  value={editFormData.nextBillingDate}
+                  onChange={(event) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      nextBillingDate: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-subscription-category">Category</Label>
+                <select
+                  id="edit-subscription-category"
+                  value={editFormData.categoryId}
+                  onChange={(event) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      categoryId: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">No category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-subscription-notes">Notes</Label>
+              <Textarea
+                id="edit-subscription-notes"
+                rows={3}
+                value={editFormData.notes}
+                onChange={(event) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    notes: event.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseEditDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditedSubscription}
+              disabled={isUpdatingSubscription}
+            >
+              {isUpdatingSubscription ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(cancelTarget)}

@@ -7,7 +7,7 @@ describe('auth options', () => {
     vi.resetModules()
     const { authOptions } = await import('./auth')
 
-    expect(authOptions.providers?.length).toBe(1)
+    expect(authOptions.providers?.length).toBe(2)
 
     const sessionResult = await authOptions.callbacks?.session?.({
       session: { user: {} } as { user: { id?: string } },

@@ -1880,7 +1880,7 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                      Starter includes core budgeting and transaction workflows.
+                      Basic includes core budgeting and transaction workflows.
                       Pro adds advanced AI insight blocks and full assistant
                       access.
                     </p>

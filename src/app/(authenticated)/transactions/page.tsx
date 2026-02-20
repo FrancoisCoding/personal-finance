@@ -95,6 +95,10 @@ export default function TransactionsPage() {
           transaction.categoryRelation?.name ||
           transaction.category
       )
+      const hasResolvedCategory =
+        hasExplicitCategory &&
+        categoryName.trim().length > 0 &&
+        categoryName.toLowerCase() !== 'other'
       const categoryColor = getCategoryColor(categoryName)
       const categoryIcon = getCategoryIconComponent(categoryName)
       const accountName =
@@ -113,7 +117,7 @@ export default function TransactionsPage() {
         amount: transaction.amount,
         amountLabel: formatCurrency(transaction.amount),
         type: transaction.type,
-        isUncategorized: !hasExplicitCategory,
+        isUncategorized: !hasResolvedCategory,
       }
     })
   }, [accounts, categories, filteredTransactions])
@@ -241,6 +245,60 @@ export default function TransactionsPage() {
   const handleTypeChange = (value: string) => {
     setSelectedType(value)
     table.setPageIndex(0)
+  }
+
+  const handleExportTransactions = () => {
+    if (filteredRows.length === 0) {
+      toast({
+        title: 'No transactions to export',
+        description: 'Adjust your filters or add transactions first.',
+      })
+      return
+    }
+
+    const escapeCsvValue = (value: string) => {
+      if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+
+      return value
+    }
+
+    const headers = [
+      'Date',
+      'Description',
+      'Category',
+      'Account',
+      'Type',
+      'Amount',
+    ]
+    const rows = filteredRows.map((row) => [
+      row.original.dateLabel,
+      row.original.description,
+      row.original.categoryName,
+      row.original.accountName,
+      row.original.type,
+      row.original.amount.toFixed(2),
+    ])
+    const csvLines = [headers, ...rows].map((line) =>
+      line.map((value) => escapeCsvValue(String(value))).join(',')
+    )
+    const blob = new Blob([`\uFEFF${csvLines.join('\n')}`], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+
+    toast({
+      title: 'Transactions exported',
+      description: 'Your CSV download is ready.',
+    })
   }
 
   // Handle transaction creation
@@ -470,7 +528,12 @@ export default function TransactionsPage() {
                     ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="outline" size="sm" disabled={isLoading}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                onClick={handleExportTransactions}
+              >
                 Export
               </Button>
             </div>

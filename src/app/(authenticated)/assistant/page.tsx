@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useBillingStatus } from '@/hooks/use-billing-status'
+import { useUserPreferences } from '@/hooks/use-user-preferences'
 import {
   useAccounts,
   useSubscriptions,
@@ -23,7 +24,6 @@ import {
 } from '@/hooks/use-finance-data'
 import {
   Bot,
-  Crown,
   CreditCard,
   Send,
   Sparkles,
@@ -39,32 +39,65 @@ interface Message {
   timestamp: Date
 }
 
-const quickPrompts = [
-  {
-    title: 'Spending snapshot',
-    prompt: 'Give me a quick summary of my spending in the last 30 days.',
-  },
-  {
-    title: 'Top categories',
-    prompt: 'What are my top three expense categories right now?',
-  },
-  {
-    title: 'Cash position',
-    prompt: 'How much cash do I have across checking and savings?',
-  },
-  {
-    title: 'Recurring charges',
-    prompt: 'Show me upcoming subscriptions and monthly totals.',
-  },
-  {
-    title: 'Trend check',
-    prompt: 'Are there any new spending spikes I should know about?',
-  },
-  {
-    title: 'Next best step',
-    prompt: 'Suggest one action to improve my cash flow this month.',
-  },
-] as const
+const getQuickPromptsByLocale = (locale: string) => {
+  if (locale === 'pt-BR') {
+    return [
+      {
+        title: 'Resumo de gastos',
+        prompt: 'Me de um resumo rapido dos meus gastos nos ultimos 30 dias.',
+      },
+      {
+        title: 'Principais categorias',
+        prompt: 'Quais sao minhas tres maiores categorias de despesa agora?',
+      },
+      {
+        title: 'Posicao de caixa',
+        prompt: 'Quanto dinheiro eu tenho entre conta corrente e poupanca?',
+      },
+      {
+        title: 'Cobrancas recorrentes',
+        prompt:
+          'Mostre minhas proximas assinaturas e os totais mensais estimados.',
+      },
+      {
+        title: 'Verificar tendencia',
+        prompt: 'Existe algum pico novo de gastos que eu deva saber neste mes?',
+      },
+      {
+        title: 'Proximo melhor passo',
+        prompt:
+          'Sugira uma acao objetiva para melhorar meu fluxo de caixa neste mes.',
+      },
+    ] as const
+  }
+
+  return [
+    {
+      title: 'Spending snapshot',
+      prompt: 'Give me a quick summary of my spending in the last 30 days.',
+    },
+    {
+      title: 'Top categories',
+      prompt: 'What are my top three expense categories right now?',
+    },
+    {
+      title: 'Cash position',
+      prompt: 'How much cash do I have across checking and savings?',
+    },
+    {
+      title: 'Recurring charges',
+      prompt: 'Show me upcoming subscriptions and monthly totals.',
+    },
+    {
+      title: 'Trend check',
+      prompt: 'Are there any new spending spikes I should know about?',
+    },
+    {
+      title: 'Next best step',
+      prompt: 'Suggest one action to improve my cash flow this month.',
+    },
+  ] as const
+}
 
 const capabilityCards = [
   {
@@ -89,20 +122,60 @@ const capabilityCards = [
   },
 ] as const
 
-const buildWelcomeMessage = (): Message => ({
-  id: `welcome-${Date.now()}`,
-  content: [
+const getWelcomeMessageByLocale = (locale: string) => {
+  if (locale === 'pt-BR') {
+    return [
+      'Oi, sou seu Assistente Financeiro.',
+      'Posso transformar seus dados em orientacoes claras e amigaveis.',
+      '',
+      'Experimente um prompt para comecar.',
+    ].join('\n')
+  }
+
+  if (locale === 'es-ES') {
+    return [
+      'Hola, soy tu Asistente Financiero.',
+      'Puedo convertir tus datos en orientacion clara y amigable.',
+      '',
+      'Prueba un prompt para comenzar.',
+    ].join('\n')
+  }
+
+  if (locale === 'fr-FR') {
+    return [
+      'Bonjour, je suis votre Assistant Financier.',
+      'Je peux transformer vos donnees en conseils clairs et accessibles.',
+      '',
+      'Essayez un prompt pour commencer.',
+    ].join('\n')
+  }
+
+  if (locale === 'hi-IN') {
+    return [
+      'Namaste, main aapka Financial Assistant hoon.',
+      'Main aapke data ko saaf aur upyogi guidance mein badal sakta hoon.',
+      '',
+      'Shuru karne ke liye ek prompt try karen.',
+    ].join('\n')
+  }
+
+  return [
     "Hi, I'm your Financial Assistant.",
     'I can translate your data into clear, friendly guidance.',
     '',
     'Try a prompt to get started.',
-  ].join('\n'),
+  ].join('\n')
+}
+
+const buildWelcomeMessage = (locale: string): Message => ({
+  id: `welcome-${Date.now()}`,
+  content: getWelcomeMessageByLocale(locale),
   role: 'assistant',
   timestamp: new Date(),
 })
 
-const formatMessageTime = (date: Date) =>
-  date.toLocaleTimeString('en-US', {
+const formatMessageTime = (date: Date, locale: string) =>
+  date.toLocaleTimeString(locale, {
     hour: 'numeric',
     minute: '2-digit',
   })
@@ -119,14 +192,32 @@ export default function FinancialAssistantPage() {
   const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
     useSubscriptions()
   const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
+  const { data: userPreferences } = useUserPreferences()
+  const assistantLocale = userPreferences?.locale ?? 'en-US'
+  const assistantCurrency = userPreferences?.currency ?? 'USD'
+  const quickPrompts = getQuickPromptsByLocale(assistantLocale)
 
-  const [messages, setMessages] = useState<Message[]>([buildWelcomeMessage()])
+  const [messages, setMessages] = useState<Message[]>([
+    buildWelcomeMessage(assistantLocale),
+  ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesScrollContainerRef = useRef<HTMLDivElement>(null)
   const lastQuestionRef = useRef<string | null>(null)
   const hasMountedMessagesRef = useRef(false)
+
+  useEffect(() => {
+    setMessages((previousMessages) => {
+      if (previousMessages.length !== 1) {
+        return previousMessages
+      }
+      if (!previousMessages[0]?.id.startsWith('welcome-')) {
+        return previousMessages
+      }
+      return [buildWelcomeMessage(assistantLocale)]
+    })
+  }, [assistantLocale])
 
   useEffect(() => {
     const container = messagesScrollContainerRef.current
@@ -215,7 +306,12 @@ export default function FinancialAssistantPage() {
         const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: trimmed, context }),
+          body: JSON.stringify({
+            message: trimmed,
+            context,
+            locale: assistantLocale,
+            currency: assistantCurrency,
+          }),
         })
 
         const data = await response.json().catch(() => null)
@@ -247,7 +343,16 @@ export default function FinancialAssistantPage() {
         setIsLoading(false)
       }
     },
-    [accounts, input, isLoading, subscriptions, toast, transactions]
+    [
+      accounts,
+      assistantCurrency,
+      assistantLocale,
+      input,
+      isLoading,
+      subscriptions,
+      toast,
+      transactions,
+    ]
   )
 
   useEffect(() => {
@@ -271,7 +376,7 @@ export default function FinancialAssistantPage() {
   }
 
   const handleNewThread = () => {
-    setMessages([buildWelcomeMessage()])
+    setMessages([buildWelcomeMessage(assistantLocale)])
     setInput('')
     inputRef.current?.focus()
   }
@@ -291,7 +396,8 @@ export default function FinancialAssistantPage() {
     isSubscriptionsLoading ||
     isBillingLoading
 
-  const hasProAccess = isDemoMode || billingData?.currentPlan === 'PRO'
+  const hasAssistantAccess =
+    billingData?.currentPlan === 'BASIC' || billingData?.currentPlan === 'PRO'
 
   if (status === 'loading' || isDataLoading) {
     return (
@@ -395,25 +501,28 @@ export default function FinancialAssistantPage() {
     )
   }
 
-  if (!hasProAccess) {
+  if (!hasAssistantAccess) {
     return (
       <Card className="mx-auto max-w-3xl border-border/70 bg-card/90 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
-            <Crown className="h-5 w-5 text-amber-500" />
-            Pro feature
+            Paid feature
           </CardTitle>
           <CardDescription>
-            Financial Assistant is available on the Pro plan.
+            Financial Assistant is available on Basic and Pro plans.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Upgrade to Pro to unlock AI guidance, advanced insight prompts, and
-            personalized recommendations.
+            Basic includes guarded AI usage limits, and Pro includes
+            high-throughput access with fair-use safeguards.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Demo mode is for product exploration only and does not include AI
+            Assistant chat.
           </p>
           <Button asChild className="min-h-11">
-            <a href="/billing">Upgrade to Pro</a>
+            <a href="/billing">Choose a plan</a>
           </Button>
         </CardContent>
       </Card>
@@ -515,7 +624,12 @@ export default function FinancialAssistantPage() {
                           <span className="font-medium text-foreground">
                             {isUser ? 'You' : 'Assistant'}
                           </span>
-                          <span>{formatMessageTime(message.timestamp)}</span>
+                          <span>
+                            {formatMessageTime(
+                              message.timestamp,
+                              assistantLocale
+                            )}
+                          </span>
                         </div>
                         <div
                           className={

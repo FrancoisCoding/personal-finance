@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useFormik } from 'formik'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -24,13 +26,42 @@ import { Progress } from '@/components/ui/progress'
 import { Navbar } from '@/components/navbar'
 import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
+import { getCredentialsSignInErrorMessage } from '@/lib/credentials-signin-result'
 import { Mail, Sparkles } from 'lucide-react'
+
+const loginFormSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .email('Enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+type TLoginFormValues = z.infer<typeof loginFormSchema>
+
+const validateLoginForm = (values: TLoginFormValues) => {
+  const parsedValues = loginFormSchema.safeParse(values)
+  if (parsedValues.success) {
+    return {}
+  }
+
+  const formErrors: Partial<Record<keyof TLoginFormValues, string>> = {}
+  for (const issue of parsedValues.error.issues) {
+    const fieldName = issue.path[0]
+    if (typeof fieldName !== 'string') continue
+    if (!formErrors[fieldName as keyof TLoginFormValues]) {
+      formErrors[fieldName as keyof TLoginFormValues] = issue.message
+    }
+  }
+
+  return formErrors
+}
 
 export default function LoginPage() {
   const { status } = useSession()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState<string | null>(null)
+  const [credentialsError, setCredentialsError] = useState<string | null>(null)
   const [callbackUrl, setCallbackUrl] = useState('/dashboard')
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
@@ -77,37 +108,52 @@ export default function LoginPage() {
     }
   }, [callbackUrl, router, status])
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const formik = useFormik<TLoginFormValues>({
+    initialValues: {
+      email: '',
+      password: '',
+    },
+    validate: validateLoginForm,
+    onSubmit: async (values) => {
+      setCredentialsError(null)
+      setIsLoading(true)
 
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        callbackUrl,
-        redirect: false,
-      })
+      try {
+        const result = await signIn('credentials', {
+          email: values.email.trim(),
+          password: values.password,
+          callbackUrl,
+          redirect: false,
+        })
 
-      if (result?.error) {
+        const signInErrorMessage = getCredentialsSignInErrorMessage(result)
+        if (signInErrorMessage) {
+          if (signInErrorMessage === 'Invalid email or password') {
+            setCredentialsError(
+              'Incorrect email or password. Please check both fields and try again.'
+            )
+          } else {
+            toast({
+              title: 'Error',
+              description: signInErrorMessage,
+              variant: 'destructive',
+            })
+          }
+          return
+        }
+
+        router.push(callbackUrl)
+      } catch (error) {
         toast({
           title: 'Error',
-          description: 'Invalid email or password',
+          description: 'Something went wrong. Please try again.',
           variant: 'destructive',
         })
-      } else {
-        router.push(callbackUrl)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    },
+  })
 
   const handleOAuthSignIn = async (provider: string) => {
     setIsLoading(true)
@@ -239,7 +285,11 @@ export default function LoginPage() {
               </div>
 
               {/* Email Form */}
-              <form onSubmit={handleEmailSignIn} className="space-y-4">
+              <form
+                onSubmit={formik.handleSubmit}
+                className="space-y-4"
+                noValidate
+              >
                 <div>
                   <label
                     htmlFor="email"
@@ -249,13 +299,36 @@ export default function LoginPage() {
                   </label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formik.values.email}
+                    onChange={(event) => {
+                      formik.handleChange(event)
+                      if (credentialsError) {
+                        setCredentialsError(null)
+                      }
+                    }}
+                    onBlur={formik.handleBlur}
                     placeholder="Enter your email"
                     required
                     className="mt-1"
+                    aria-invalid={Boolean(
+                      formik.touched.email && formik.errors.email
+                    )}
+                    aria-describedby={
+                      formik.touched.email && formik.errors.email
+                        ? 'login-email-error'
+                        : undefined
+                    }
                   />
+                  {formik.touched.email && formik.errors.email ? (
+                    <p
+                      id="login-email-error"
+                      className="mt-1 text-xs text-red-500"
+                    >
+                      {formik.errors.email}
+                    </p>
+                  ) : null}
                 </div>
                 <div>
                   <label
@@ -266,14 +339,53 @@ export default function LoginPage() {
                   </label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formik.values.password}
+                    onChange={(event) => {
+                      formik.handleChange(event)
+                      if (credentialsError) {
+                        setCredentialsError(null)
+                      }
+                    }}
+                    onBlur={formik.handleBlur}
                     placeholder="Enter your password"
                     required
                     className="mt-1"
+                    aria-invalid={Boolean(
+                      formik.touched.password && formik.errors.password
+                    )}
+                    aria-describedby={
+                      formik.touched.password && formik.errors.password
+                        ? 'login-password-error'
+                        : undefined
+                    }
                   />
+                  {formik.touched.password && formik.errors.password ? (
+                    <p
+                      id="login-password-error"
+                      className="mt-1 text-xs text-red-500"
+                    >
+                      {formik.errors.password}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 text-right">
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
+                {credentialsError ? (
+                  <p
+                    className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-500"
+                    aria-live="polite"
+                  >
+                    {credentialsError}
+                  </p>
+                ) : null}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>

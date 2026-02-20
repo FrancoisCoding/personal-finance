@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/password'
 import { isCompromisedPassword } from '@/lib/compromised-password'
+import { getPasswordPolicyErrors } from '@/lib/password-policy'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -30,9 +31,13 @@ export async function POST(request: Request) {
       )
     }
 
-    if (password.length < 8 || password.length > 128) {
+    const passwordPolicyErrors = getPasswordPolicyErrors(password)
+    if (passwordPolicyErrors.length > 0) {
       return NextResponse.json(
-        { error: 'Password must be between 8 and 128 characters.' },
+        {
+          error: 'Password does not meet security requirements.',
+          details: passwordPolicyErrors,
+        },
         { status: 400 }
       )
     }

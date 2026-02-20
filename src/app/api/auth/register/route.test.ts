@@ -61,7 +61,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'A',
         email: 'valid@example.com',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -76,7 +76,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'Valid Name',
         email: 'invalid-email',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -85,19 +85,21 @@ describe('register route', () => {
     expect(payload.error).toBe('Please enter a valid email address.')
   })
 
-  it('returns 400 for an invalid password length', async () => {
+  it('returns 400 for an invalid password policy', async () => {
     const { POST } = await import('./route')
     const response = await POST(
       createPostRequest({
         name: 'Valid Name',
         email: 'valid@example.com',
-        password: 'short',
+        password: '12345678',
       })
     )
     const payload = await response.json()
 
     expect(response.status).toBe(400)
-    expect(payload.error).toBe('Password must be between 8 and 128 characters.')
+    expect(payload.error).toBe('Password does not meet security requirements.')
+    expect(payload.details).toContain('Use 12-128 characters')
+    expect(payload.details).toContain('Include at least one symbol')
   })
 
   it('returns 409 when an email already exists with password credentials', async () => {
@@ -110,7 +112,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'Valid Name',
         email: 'valid@example.com',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -130,7 +132,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'Valid Name',
         email: 'valid@example.com',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -156,7 +158,7 @@ describe('register route', () => {
       createPostRequest({
         name: '  Valid Name  ',
         email: '  VALID@example.com  ',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -167,8 +169,8 @@ describe('register route', () => {
       name: 'Valid Name',
       email: 'valid@example.com',
     })
-    expect(isCompromisedPasswordMock).toHaveBeenCalledWith('password123')
-    expect(hashPasswordMock).toHaveBeenCalledWith('password123')
+    expect(isCompromisedPasswordMock).toHaveBeenCalledWith('StrongPassword123!')
+    expect(hashPasswordMock).toHaveBeenCalledWith('StrongPassword123!')
     expect(createMock).toHaveBeenCalledWith({
       data: {
         name: 'Valid Name',
@@ -196,7 +198,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'Valid Name',
         email: 'valid@example.com',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -215,7 +217,7 @@ describe('register route', () => {
       createPostRequest({
         name: 'Valid Name',
         email: 'valid@example.com',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()

@@ -6,6 +6,7 @@ import {
 } from '@/lib/request-rate-limit'
 import { hashPassword } from '@/lib/password'
 import { hashPasswordResetToken } from '@/lib/password-reset'
+import { getPasswordPolicyErrors } from '@/lib/password-policy'
 
 const parseString = (value: unknown) => {
   return typeof value === 'string' ? value.trim() : ''
@@ -80,9 +81,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (password.length < 8 || password.length > 128) {
+    const passwordPolicyErrors = getPasswordPolicyErrors(password)
+    if (passwordPolicyErrors.length > 0) {
       return NextResponse.json(
-        { error: 'Password must be between 8 and 128 characters.' },
+        {
+          error: 'Password does not meet security requirements.',
+          details: passwordPolicyErrors,
+        },
         { status: 400 }
       )
     }

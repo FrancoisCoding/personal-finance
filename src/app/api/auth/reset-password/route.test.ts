@@ -129,18 +129,20 @@ describe('reset password route', () => {
     expect(payload.valid).toBe(true)
   })
 
-  it('returns 400 for short passwords', async () => {
+  it('returns 400 for invalid password policy', async () => {
     const { POST } = await import('./route')
     const response = await POST(
       createPostRequest({
         token: 'raw-token',
-        password: 'short',
+        password: '12345678',
       })
     )
     const payload = await response.json()
 
     expect(response.status).toBe(400)
-    expect(payload.error).toBe('Password must be between 8 and 128 characters.')
+    expect(payload.error).toBe('Password does not meet security requirements.')
+    expect(payload.details).toContain('Use 12-128 characters')
+    expect(payload.details).toContain('Include at least one symbol')
   })
 
   it('returns 400 for missing or inactive reset tokens', async () => {
@@ -149,7 +151,7 @@ describe('reset password route', () => {
     const response = await POST(
       createPostRequest({
         token: 'raw-token',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
@@ -170,14 +172,14 @@ describe('reset password route', () => {
     const response = await POST(
       createPostRequest({
         token: 'raw-token',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()
 
     expect(response.status).toBe(200)
     expect(payload.success).toBe(true)
-    expect(hashPasswordMock).toHaveBeenCalledWith('password123')
+    expect(hashPasswordMock).toHaveBeenCalledWith('StrongPassword123!')
     expect(updateUserMock).toHaveBeenCalledWith({
       where: { id: 'user-1' },
       data: { hashedPassword: 'hashed-password' },
@@ -198,7 +200,7 @@ describe('reset password route', () => {
     const response = await POST(
       createPostRequest({
         token: 'raw-token',
-        password: 'password123',
+        password: 'StrongPassword123!',
       })
     )
     const payload = await response.json()

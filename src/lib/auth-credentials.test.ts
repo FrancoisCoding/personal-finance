@@ -102,7 +102,7 @@ describe('authorizeCredentials', () => {
       id: 'user-1',
       name: 'User',
       email: 'user@example.com',
-      hashedPassword: 'hash',
+      hashedPassword: 'scrypt$test-salt$test-key',
     })
     const verifyPasswordValue = vi.fn().mockReturnValueOnce(false)
 
@@ -112,6 +112,53 @@ describe('authorizeCredentials', () => {
     )
 
     expect(result).toBeNull()
-    expect(verifyPasswordValue).toHaveBeenCalledWith('password', 'hash')
+    expect(verifyPasswordValue).toHaveBeenCalledWith(
+      'password',
+      'scrypt$test-salt$test-key'
+    )
+  })
+
+  it('supports legacy plaintext passwords and upgrades hash after login', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValueOnce({
+      id: 'legacy-user',
+      name: 'Legacy User',
+      email: 'legacy@example.com',
+      hashedPassword: 'legacy-password',
+    })
+    const updateUserPasswordHash = vi.fn().mockResolvedValueOnce(undefined)
+
+    const result = await authorizeCredentialsWithDependencies(
+      { email: 'legacy@example.com', password: 'legacy-password' },
+      { findUserByEmail, updateUserPasswordHash }
+    )
+
+    expect(result).toEqual({
+      id: 'legacy-user',
+      name: 'Legacy User',
+      email: 'legacy@example.com',
+    })
+    expect(updateUserPasswordHash).toHaveBeenCalledTimes(1)
+    expect(updateUserPasswordHash).toHaveBeenCalledWith(
+      'legacy-user',
+      expect.stringMatching(/^scrypt\$/)
+    )
+  })
+
+  it('returns null for legacy plaintext password mismatch', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValueOnce({
+      id: 'legacy-user',
+      name: 'Legacy User',
+      email: 'legacy@example.com',
+      hashedPassword: 'legacy-password',
+    })
+    const updateUserPasswordHash = vi.fn()
+
+    const result = await authorizeCredentialsWithDependencies(
+      { email: 'legacy@example.com', password: 'wrong-password' },
+      { findUserByEmail, updateUserPasswordHash }
+    )
+
+    expect(result).toBeNull()
+    expect(updateUserPasswordHash).not.toHaveBeenCalled()
   })
 })

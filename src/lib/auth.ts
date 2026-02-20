@@ -2,8 +2,9 @@ import { NextAuthOptions } from 'next-auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { timingSafeEqual } from 'crypto'
 import { prisma } from './prisma'
-import { verifyPassword } from './password'
+import { hashPassword, verifyPassword } from './password'
 
 // Extend the built-in session types
 declare module 'next-auth' {
@@ -30,6 +31,10 @@ export const authorizeCredentialsWithDependencies = async (
       hashedPassword: string | null
     } | null>
     verifyPasswordValue?: (password: string, storedHash: string) => boolean
+    updateUserPasswordHash?: (
+      userId: string,
+      hashedPassword: string
+    ) => Promise<void>
     onError?: (error: unknown) => void
   }
 ) => {
@@ -50,6 +55,16 @@ export const authorizeCredentialsWithDependencies = async (
     })
   const verifyPasswordValue =
     dependencies?.verifyPasswordValue ?? verifyPassword
+  const updateUserPasswordHash =
+    dependencies?.updateUserPasswordHash ??
+    (async (userId: string, hashedPasswordValue: string) => {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          hashedPassword: hashedPasswordValue,
+        },
+      })
+    })
   const onError =
     dependencies?.onError ??
     ((error: unknown) => {
@@ -66,9 +81,34 @@ export const authorizeCredentialsWithDependencies = async (
       return null
     }
 
-    const isPasswordValid = verifyPasswordValue(password, user.hashedPassword)
+    let shouldUpgradeLegacyPassword = false
+    const isScryptPasswordHash = user.hashedPassword.startsWith('scrypt$')
+    const isPasswordValid = isScryptPasswordHash
+      ? verifyPasswordValue(password, user.hashedPassword)
+      : (() => {
+          const providedPasswordBuffer = Buffer.from(password, 'utf8')
+          const storedPasswordBuffer = Buffer.from(user.hashedPassword, 'utf8')
+          if (providedPasswordBuffer.length !== storedPasswordBuffer.length) {
+            return false
+          }
+          const isMatch = timingSafeEqual(
+            providedPasswordBuffer,
+            storedPasswordBuffer
+          )
+          shouldUpgradeLegacyPassword = isMatch
+          return isMatch
+        })()
+
     if (!isPasswordValid) {
       return null
+    }
+
+    if (shouldUpgradeLegacyPassword) {
+      try {
+        await updateUserPasswordHash(user.id, hashPassword(password))
+      } catch (error) {
+        onError(error)
+      }
     }
 
     return {

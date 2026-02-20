@@ -39,6 +39,9 @@ const loginFormSchema = z.object({
 })
 
 type TLoginFormValues = z.infer<typeof loginFormSchema>
+const loginAttemptStorageKey = 'finance-login-attempt'
+const loginCredentialsErrorMessage =
+  'Incorrect email or password. Please check both fields and try again.'
 
 const validateLoginForm = (values: TLoginFormValues) => {
   const parsedValues = loginFormSchema.safeParse(values)
@@ -81,6 +84,30 @@ export default function LoginPage() {
             ? 'Sign in failed. Please try again.'
             : null
 
+  const getSafeCallbackUrl = (callbackValue: string | null) => {
+    if (!callbackValue) {
+      return '/dashboard'
+    }
+
+    if (callbackValue.startsWith('/')) {
+      return callbackValue
+    }
+
+    try {
+      const parsedCallbackUrl = new URL(callbackValue, window.location.origin)
+      if (parsedCallbackUrl.origin !== window.location.origin) {
+        return '/dashboard'
+      }
+
+      const normalizedCallbackUrl = `${parsedCallbackUrl.pathname}${parsedCallbackUrl.search}${parsedCallbackUrl.hash}`
+      return normalizedCallbackUrl.startsWith('/')
+        ? normalizedCallbackUrl
+        : '/dashboard'
+    } catch {
+      return '/dashboard'
+    }
+  }
+
   useEffect(() => {
     return () => {
       if (demoProgressIntervalRef.current !== null) {
@@ -94,12 +121,32 @@ export default function LoginPage() {
     const queryParams = new URLSearchParams(window.location.search)
     const authErrorValue = queryParams.get('error')
     const callbackValue = queryParams.get('callbackUrl')
-    setAuthError(authErrorValue)
-    setCallbackUrl(
-      callbackValue && callbackValue.startsWith('/')
-        ? callbackValue
-        : '/dashboard'
-    )
+    const safeCallbackUrl = getSafeCallbackUrl(callbackValue)
+
+    if (authErrorValue === 'CredentialsSignin') {
+      setAuthError(null)
+      setCredentialsError(loginCredentialsErrorMessage)
+    } else {
+      setAuthError(authErrorValue)
+      try {
+        const attemptTimestampValue = window.sessionStorage.getItem(
+          loginAttemptStorageKey
+        )
+        if (attemptTimestampValue) {
+          const attemptTimestamp = Number.parseInt(attemptTimestampValue, 10)
+          if (
+            Number.isFinite(attemptTimestamp) &&
+            Date.now() - attemptTimestamp < 2 * 60 * 1000 &&
+            safeCallbackUrl
+          ) {
+            setCredentialsError(loginCredentialsErrorMessage)
+          }
+          window.sessionStorage.removeItem(loginAttemptStorageKey)
+        }
+      } catch {}
+    }
+
+    setCallbackUrl(safeCallbackUrl)
   }, [])
 
   useEffect(() => {
@@ -119,6 +166,13 @@ export default function LoginPage() {
       setIsLoading(true)
 
       try {
+        try {
+          window.sessionStorage.setItem(
+            loginAttemptStorageKey,
+            Date.now().toString()
+          )
+        } catch {}
+
         const result = await signIn('credentials', {
           email: values.email.trim(),
           password: values.password,
@@ -128,10 +182,11 @@ export default function LoginPage() {
 
         const signInErrorMessage = getCredentialsSignInErrorMessage(result)
         if (signInErrorMessage) {
+          try {
+            window.sessionStorage.removeItem(loginAttemptStorageKey)
+          } catch {}
           if (signInErrorMessage === 'Invalid email or password') {
-            setCredentialsError(
-              'Incorrect email or password. Please check both fields and try again.'
-            )
+            setCredentialsError(loginCredentialsErrorMessage)
           } else {
             toast({
               title: 'Error',
@@ -142,8 +197,14 @@ export default function LoginPage() {
           return
         }
 
+        try {
+          window.sessionStorage.removeItem(loginAttemptStorageKey)
+        } catch {}
         router.push(callbackUrl)
       } catch (error) {
+        try {
+          window.sessionStorage.removeItem(loginAttemptStorageKey)
+        } catch {}
         toast({
           title: 'Error',
           description: 'Something went wrong. Please try again.',

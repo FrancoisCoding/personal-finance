@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 
-export default function ResetPasswordPage() {
+function ResetPasswordPageContent() {
   const { status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -244,5 +244,34 @@ export default function ResetPasswordPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+          >
+            <div className="w-full max-w-md space-y-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">
+                    Loading password reset...
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </div>
+      }
+    >
+      <ResetPasswordPageContent />
+    </Suspense>
   )
 }

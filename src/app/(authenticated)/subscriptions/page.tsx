@@ -759,7 +759,7 @@ export default function SubscriptionsPage() {
           name: normalizedName,
           amount: parsedAmount,
           billingCycle: editFormData.billingCycle,
-          nextBillingDate: new Date(editFormData.nextBillingDate),
+          nextBillingDate: editFormData.nextBillingDate,
           categoryId: editFormData.categoryId || undefined,
           notes: editFormData.notes.trim() || undefined,
         },

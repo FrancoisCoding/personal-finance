@@ -260,6 +260,15 @@ export default function LandingPage() {
 
         <section className="px-4 pb-4">
           <div className="container mx-auto">
+            <div className="mx-auto max-w-5xl space-y-2 pb-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Curated financial resources
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Explore vetted budgeting templates, investing explainers, and
+                security guides selected for FinanceFlow readers.
+              </p>
+            </div>
             <AdSlot
               slotId={landingHeroAdSlotId}
               title="Sponsored resources"
@@ -414,6 +423,15 @@ export default function LandingPage() {
 
         <section className="px-4 pb-8">
           <div className="container mx-auto">
+            <div className="mx-auto max-w-5xl space-y-2 pb-3">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Partner spotlight
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                We occasionally feature tools that complement long-term planning
+                and responsible money management.
+              </p>
+            </div>
             <AdSlot
               slotId={landingFooterAdSlotId}
               title="Partner spotlight"

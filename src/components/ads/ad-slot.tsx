@@ -27,6 +27,7 @@ interface IAdSlotProps {
 
 const adsenseScriptId = 'financeflow-adsense-script'
 const adEligiblePathPatterns = [/^\/$/, /^\/support(?:\/|$)/]
+const minimumMainContentCharacterCount = 900
 
 const ensureAdsenseScript = (adClientId: string) => {
   if (typeof window === 'undefined') {
@@ -45,6 +46,19 @@ const ensureAdsenseScript = (adClientId: string) => {
   window.document.head.appendChild(scriptElement)
 }
 
+const getMainContentCharacterCount = () => {
+  if (typeof window === 'undefined') {
+    return 0
+  }
+
+  const mainElement = window.document.querySelector('main')
+  if (!mainElement) {
+    return 0
+  }
+
+  return (mainElement.textContent || '').replace(/\s+/g, ' ').trim().length
+}
+
 export function AdSlot({
   slotId,
   className,
@@ -57,6 +71,8 @@ export function AdSlot({
   const [consentValue, setConsentValue] = useState<TAdConsentValue | null>(null)
   const [isReadyForAdsense, setIsReadyForAdsense] = useState(false)
   const [isPageContentReady, setIsPageContentReady] = useState(false)
+  const [hasSufficientMainContent, setHasSufficientMainContent] =
+    useState(false)
   const [hasAdError, setHasAdError] = useState(false)
   const adElementReference = useRef<HTMLElement | null>(null)
 
@@ -67,7 +83,7 @@ export function AdSlot({
   }, [pathname])
 
   const canRenderAd = useMemo(() => {
-    if (!isEligiblePath || !isPageContentReady) {
+    if (!isEligiblePath || !isPageContentReady || !hasSufficientMainContent) {
       return false
     }
     if (session?.user?.id && isBillingLoading) {
@@ -88,6 +104,7 @@ export function AdSlot({
     billingData?.currentPlan,
     effectiveConsentValue,
     hasAdError,
+    hasSufficientMainContent,
     isEligiblePath,
     isBillingLoading,
     isPageContentReady,
@@ -137,9 +154,22 @@ export function AdSlot({
   }, [])
 
   useEffect(() => {
+    if (!isEligiblePath || !isPageContentReady) {
+      setHasSufficientMainContent(false)
+      return
+    }
+
+    const mainContentCharacterCount = getMainContentCharacterCount()
+    setHasSufficientMainContent(
+      mainContentCharacterCount >= minimumMainContentCharacterCount
+    )
+  }, [isEligiblePath, isPageContentReady, pathname])
+
+  useEffect(() => {
     if (
       !isEligiblePath ||
       !isPageContentReady ||
+      !hasSufficientMainContent ||
       !adClientId ||
       effectiveConsentValue !== 'accepted'
     ) {
@@ -149,7 +179,13 @@ export function AdSlot({
 
     ensureAdsenseScript(adClientId)
     setIsReadyForAdsense(true)
-  }, [adClientId, effectiveConsentValue, isEligiblePath, isPageContentReady])
+  }, [
+    adClientId,
+    effectiveConsentValue,
+    hasSufficientMainContent,
+    isEligiblePath,
+    isPageContentReady,
+  ])
 
   useEffect(() => {
     if (!canRenderAd || !adElementReference.current) {
@@ -165,7 +201,7 @@ export function AdSlot({
     }
   }, [canRenderAd])
 
-  if (!isEligiblePath || !isPageContentReady) {
+  if (!isEligiblePath || !isPageContentReady || !hasSufficientMainContent) {
     return null
   }
 

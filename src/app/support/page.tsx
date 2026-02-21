@@ -97,6 +97,15 @@ export default function SupportPage() {
                 ))}
               </CardContent>
             </Card>
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Sponsored tools
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                These recommendations focus on secure, reliable services that
+                support budgeting, account hygiene, and financial education.
+              </p>
+            </div>
             <AdSlot
               slotId={supportSidebarAdSlotId}
               title="Sponsored tools"

@@ -4,7 +4,7 @@ describe('demo data', () => {
   it('builds a complete demo dataset', () => {
     const data = buildDemoData()
 
-    expect(data.accounts).toHaveLength(4)
+    expect(data.accounts).toHaveLength(5)
     expect(data.categories.length).toBeGreaterThan(5)
     expect(data.transactions.length).toBeGreaterThan(10)
     expect(data.budgets.length).toBeGreaterThan(1)

@@ -907,7 +907,7 @@ export function NotificationCenter() {
         aria-hidden="true"
       />
       <div
-        className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] sm:left-auto sm:w-full sm:max-w-md"
+        className="absolute bottom-4 left-4 right-4 top-4 bottom-[max(1rem,env(safe-area-inset-bottom))] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] sm:left-auto sm:w-full sm:max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

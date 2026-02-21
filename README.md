@@ -143,7 +143,14 @@ You can evaluate the full product without creating external integrations:
 npm run lint
 npm run format:check
 npm run test
+npm run test:e2e:browsers
 ```
+
+## Browser support
+
+- Supported: latest Chrome, Edge, Firefox, Safari, Brave, and Opera releases.
+- Tested automatically with Playwright on Chromium, Firefox, and WebKit engines.
+- Internet Explorer is not supported.
 
 ## Deployment notes
 

@@ -77,6 +77,8 @@
 
   html {
     scrollbar-gutter: stable both-edges;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   :root {
@@ -225,6 +227,28 @@
 .table-scroll::-webkit-scrollbar-track {
   margin-top: 48px;
   margin-bottom: 8px;
+}
+
+@supports not (overflow: clip) {
+  .overflow-x-clip {
+    overflow-x: hidden;
+  }
+
+  .overflow-y-clip {
+    overflow-y: hidden;
+  }
+}
+
+@supports not (
+  (-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))
+) {
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl {
+    background-color: hsl(var(--background) / 0.96);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

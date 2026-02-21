@@ -41,7 +41,7 @@ const loginFormSchema = z.object({
 type TLoginFormValues = z.infer<typeof loginFormSchema>
 const loginAttemptStorageKey = 'finance-login-attempt'
 const loginCredentialsErrorMessage =
-  'Incorrect email or password. Please check both fields and try again.'
+  'Incorrect email or password. If you used Google before, continue with Google or reset your password.'
 
 const validateLoginForm = (values: TLoginFormValues) => {
   const parsedValues = loginFormSchema.safeParse(values)

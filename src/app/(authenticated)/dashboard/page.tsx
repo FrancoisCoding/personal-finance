@@ -59,11 +59,16 @@ import {
   useClearCompletedReminders,
   queryKeys,
 } from '@/hooks/use-finance-data'
-import { analyzeSpendingPatterns } from '@/lib/enhanced-ai'
 import { calculateBudgetForecastItems } from '@/lib/budget-forecast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useBillingStatus } from '@/hooks/use-billing-status'
 import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
+import type {
+  ICashFlowPlanningSnapshot,
+  IDashboardWorkerRequestPayload,
+  IDashboardWorkerResponse,
+  IDashboardWorkerResultPayload,
+} from './dashboard-analytics.types'
 
 const SpendingChart = dynamic(
   () => import('@/components/spending-chart').then((mod) => mod.SpendingChart),
@@ -174,6 +179,30 @@ const AnalyticsDashboard = dynamic(
   }
 )
 
+const emptyCashFlowPlanningSnapshot: ICashFlowPlanningSnapshot = {
+  income14: 0,
+  expenses14: 0,
+  net14: 0,
+  income30: 0,
+  expenses30: 0,
+  net30: 0,
+  lowCashDays: 0,
+  lowCashThreshold: 250,
+  timeline: [],
+  upcomingEvents: [],
+}
+
+const emptyDashboardWorkerResultPayload: IDashboardWorkerResultPayload = {
+  cashFlowPlanningSnapshot: emptyCashFlowPlanningSnapshot,
+  spendingData: [],
+  expenseTotalsByDay: {},
+  dataQualitySnapshot: {
+    uncategorizedCount: 0,
+    possibleDuplicates: 0,
+    staleAccounts: 0,
+  },
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { isDemoMode } = useDemoMode()
@@ -186,6 +215,10 @@ export default function DashboardPage() {
   const [isCreateBudgetModalOpen, setIsCreateBudgetModalOpen] = useState(false)
   const [isCreateGoalModalOpen, setIsCreateGoalModalOpen] = useState(false)
   const demoProgressIntervalRef = useRef<number | null>(null)
+  const dashboardAnalyticsWorkerRef = useRef<Worker | null>(null)
+  const dashboardAnalyticsRequestIdRef = useRef(0)
+  const [dashboardWorkerResult, setDashboardWorkerResult] =
+    useState<IDashboardWorkerResultPayload>(emptyDashboardWorkerResultPayload)
   const highContrastActionButtonClass =
     'min-h-11 border border-primary/85 bg-primary text-primary-foreground font-semibold ' +
     'shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_12px_30px_hsl(var(--primary)/0.33)] ' +
@@ -203,6 +236,29 @@ export default function DashboardPage() {
         window.clearInterval(demoProgressIntervalRef.current)
         demoProgressIntervalRef.current = null
       }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const worker = new Worker(
+      new URL('./dashboard-analytics.worker.ts', import.meta.url)
+    )
+    dashboardAnalyticsWorkerRef.current = worker
+
+    worker.onmessage = (event: MessageEvent<IDashboardWorkerResponse>) => {
+      if (event.data.requestId !== dashboardAnalyticsRequestIdRef.current) {
+        return
+      }
+      setDashboardWorkerResult(event.data.payload)
+    }
+
+    return () => {
+      worker.terminate()
+      dashboardAnalyticsWorkerRef.current = null
     }
   }, [])
 
@@ -483,6 +539,54 @@ export default function DashboardPage() {
     return liquidAccounts.reduce((sum, account) => sum + account.balance, 0)
   }, [accounts, totalBalance])
 
+  const dashboardWorkerRequestPayload = useMemo<IDashboardWorkerRequestPayload>(
+    () => ({
+      liquidCashBalance,
+      accounts: accounts.map((account) => ({
+        id: account.id,
+        type: account.type,
+        updatedAt: account.updatedAt ? String(account.updatedAt) : null,
+      })),
+      categories: categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      })),
+      subscriptions: subscriptions.map((subscription) => ({
+        id: subscription.id,
+        name: subscription.name,
+        amount: subscription.amount,
+        billingCycle: subscription.billingCycle,
+        nextBillingDate: String(subscription.nextBillingDate),
+        isActive: subscription.isActive,
+      })),
+      transactions: transactions.map((transaction) => ({
+        id: transaction.id,
+        description: transaction.description,
+        amount: transaction.amount,
+        type: transaction.type,
+        date: String(transaction.date),
+        categoryId: transaction.categoryId ?? null,
+        category: transaction.category ?? null,
+        categoryRelationName: transaction.categoryRelation?.name ?? null,
+        isRecurring: transaction.isRecurring,
+      })),
+    }),
+    [accounts, categories, liquidCashBalance, subscriptions, transactions]
+  )
+
+  useEffect(() => {
+    const worker = dashboardAnalyticsWorkerRef.current
+    if (!worker) {
+      return
+    }
+
+    dashboardAnalyticsRequestIdRef.current += 1
+    worker.postMessage({
+      requestId: dashboardAnalyticsRequestIdRef.current,
+      payload: dashboardWorkerRequestPayload,
+    })
+  }, [dashboardWorkerRequestPayload])
+
   const budgetForecastItems = useMemo(
     () =>
       calculateBudgetForecastItems({
@@ -514,271 +618,8 @@ export default function DashboardPage() {
     }
   }, [budgetForecastItems])
 
-  const cashFlowPlanningSnapshot = useMemo(() => {
-    type TCashEvent = {
-      id: string
-      title: string
-      date: Date
-      amount: number
-      kind: 'income' | 'expense'
-      source: 'subscription' | 'pattern'
-    }
-
-    const now = new Date()
-    const startOfToday = new Date(now)
-    startOfToday.setHours(0, 0, 0, 0)
-    const horizonDays = 30
-    const day14 = new Date(startOfToday)
-    day14.setDate(day14.getDate() + 14)
-    const horizonEnd = new Date(startOfToday)
-    horizonEnd.setDate(horizonEnd.getDate() + horizonDays)
-    const millisecondsPerDay = 24 * 60 * 60 * 1000
-
-    const events: TCashEvent[] = []
-    const addBillingCycle = (
-      date: Date,
-      billingCycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'WEEKLY' | 'CUSTOM'
-    ) => {
-      const next = new Date(date)
-      if (billingCycle === 'WEEKLY') {
-        next.setDate(next.getDate() + 7)
-        return next
-      }
-      if (billingCycle === 'QUARTERLY') {
-        next.setMonth(next.getMonth() + 3)
-        return next
-      }
-      if (billingCycle === 'YEARLY') {
-        next.setFullYear(next.getFullYear() + 1)
-        return next
-      }
-      if (billingCycle === 'MONTHLY') {
-        next.setMonth(next.getMonth() + 1)
-        return next
-      }
-      return next
-    }
-
-    subscriptions.forEach((subscription) => {
-      if (!subscription.isActive) {
-        return
-      }
-
-      const billingCycle = subscription.billingCycle
-      let nextDate = new Date(subscription.nextBillingDate)
-      nextDate.setHours(0, 0, 0, 0)
-      let guard = 0
-
-      while (nextDate <= horizonEnd && guard < 18) {
-        if (nextDate >= startOfToday) {
-          events.push({
-            id: `subscription-${subscription.id}-${nextDate.toISOString().slice(0, 10)}`,
-            title: subscription.name,
-            date: new Date(nextDate),
-            amount: Math.abs(subscription.amount),
-            kind: 'expense',
-            source: 'subscription',
-          })
-        }
-
-        if (billingCycle === 'CUSTOM') {
-          break
-        }
-
-        nextDate = addBillingCycle(nextDate, billingCycle)
-        guard += 1
-      }
-    })
-
-    const historyStart = new Date(startOfToday)
-    historyStart.setDate(historyStart.getDate() - 120)
-    const groupedPatterns = new Map<
-      string,
-      {
-        type: 'INCOME' | 'EXPENSE'
-        description: string
-        dates: Date[]
-        amounts: number[]
-        isRecurring: boolean
-      }
-    >()
-
-    transactionDateEntries.forEach(({ transaction, transactionDate }) => {
-      if (transactionDate < historyStart || transaction.type === 'TRANSFER') {
-        return
-      }
-      const normalizedDescription = transaction.description
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-      const patternKey = `${transaction.type}|${normalizedDescription}`
-      const existing = groupedPatterns.get(patternKey)
-      if (!existing) {
-        groupedPatterns.set(patternKey, {
-          type: transaction.type,
-          description: transaction.description.trim(),
-          dates: [transactionDate],
-          amounts: [Math.abs(transaction.amount)],
-          isRecurring: transaction.isRecurring,
-        })
-        return
-      }
-
-      existing.dates.push(transactionDate)
-      existing.amounts.push(Math.abs(transaction.amount))
-      existing.isRecurring = existing.isRecurring || transaction.isRecurring
-      groupedPatterns.set(patternKey, existing)
-    })
-
-    groupedPatterns.forEach((pattern, patternKey) => {
-      if (pattern.dates.length < 2) {
-        return
-      }
-
-      const sortedDates = [...pattern.dates].sort(
-        (a, b) => a.getTime() - b.getTime()
-      )
-      const intervals = sortedDates
-        .slice(1)
-        .map((date, index) =>
-          Math.round(
-            (date.getTime() - sortedDates[index].getTime()) / millisecondsPerDay
-          )
-        )
-        .filter((value) => value > 0)
-
-      if (intervals.length === 0) {
-        return
-      }
-
-      const medianInterval = getMedian(intervals)
-      if (medianInterval < 10 || medianInterval > 45) {
-        return
-      }
-
-      if (
-        !pattern.isRecurring &&
-        pattern.type === 'EXPENSE' &&
-        pattern.dates.length < 3
-      ) {
-        return
-      }
-
-      const averageAmount =
-        pattern.amounts.reduce((sum, amount) => sum + amount, 0) /
-        pattern.amounts.length
-      const minAmount = Math.min(...pattern.amounts)
-      const maxAmount = Math.max(...pattern.amounts)
-      if (
-        averageAmount <= 0 ||
-        (maxAmount - minAmount) / averageAmount > 0.45
-      ) {
-        return
-      }
-
-      let nextDate = new Date(sortedDates[sortedDates.length - 1])
-      let guard = 0
-      while (nextDate <= horizonEnd && guard < 6) {
-        nextDate = new Date(
-          nextDate.getTime() + Math.round(medianInterval) * millisecondsPerDay
-        )
-        if (nextDate > horizonEnd) {
-          break
-        }
-        if (nextDate < startOfToday) {
-          guard += 1
-          continue
-        }
-
-        const title =
-          pattern.description.length > 36
-            ? `${pattern.description.slice(0, 36).trimEnd()}...`
-            : pattern.description
-        events.push({
-          id: `pattern-${patternKey}-${nextDate.toISOString().slice(0, 10)}-${guard}`,
-          title,
-          date: new Date(nextDate),
-          amount: averageAmount,
-          kind: pattern.type === 'INCOME' ? 'income' : 'expense',
-          source: 'pattern',
-        })
-        guard += 1
-      }
-    })
-
-    const sortedEvents = events.sort(
-      (a, b) =>
-        a.date.getTime() - b.date.getTime() || a.title.localeCompare(b.title)
-    )
-    const eventsIn14 = sortedEvents.filter((event) => event.date <= day14)
-    const income14 = eventsIn14
-      .filter((event) => event.kind === 'income')
-      .reduce((sum, event) => sum + event.amount, 0)
-    const expenses14 = eventsIn14
-      .filter((event) => event.kind === 'expense')
-      .reduce((sum, event) => sum + event.amount, 0)
-    const income30 = sortedEvents
-      .filter((event) => event.kind === 'income')
-      .reduce((sum, event) => sum + event.amount, 0)
-    const expenses30 = sortedEvents
-      .filter((event) => event.kind === 'expense')
-      .reduce((sum, event) => sum + event.amount, 0)
-
-    const dailyBuckets = new Map<string, { income: number; expenses: number }>()
-    Array.from({ length: horizonDays }, (_, dayOffset) => {
-      const day = new Date(startOfToday)
-      day.setDate(day.getDate() + dayOffset)
-      dailyBuckets.set(day.toISOString().slice(0, 10), {
-        income: 0,
-        expenses: 0,
-      })
-    })
-
-    sortedEvents.forEach((event) => {
-      const dayKey = event.date.toISOString().slice(0, 10)
-      const bucket = dailyBuckets.get(dayKey)
-      if (!bucket) {
-        return
-      }
-      if (event.kind === 'income') {
-        bucket.income += event.amount
-      } else {
-        bucket.expenses += event.amount
-      }
-      dailyBuckets.set(dayKey, bucket)
-    })
-
-    const lowCashThreshold = Math.max(250, liquidCashBalance * 0.15)
-    let projectedBalance = liquidCashBalance
-    const timeline = Array.from({ length: horizonDays }, (_, dayOffset) => {
-      const day = new Date(startOfToday)
-      day.setDate(day.getDate() + dayOffset)
-      const dayKey = day.toISOString().slice(0, 10)
-      const bucket = dailyBuckets.get(dayKey) ?? { income: 0, expenses: 0 }
-      const delta = bucket.income - bucket.expenses
-      projectedBalance += delta
-      return {
-        day,
-        dayKey,
-        delta,
-        endingBalance: projectedBalance,
-        isLowCashDay: projectedBalance < lowCashThreshold,
-      }
-    })
-
-    return {
-      income14,
-      expenses14,
-      net14: income14 - expenses14,
-      income30,
-      expenses30,
-      net30: income30 - expenses30,
-      lowCashDays: timeline.filter((day) => day.isLowCashDay).length,
-      timeline,
-      upcomingEvents: sortedEvents.slice(0, 8),
-      lowCashThreshold,
-    }
-  }, [getMedian, liquidCashBalance, subscriptions, transactionDateEntries])
+  const cashFlowPlanningSnapshot =
+    dashboardWorkerResult.cashFlowPlanningSnapshot
 
   const inferDonationCause = useCallback(
     (category: string | undefined, description: string) => {
@@ -1062,13 +903,13 @@ export default function DashboardPage() {
 
   const spendingData = useMemo(
     () =>
-      analyzeSpendingPatterns(transformedTransactions).map((pattern) => ({
+      dashboardWorkerResult.spendingData.map((pattern) => ({
         category: pattern.category,
-        amount: pattern.totalSpent,
-        percentage: pattern.percentageOfTotal,
+        amount: pattern.amount,
+        percentage: pattern.percentage,
         color: getCategoryColor(pattern.category),
       })),
-    [transformedTransactions]
+    [dashboardWorkerResult.spendingData]
   )
 
   const cashFlowData = useMemo(() => {
@@ -1119,20 +960,10 @@ export default function DashboardPage() {
   }, [displayLocale, transactionDateEntries])
 
   const expenseTotalsByDay = useMemo(() => {
-    const totals = new Map<string, number>()
-
-    transactionDateEntries.forEach(({ transaction, dayKey }) => {
-      if (transaction.type !== 'EXPENSE') {
-        return
-      }
-      totals.set(
-        dayKey,
-        (totals.get(dayKey) ?? 0) + Math.abs(transaction.amount)
-      )
-    })
-
-    return totals
-  }, [transactionDateEntries])
+    return new Map<string, number>(
+      Object.entries(dashboardWorkerResult.expenseTotalsByDay)
+    )
+  }, [dashboardWorkerResult.expenseTotalsByDay])
 
   const { netWorth, netWorthSummaryItems, hasNetWorthData } = useMemo(() => {
     const assets = totalBalance
@@ -1240,58 +1071,7 @@ export default function DashboardPage() {
     }
   }, [accounts, transactionDateEntries])
 
-  const dataQualitySnapshot = useMemo(() => {
-    const uncategorizedCount = transactions.filter((transaction) => {
-      const categoryName =
-        transaction.categoryRelation?.name ??
-        categoryLookup.get(transaction.categoryId ?? '') ??
-        transaction.category
-
-      return (
-        !categoryName ||
-        categoryName === 'Other' ||
-        categoryName === 'Uncategorized'
-      )
-    }).length
-
-    const duplicateBuckets = new Map<string, number>()
-    transactionDateEntries.forEach(({ transaction, dayKey }) => {
-      const normalizedDescription = transaction.description
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, ' ')
-      const amountKey = Math.abs(transaction.amount).toFixed(2)
-      const bucketKey = `${dayKey}|${transaction.type}|${amountKey}|${normalizedDescription}`
-      duplicateBuckets.set(
-        bucketKey,
-        (duplicateBuckets.get(bucketKey) ?? 0) + 1
-      )
-    })
-
-    const possibleDuplicates = Array.from(duplicateBuckets.values()).reduce(
-      (count, bucketSize) => count + Math.max(0, bucketSize - 1),
-      0
-    )
-
-    const staleThresholdMs = 7 * 24 * 60 * 60 * 1000
-    const now = Date.now()
-    const staleAccounts = accounts.filter((account) => {
-      if (!account.updatedAt) {
-        return false
-      }
-      const updatedAtMs = new Date(account.updatedAt).getTime()
-      if (!Number.isFinite(updatedAtMs)) {
-        return false
-      }
-      return now - updatedAtMs > staleThresholdMs
-    }).length
-
-    return {
-      uncategorizedCount,
-      possibleDuplicates,
-      staleAccounts,
-    }
-  }, [accounts, categoryLookup, transactionDateEntries, transactions])
+  const dataQualitySnapshot = dashboardWorkerResult.dataQualitySnapshot
 
   if (isLoading) {
     return (

@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import {
-  getCachedValue,
-  getUserCacheKey,
-  invalidateCacheKey,
-  setCachedValue,
-} from '@/lib/server-cache'
+  getUserDataCacheTag,
+  revalidateUserDataCacheTags,
+} from '@/lib/data-cache'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 import { prisma } from '@/lib/prisma'
 import { AccountType } from '@prisma/client'
 
-const CREDIT_CARDS_CACHE_TTL_MS = 30_000
+const CREDIT_CARDS_CACHE_TTL_SECONDS = 30
 
 type CreditCardSummary = {
   id: string
@@ -35,34 +34,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const cacheKey = getUserCacheKey('credit-cards', session.user.id)
-    const cachedCards = getCachedValue<CreditCardSummary[]>(cacheKey)
-    if (cachedCards) {
-      return NextResponse.json(cachedCards)
-    }
+    const mappedCreditCards = await unstable_cache(
+      async () => {
+        const creditCardAccounts = await prisma.financialAccount.findMany({
+          where: {
+            userId: session.user.id,
+            type: AccountType.CREDIT_CARD,
+            isActive: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        })
 
-    const creditCardAccounts = await prisma.financialAccount.findMany({
-      where: {
-        userId: session.user.id,
-        type: AccountType.CREDIT_CARD,
-        isActive: true,
+        const mappedCards: CreditCardSummary[] = creditCardAccounts.map(
+          (account) => ({
+            id: account.id,
+            name: account.name,
+            balance: Math.abs(account.balance),
+            limit: account.creditLimit ?? 0,
+            apr: 0,
+            dueDate: '',
+            lastStatement: '',
+          })
+        )
+
+        return mappedCards
       },
-      orderBy: { createdAt: 'desc' },
-    })
-
-    const mappedCreditCards: CreditCardSummary[] = creditCardAccounts.map(
-      (account) => ({
-        id: account.id,
-        name: account.name,
-        balance: Math.abs(account.balance),
-        limit: account.creditLimit ?? 0,
-        apr: 0,
-        dueDate: '',
-        lastStatement: '',
-      })
-    )
-
-    setCachedValue(cacheKey, mappedCreditCards, CREDIT_CARDS_CACHE_TTL_MS)
+      ['credit-cards', session.user.id],
+      {
+        revalidate: CREDIT_CARDS_CACHE_TTL_SECONDS,
+        tags: [getUserDataCacheTag('credit-cards', session.user.id)],
+      }
+    )()
 
     return NextResponse.json(mappedCreditCards)
   } catch (error) {
@@ -127,8 +129,7 @@ export async function POST(request: NextRequest) {
       lastStatement: new Date().toISOString().split('T')[0],
     }
 
-    invalidateCacheKey(getUserCacheKey('credit-cards', session.user.id))
-    invalidateCacheKey(getUserCacheKey('accounts', session.user.id))
+    revalidateUserDataCacheTags(session.user.id, ['credit-cards', 'accounts'])
 
     return NextResponse.json(newCard, { status: 201 })
   } catch (error) {

@@ -1,17 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import {
-  getCachedValue,
-  getUserCacheKey,
-  invalidateCacheKeys,
-  setCachedValue,
-} from '@/lib/server-cache'
+  getUserDataCacheTag,
+  revalidateUserDataCacheTags,
+} from '@/lib/data-cache'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-const TRANSACTIONS_CACHE_TTL_MS = 30_000
+const TRANSACTIONS_CACHE_TTL_SECONDS = 30
+
+const getCachedTransactions = (userId: string) =>
+  unstable_cache(
+    async () => {
+      return prisma.transaction.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          account: true,
+          categoryRelation: true,
+        },
+        orderBy: {
+          date: 'desc',
+        },
+      })
+    },
+    ['transactions', userId],
+    {
+      revalidate: TRANSACTIONS_CACHE_TTL_SECONDS,
+      tags: [getUserDataCacheTag('transactions', userId)],
+    }
+  )()
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,29 +47,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const cacheKey = getUserCacheKey('transactions', session.user.id)
-    const cachedTransactions =
-      getCachedValue<Awaited<ReturnType<typeof prisma.transaction.findMany>>>(
-        cacheKey
-      )
-    if (cachedTransactions) {
-      return NextResponse.json(cachedTransactions)
-    }
-
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      include: {
-        account: true,
-        categoryRelation: true,
-      },
-      orderBy: {
-        date: 'desc',
-      },
-    })
-
-    setCachedValue(cacheKey, transactions, TRANSACTIONS_CACHE_TTL_MS)
+    const transactions = await getCachedTransactions(session.user.id)
 
     return NextResponse.json(transactions)
   } catch (error) {
@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the account belongs to the user
     const account = await prisma.financialAccount.findFirst({
       where: {
         id: accountId,
@@ -140,8 +139,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update account balance
-    const balanceChange = type === 'INCOME' ? amount : -amount
+    const numericAmount = parseFloat(amount)
+    const balanceChange = type === 'INCOME' ? numericAmount : -numericAmount
     await prisma.financialAccount.update({
       where: { id: accountId },
       data: {
@@ -151,10 +150,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    invalidateCacheKeys([
-      getUserCacheKey('transactions', session.user.id),
-      getUserCacheKey('accounts', session.user.id),
-    ])
+    revalidateUserDataCacheTags(session.user.id, ['transactions', 'accounts'])
 
     return NextResponse.json(transaction, { status: 201 })
   } catch (error) {

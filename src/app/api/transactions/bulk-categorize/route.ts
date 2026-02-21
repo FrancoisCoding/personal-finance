@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { seedCategories } from '@/lib/seed-categories'
 import { categorizeTransaction } from '@/lib/ai'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
+import { revalidateUserDataCacheTags } from '@/lib/data-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
 interface IBulkCategorizeRequestBody {
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest) {
       getUserCacheKey('transactions', session.user.id),
       getUserCacheKey('categories', session.user.id),
     ])
+    revalidateUserDataCacheTags(session.user.id, ['transactions'])
 
     return NextResponse.json({
       message: `Categorized ${appliedResults.length} transactions`,

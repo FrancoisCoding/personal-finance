@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKeys } from '@/lib/server-cache'
+import { revalidateUserDataCacheTags } from '@/lib/data-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
 interface IRouteContext {
@@ -60,6 +61,7 @@ export async function DELETE(request: NextRequest, context: IRouteContext) {
       getUserCacheKey('accounts', session.user.id),
       getUserCacheKey('transactions', session.user.id),
     ])
+    revalidateUserDataCacheTags(session.user.id, ['accounts', 'transactions'])
 
     return NextResponse.json({
       message: 'Account deleted successfully',

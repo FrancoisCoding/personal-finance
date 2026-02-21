@@ -6,6 +6,77 @@ import { useToast } from '@/hooks/use-toast'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useMemo } from 'react'
 
+interface ITransactionDerivedEntry {
+  transaction: Transaction
+  dateMs: number
+}
+
+interface ITransactionDerivedData {
+  entries: ITransactionDerivedEntry[]
+  version: string
+}
+
+const maximumTransactionDerivedCacheEntries = 12
+const transactionDerivedDataCache = new Map<string, ITransactionDerivedData>()
+
+const getTransactionDataVersion = (transactions: Transaction[]) => {
+  let hash = 2166136261
+
+  transactions.forEach((transaction) => {
+    const signature = [
+      transaction.id,
+      String(transaction.date),
+      transaction.type,
+      String(transaction.amount),
+      transaction.categoryId ?? '',
+      transaction.category ?? '',
+      transaction.isRecurring ? '1' : '0',
+    ].join('|')
+
+    for (let index = 0; index < signature.length; index += 1) {
+      hash ^= signature.charCodeAt(index)
+      hash +=
+        (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24)
+    }
+  })
+
+  return `${transactions.length}:${hash >>> 0}`
+}
+
+const getCachedTransactionDerivedData = (
+  transactions: Transaction[]
+): ITransactionDerivedData => {
+  const version = getTransactionDataVersion(transactions)
+  const cachedValue = transactionDerivedDataCache.get(version)
+
+  if (cachedValue) {
+    transactionDerivedDataCache.delete(version)
+    transactionDerivedDataCache.set(version, cachedValue)
+    return cachedValue
+  }
+
+  const nextValue: ITransactionDerivedData = {
+    version,
+    entries: transactions.map((transaction) => ({
+      transaction,
+      dateMs: new Date(transaction.date).getTime(),
+    })),
+  }
+
+  transactionDerivedDataCache.set(version, nextValue)
+
+  if (
+    transactionDerivedDataCache.size > maximumTransactionDerivedCacheEntries
+  ) {
+    const oldestEntryKey = transactionDerivedDataCache.keys().next().value
+    if (oldestEntryKey) {
+      transactionDerivedDataCache.delete(oldestEntryKey)
+    }
+  }
+
+  return nextValue
+}
+
 // Types
 export interface Account {
   id: string
@@ -269,29 +340,44 @@ export function useReminders() {
 export function useMonthlyStats() {
   const { data: transactions = [] } = useTransactions()
   const currentMonthKey = new Date().toISOString().slice(0, 7)
+  const transactionDerivedData = useMemo(
+    () => getCachedTransactionDerivedData(transactions),
+    [transactions]
+  )
 
   return useMemo(() => {
     const now = new Date(`${currentMonthKey}-01T00:00:00`)
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const startOfMonthMs = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    ).getTime()
+    const endOfMonthMs = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    ).getTime()
 
-    const monthlyIncome = transactions
-      .filter(
-        (t) =>
-          t.type === 'INCOME' &&
-          new Date(t.date) >= startOfMonth &&
-          new Date(t.date) <= endOfMonth
-      )
-      .reduce((total, t) => total + t.amount, 0)
+    let monthlyIncome = 0
+    let monthlyExpenses = 0
+    transactionDerivedData.entries.forEach(({ transaction, dateMs }) => {
+      if (!Number.isFinite(dateMs)) {
+        return
+      }
+      if (dateMs < startOfMonthMs || dateMs > endOfMonthMs) {
+        return
+      }
 
-    const monthlyExpenses = transactions
-      .filter(
-        (t) =>
-          t.type === 'EXPENSE' &&
-          new Date(t.date) >= startOfMonth &&
-          new Date(t.date) <= endOfMonth
-      )
-      .reduce((total, t) => total + t.amount, 0)
+      if (transaction.type === 'INCOME') {
+        monthlyIncome += transaction.amount
+      } else if (transaction.type === 'EXPENSE') {
+        monthlyExpenses += transaction.amount
+      }
+    })
 
     const netIncome = monthlyIncome - monthlyExpenses
 
@@ -299,9 +385,9 @@ export function useMonthlyStats() {
       monthlyIncome,
       monthlyExpenses,
       netIncome,
-      transactionCount: transactions.length,
+      transactionCount: transactionDerivedData.entries.length,
     }
-  }, [currentMonthKey, transactions])
+  }, [currentMonthKey, transactionDerivedData])
 }
 
 export function useTotalBalance() {
@@ -346,29 +432,44 @@ export function useBudgetProgress(budgetId: string) {
   const { data: budgets = [] } = useBudgets()
   const { data: transactions = [] } = useTransactions()
   const currentDayKey = new Date().toDateString()
+  const transactionDerivedData = useMemo(
+    () => getCachedTransactionDerivedData(transactions),
+    [transactions]
+  )
 
   return useMemo(() => {
     const budget = budgets.find((b) => b.id === budgetId)
     if (!budget) return 0
+    if (budget.amount <= 0) return 0
 
     const now = new Date(currentDayKey)
-    const startDate = new Date(budget.startDate)
-    const endDate = budget.endDate
+    const startDateMs = new Date(budget.startDate).getTime()
+    const endDateMs = budget.endDate
       ? new Date(budget.endDate)
-      : new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+    const normalizedEndDateMs = endDateMs.getTime()
+    if (
+      !Number.isFinite(startDateMs) ||
+      !Number.isFinite(normalizedEndDateMs)
+    ) {
+      return 0
+    }
 
-    const spent = transactions
-      .filter(
-        (t) =>
-          t.categoryId === budget.categoryId &&
-          t.type === 'EXPENSE' &&
-          new Date(t.date) >= startDate &&
-          new Date(t.date) <= endDate
-      )
-      .reduce((total, t) => total + t.amount, 0)
+    let spent = 0
+    transactionDerivedData.entries.forEach(({ transaction, dateMs }) => {
+      if (
+        transaction.categoryId === budget.categoryId &&
+        transaction.type === 'EXPENSE' &&
+        Number.isFinite(dateMs) &&
+        dateMs >= startDateMs &&
+        dateMs <= normalizedEndDateMs
+      ) {
+        spent += transaction.amount
+      }
+    })
 
     return Math.min((spent / budget.amount) * 100, 100)
-  }, [budgetId, budgets, currentDayKey, transactions])
+  }, [budgetId, budgets, currentDayKey, transactionDerivedData])
 }
 
 export function useGoalProgress(goalId: string) {

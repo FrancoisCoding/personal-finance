@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
+import { revalidateUserDataCacheTags } from '@/lib/data-cache'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
 interface IRouteContext {
@@ -56,6 +57,7 @@ export async function PATCH(request: NextRequest, context: IRouteContext) {
     })
 
     invalidateCacheKey(getUserCacheKey('transactions', session.user.id))
+    revalidateUserDataCacheTags(session.user.id, ['transactions'])
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {

@@ -1,19 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import {
-  getCachedValue,
-  getUserCacheKey,
-  invalidateCacheKey,
-  invalidateCacheKeys,
-  setCachedValue,
-} from '@/lib/server-cache'
+  getUserDataCacheTag,
+  revalidateUserDataCacheTags,
+} from '@/lib/data-cache'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 
-const ACCOUNTS_CACHE_TTL_MS = 30_000
+const ACCOUNTS_CACHE_TTL_SECONDS = 30
+
+const getCachedAccounts = (userId: string) =>
+  unstable_cache(
+    async () => {
+      return prisma.financialAccount.findMany({
+        where: {
+          userId,
+          isActive: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      })
+    },
+    ['accounts', userId],
+    {
+      revalidate: ACCOUNTS_CACHE_TTL_SECONDS,
+      tags: [getUserDataCacheTag('accounts', userId)],
+    }
+  )()
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,26 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const cacheKey = getUserCacheKey('accounts', session.user.id)
-    const cachedAccounts =
-      getCachedValue<
-        Awaited<ReturnType<typeof prisma.financialAccount.findMany>>
-      >(cacheKey)
-    if (cachedAccounts) {
-      return NextResponse.json(cachedAccounts)
-    }
-
-    const accounts = await prisma.financialAccount.findMany({
-      where: {
-        userId: session.user.id,
-        isActive: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
-
-    setCachedValue(cacheKey, accounts, ACCOUNTS_CACHE_TTL_MS)
+    const accounts = await getCachedAccounts(session.user.id)
 
     return NextResponse.json(accounts)
   } catch (error) {
@@ -106,7 +105,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    invalidateCacheKey(getUserCacheKey('accounts', session.user.id))
+    revalidateUserDataCacheTags(session.user.id, ['accounts'])
 
     return NextResponse.json(account, { status: 201 })
   } catch (error) {
@@ -157,10 +156,7 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    invalidateCacheKeys([
-      getUserCacheKey('accounts', session.user.id),
-      getUserCacheKey('transactions', session.user.id),
-    ])
+    revalidateUserDataCacheTags(session.user.id, ['accounts', 'transactions'])
 
     return NextResponse.json({
       message: 'All accounts deleted successfully',

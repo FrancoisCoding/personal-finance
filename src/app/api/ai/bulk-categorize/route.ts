@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { seedCategories } from '@/lib/seed-categories'
 import { autoCategorizeTransactions } from '@/lib/enhanced-ai'
+import { revalidateUserDataCacheTags } from '@/lib/data-cache'
 import { buildDemoData } from '@/lib/demo-data'
 import { isDemoModeRequest } from '@/lib/demo-mode'
 import {
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
     })
 
     await Promise.all(updatePromises)
+    revalidateUserDataCacheTags(session.user.id, ['transactions'])
 
     return NextResponse.json({
       message: `Successfully categorized ${categorizationResults.length} transactions`,

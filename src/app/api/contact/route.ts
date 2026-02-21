@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -14,11 +18,36 @@ const parseString = (value: unknown) => {
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimit = await enforceRateLimit({
+      request,
+      scope: 'contact-submit',
+      maxRequests: 10,
+      windowMs: 10 * 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(
+        rateLimit,
+        'Too many contact requests. Please wait before sending another message.'
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const name = parseString(body?.name)
     const email = parseString(body?.email)
     const subject = parseString(body?.subject)
     const message = parseString(body?.message)
+    const website = parseString(body?.website)
+
+    if (website) {
+      return NextResponse.json(
+        {
+          success: true,
+          message:
+            'Thanks for reaching out. We received your message and will reply soon.',
+        },
+        { status: 202 }
+      )
+    }
 
     if (name.length < 2 || name.length > 80) {
       return NextResponse.json(

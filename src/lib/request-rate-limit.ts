@@ -30,6 +30,18 @@ export interface IRequestRateLimitOptions {
   userId?: string
 }
 
+export interface IIdentifierRateLimitOptions {
+  identifier: string
+  scope: string
+  maxRequests: number
+  windowMs: number
+}
+
+interface IRateLimitStoreConfig {
+  restToken: string
+  restUrl: string
+}
+
 const getRateLimitStore = () => {
   const globalStore = globalThis as IGlobalRateLimitStore
   if (!globalStore.__financeFlowRateLimitStore) {
@@ -40,6 +52,22 @@ const getRateLimitStore = () => {
   }
   return globalStore.__financeFlowRateLimitStore
 }
+
+const getRateLimitStoreConfig = (): IRateLimitStoreConfig | null => {
+  const restUrl = process.env.UPSTASH_REDIS_REST_URL?.trim() || ''
+  const restToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim() || ''
+
+  if (!restUrl || !restToken) {
+    return null
+  }
+
+  return {
+    restToken,
+    restUrl: restUrl.replace(/\/+$/, ''),
+  }
+}
+
+let hasLoggedDistributedRateLimitFallback = false
 
 const getClientAddress = (request: NextRequest) => {
   const forwardedFor = request.headers.get('x-forwarded-for')
@@ -101,7 +129,113 @@ const consumeRateLimit = ({
   }
 }
 
-export const enforceRateLimit = ({
+const createRateLimitResult = (
+  count: number,
+  maxRequests: number,
+  ttlMs: number
+): IRateLimitResult => {
+  const normalizedTtlMs = Math.max(1, ttlMs)
+
+  return {
+    isLimited: count > maxRequests,
+    remaining: Math.max(0, maxRequests - count),
+    resetAt: Date.now() + normalizedTtlMs,
+    retryAfterSeconds: Math.max(1, Math.ceil(normalizedTtlMs / 1000)),
+  }
+}
+
+const executeRedisCommand = async (
+  config: IRateLimitStoreConfig,
+  commandParts: Array<string | number>
+) => {
+  const encodedCommand = commandParts
+    .map((commandPart) => encodeURIComponent(String(commandPart)))
+    .join('/')
+  const response = await fetch(`${config.restUrl}/${encodedCommand}`, {
+    headers: {
+      Authorization: `Bearer ${config.restToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Rate-limit store returned ${response.status}`)
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string
+    result?: unknown
+  }
+
+  if (payload.error) {
+    throw new Error(payload.error)
+  }
+
+  return payload.result
+}
+
+const consumeDistributedRateLimit = async ({
+  key,
+  maxRequests,
+  windowMs,
+}: IConsumeRateLimitOptions): Promise<IRateLimitResult> => {
+  const config = getRateLimitStoreConfig()
+  if (!config) {
+    return consumeRateLimit({ key, maxRequests, windowMs })
+  }
+
+  const distributedKey = `financeflow:ratelimit:${key}`
+  const incrementResult = await executeRedisCommand(config, [
+    'INCR',
+    distributedKey,
+  ])
+  const count =
+    typeof incrementResult === 'number' && Number.isFinite(incrementResult)
+      ? incrementResult
+      : 1
+
+  if (count <= 1) {
+    await executeRedisCommand(config, ['PEXPIRE', distributedKey, windowMs])
+  }
+
+  const ttlResult = await executeRedisCommand(config, ['PTTL', distributedKey])
+  const ttlMs =
+    typeof ttlResult === 'number' && Number.isFinite(ttlResult) && ttlResult > 0
+      ? ttlResult
+      : windowMs
+
+  return createRateLimitResult(count, maxRequests, ttlMs)
+}
+
+const consumeRateLimitWithFallback = async (
+  options: IConsumeRateLimitOptions
+): Promise<IRateLimitResult> => {
+  try {
+    return await consumeDistributedRateLimit(options)
+  } catch (error) {
+    if (!hasLoggedDistributedRateLimitFallback) {
+      hasLoggedDistributedRateLimitFallback = true
+      console.warn(
+        'Distributed rate limit unavailable; falling back to in-memory store.',
+        error
+      )
+    }
+
+    return consumeRateLimit(options)
+  }
+}
+
+export const enforceIdentifierRateLimit = async ({
+  identifier,
+  scope,
+  maxRequests,
+  windowMs,
+}: IIdentifierRateLimitOptions) => {
+  const normalizedIdentifier = identifier.trim() || 'unknown'
+  const key = `${scope}:${normalizedIdentifier}`
+  return consumeRateLimitWithFallback({ key, maxRequests, windowMs })
+}
+
+export const enforceRateLimit = async ({
   request,
   scope,
   maxRequests,
@@ -109,8 +243,12 @@ export const enforceRateLimit = ({
   userId,
 }: IRequestRateLimitOptions) => {
   const identifier = userId || getClientAddress(request)
-  const key = `${scope}:${identifier}`
-  return consumeRateLimit({ key, maxRequests, windowMs })
+  return enforceIdentifierRateLimit({
+    identifier,
+    scope,
+    maxRequests,
+    windowMs,
+  })
 }
 
 export const createRateLimitResponse = (

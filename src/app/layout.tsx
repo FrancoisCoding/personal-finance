@@ -24,9 +24,26 @@ const displayFont = Sora({
 
 const adsensePublisherId =
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? 'ca-pub-2720502399458958'
+const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+const metadataBase = (() => {
+  if (configuredAppUrl) {
+    try {
+      return new URL(configuredAppUrl)
+    } catch {
+      console.warn(
+        'NEXT_PUBLIC_APP_URL is invalid. Using fallback metadata URL.'
+      )
+    }
+  }
+  return new URL('https://financeflow.dev')
+})()
 
 export const metadata: Metadata = {
-  title: 'Finance App - AI-Powered Personal Finance Management',
+  metadataBase,
+  title: {
+    default: 'FinanceFlow | AI-Powered Personal Finance Management',
+    template: '%s | FinanceFlow',
+  },
   description:
     'Modern personal finance app with AI-powered insights, smart categorization, budgeting, and progress tracking.',
   keywords: [
@@ -36,7 +53,25 @@ export const metadata: Metadata = {
     'personal finance',
     'money management',
   ],
-  authors: [{ name: 'Finance App Team' }],
+  authors: [{ name: 'FinanceFlow Team' }],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'FinanceFlow | AI-Powered Personal Finance Management',
+    description:
+      'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
+    url: '/',
+    siteName: 'FinanceFlow',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FinanceFlow | AI-Powered Personal Finance Management',
+    description:
+      'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
+  },
   other: {
     'google-adsense-account': adsensePublisherId,
   },

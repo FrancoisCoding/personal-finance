@@ -1,4 +1,18 @@
 /** @type {import('next').NextConfig} */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://js.stripe.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://api.openrouter.ai https://openrouter.ai https://api.stripe.com https://api.teller.io https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net",
+  "frame-src 'self' https://accounts.google.com https://googleads.g.doubleclick.net https://js.stripe.com https://hooks.stripe.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
 const nextConfig = {
   poweredByHeader: false,
   images: {
@@ -22,6 +36,10 @@ const nextConfig = {
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: contentSecurityPolicy,
           },
         ],
       },

@@ -51,7 +51,7 @@ const successResponse = () => {
 
 export async function POST(request: NextRequest) {
   try {
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       request,
       scope: 'auth-forgot-password',
       maxRequests: 5,

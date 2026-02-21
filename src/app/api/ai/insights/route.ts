@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       request,
       scope: 'ai-insights-get',
       userId: session.user.id,
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       request,
       scope: 'ai-insights-post',
       userId: session.user.id,

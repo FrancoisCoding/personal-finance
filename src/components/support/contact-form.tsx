@@ -14,6 +14,7 @@ interface IContactFormState {
   email: string
   subject: string
   message: string
+  website: string
 }
 
 const defaultFormState: IContactFormState = {
@@ -21,6 +22,7 @@ const defaultFormState: IContactFormState = {
   email: '',
   subject: '',
   message: '',
+  website: '',
 }
 
 export function ContactForm() {
@@ -97,6 +99,19 @@ export function ContactForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div className="hidden" aria-hidden="true">
+            <Label htmlFor="contact-website">Website</Label>
+            <Input
+              id="contact-website"
+              autoComplete="off"
+              tabIndex={-1}
+              value={formState.website}
+              onChange={(event) =>
+                handleFieldChange('website', event.target.value)
+              }
+            />
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contact-name">Name</Label>

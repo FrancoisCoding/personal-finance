@@ -3,12 +3,16 @@ const {
   createMock,
   hashPasswordMock,
   isCompromisedPasswordMock,
+  enforceRateLimitMock,
+  createRateLimitResponseMock,
 } = vi.hoisted(() => {
   return {
     findUniqueMock: vi.fn(),
     createMock: vi.fn(),
     hashPasswordMock: vi.fn(),
     isCompromisedPasswordMock: vi.fn(),
+    enforceRateLimitMock: vi.fn(),
+    createRateLimitResponseMock: vi.fn(),
   }
 })
 
@@ -35,6 +39,13 @@ vi.mock('@/lib/compromised-password', () => {
   }
 })
 
+vi.mock('@/lib/request-rate-limit', () => {
+  return {
+    enforceRateLimit: enforceRateLimitMock,
+    createRateLimitResponse: createRateLimitResponseMock,
+  }
+})
+
 const createPostRequest = (body: unknown) => {
   return new Request('http://localhost/api/auth/register', {
     method: 'POST',
@@ -51,7 +62,18 @@ describe('register route', () => {
     createMock.mockReset()
     hashPasswordMock.mockReset()
     isCompromisedPasswordMock.mockReset()
+    enforceRateLimitMock.mockReset()
+    createRateLimitResponseMock.mockReset()
     isCompromisedPasswordMock.mockResolvedValue(false)
+    enforceRateLimitMock.mockResolvedValue({
+      isLimited: false,
+      remaining: 7,
+      resetAt: Date.now() + 60_000,
+      retryAfterSeconds: 60,
+    })
+    createRateLimitResponseMock.mockImplementation((result, errorMessage) => {
+      return Response.json({ error: errorMessage }, { status: 429 })
+    })
     vi.resetModules()
   })
 
@@ -175,6 +197,7 @@ describe('register route', () => {
       data: {
         name: 'Valid Name',
         email: 'valid@example.com',
+        emailVerified: expect.any(Date),
         hashedPassword: 'hashed-password',
       },
       select: {
@@ -228,5 +251,27 @@ describe('register route', () => {
     )
     expect(hashPasswordMock).not.toHaveBeenCalled()
     expect(createMock).not.toHaveBeenCalled()
+  })
+
+  it('returns a rate limit response when registration is throttled', async () => {
+    enforceRateLimitMock.mockResolvedValueOnce({
+      isLimited: true,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+      retryAfterSeconds: 60,
+    })
+    const { POST } = await import('./route')
+    const response = await POST(
+      createPostRequest({
+        name: 'Valid Name',
+        email: 'valid@example.com',
+        password: 'StrongPassword123!',
+      })
+    )
+    const payload = await response.json()
+
+    expect(response.status).toBe(429)
+    expect(payload.error).toContain('Too many signup attempts')
+    expect(findUniqueMock).not.toHaveBeenCalled()
   })
 })

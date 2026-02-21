@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       tier: userTier,
     })
 
-    const burstRateLimit = enforceRateLimit({
+    const burstRateLimit = await enforceRateLimit({
       request,
       scope: `${rateLimitPolicy.scope}:burst`,
       userId: session.user.id,
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const windowRateLimit = enforceRateLimit({
+    const windowRateLimit = await enforceRateLimit({
       request,
       scope: `${rateLimitPolicy.scope}:window`,
       userId: session.user.id,
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const dailyRateLimit = enforceRateLimit({
+    const dailyRateLimit = await enforceRateLimit({
       request,
       scope: `${rateLimitPolicy.scope}:daily`,
       userId: session.user.id,

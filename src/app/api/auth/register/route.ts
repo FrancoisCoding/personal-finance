@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/password'
 import { isCompromisedPassword } from '@/lib/compromised-password'
 import { getPasswordPolicyErrors } from '@/lib/password-policy'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -10,8 +14,21 @@ const parseString = (value: unknown) => {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const rateLimit = await enforceRateLimit({
+      request,
+      scope: 'auth-register',
+      maxRequests: 8,
+      windowMs: 10 * 60_000,
+    })
+    if (rateLimit.isLimited) {
+      return createRateLimitResponse(
+        rateLimit,
+        'Too many signup attempts. Please wait and try again.'
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const name = parseString(body?.name)
     const email = parseString(body?.email).toLowerCase()
@@ -77,6 +94,7 @@ export async function POST(request: Request) {
       data: {
         name,
         email,
+        emailVerified: new Date(),
         hashedPassword,
       },
       select: {

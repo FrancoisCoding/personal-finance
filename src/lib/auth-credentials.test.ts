@@ -35,6 +35,7 @@ describe('authorizeCredentials', () => {
       name: 'User',
       email: 'user@example.com',
       hashedPassword: null,
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
 
     const result = await authorizeCredentialsWithDependencies(
@@ -51,6 +52,7 @@ describe('authorizeCredentials', () => {
       name: 'User',
       email: 'user@example.com',
       hashedPassword: hashPassword('correct-password'),
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
 
     const result = await authorizeCredentialsWithDependencies(
@@ -67,6 +69,7 @@ describe('authorizeCredentials', () => {
       name: 'User',
       email: 'user@example.com',
       hashedPassword: hashPassword('correct-password'),
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
 
     const result = await authorizeCredentialsWithDependencies(
@@ -103,6 +106,7 @@ describe('authorizeCredentials', () => {
       name: 'User',
       email: 'user@example.com',
       hashedPassword: 'scrypt$test-salt$test-key',
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
     const verifyPasswordValue = vi.fn().mockReturnValueOnce(false)
 
@@ -124,6 +128,7 @@ describe('authorizeCredentials', () => {
       name: 'Legacy User',
       email: 'legacy@example.com',
       hashedPassword: 'legacy-password',
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
     const updateUserPasswordHash = vi.fn().mockResolvedValueOnce(undefined)
 
@@ -150,6 +155,7 @@ describe('authorizeCredentials', () => {
       name: 'Legacy User',
       email: 'legacy@example.com',
       hashedPassword: 'legacy-password',
+      emailVerified: new Date('2024-01-01T00:00:00.000Z'),
     })
     const updateUserPasswordHash = vi.fn()
 
@@ -160,5 +166,46 @@ describe('authorizeCredentials', () => {
 
     expect(result).toBeNull()
     expect(updateUserPasswordHash).not.toHaveBeenCalled()
+  })
+
+  it('returns null when credentials rate limit is reached', async () => {
+    const findUserByEmail = vi.fn()
+    const consumeCredentialsRateLimit = vi.fn().mockResolvedValueOnce({
+      isLimited: true,
+      remaining: 0,
+      resetAt: Date.now() + 60_000,
+      retryAfterSeconds: 60,
+    })
+
+    const result = await authorizeCredentialsWithDependencies(
+      { email: 'user@example.com', password: 'password' },
+      { findUserByEmail, consumeCredentialsRateLimit }
+    )
+
+    expect(result).toBeNull()
+    expect(findUserByEmail).not.toHaveBeenCalled()
+  })
+
+  it('marks email as verified after successful credentials login', async () => {
+    const findUserByEmail = vi.fn().mockResolvedValueOnce({
+      id: 'user-1',
+      name: 'User',
+      email: 'user@example.com',
+      hashedPassword: hashPassword('correct-password'),
+      emailVerified: null,
+    })
+    const updateUserEmailVerified = vi.fn().mockResolvedValueOnce(undefined)
+
+    const result = await authorizeCredentialsWithDependencies(
+      { email: 'user@example.com', password: 'correct-password' },
+      { findUserByEmail, updateUserEmailVerified }
+    )
+
+    expect(result).toEqual({
+      id: 'user-1',
+      name: 'User',
+      email: 'user@example.com',
+    })
+    expect(updateUserEmailVerified).toHaveBeenCalledWith('user-1')
   })
 })

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       request,
       scope: 'ai-categorize',
       userId: session.user.id,

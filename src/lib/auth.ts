@@ -5,6 +5,10 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { timingSafeEqual } from 'crypto'
 import { prisma } from './prisma'
 import { hashPassword, verifyPassword } from './password'
+import {
+  enforceIdentifierRateLimit,
+  type IRateLimitResult,
+} from './request-rate-limit'
 
 // Extend the built-in session types
 declare module 'next-auth' {
@@ -18,25 +22,86 @@ declare module 'next-auth' {
   }
 }
 
+interface ICredentialsRequestContext {
+  headers?: Headers | Record<string, string | string[] | undefined>
+}
+
+interface ICredentialsAuthorizeDependencies {
+  findUserByEmail?: (email: string) => Promise<{
+    id: string
+    name: string | null
+    email: string
+    hashedPassword: string | null
+    emailVerified: Date | null
+  } | null>
+  verifyPasswordValue?: (password: string, storedHash: string) => boolean
+  updateUserPasswordHash?: (
+    userId: string,
+    hashedPassword: string
+  ) => Promise<void>
+  updateUserEmailVerified?: (userId: string) => Promise<void>
+  consumeCredentialsRateLimit?: (
+    identifier: string
+  ) => Promise<IRateLimitResult>
+  onError?: (error: unknown) => void
+}
+
+const getRequestHeaderValue = (
+  requestContext: ICredentialsRequestContext | undefined,
+  headerName: string
+) => {
+  const headers = requestContext?.headers
+  if (!headers) {
+    return ''
+  }
+
+  if (headers instanceof Headers) {
+    return headers.get(headerName)?.trim() ?? ''
+  }
+
+  const rawHeaderValue = headers[headerName]
+  if (Array.isArray(rawHeaderValue)) {
+    return rawHeaderValue[0]?.trim() ?? ''
+  }
+  return typeof rawHeaderValue === 'string' ? rawHeaderValue.trim() : ''
+}
+
+const getClientAddressFromRequestContext = (
+  requestContext?: ICredentialsRequestContext
+) => {
+  const forwardedFor = getRequestHeaderValue(requestContext, 'x-forwarded-for')
+  if (forwardedFor) {
+    const firstForwardedAddress = forwardedFor
+      .split(',')
+      .map((value) => value.trim())
+      .find(Boolean)
+    if (firstForwardedAddress) {
+      return firstForwardedAddress
+    }
+  }
+
+  const realIp = getRequestHeaderValue(requestContext, 'x-real-ip')
+  if (realIp) {
+    return realIp
+  }
+
+  return ''
+}
+
+const createOpenRateLimitResult = (): IRateLimitResult => ({
+  isLimited: false,
+  remaining: Number.MAX_SAFE_INTEGER,
+  resetAt: Date.now(),
+  retryAfterSeconds: 0,
+})
+
 export const authorizeCredentialsWithDependencies = async (
   credentials?: {
     email?: string
     password?: string
   },
-  dependencies?: {
-    findUserByEmail?: (email: string) => Promise<{
-      id: string
-      name: string | null
-      email: string
-      hashedPassword: string | null
-    } | null>
-    verifyPasswordValue?: (password: string, storedHash: string) => boolean
-    updateUserPasswordHash?: (
-      userId: string,
-      hashedPassword: string
-    ) => Promise<void>
-    onError?: (error: unknown) => void
-  }
+  dependencies?: ICredentialsAuthorizeDependencies,
+  requestContext?: ICredentialsRequestContext
 ) => {
   const email = credentials?.email?.trim().toLowerCase()
   const password = credentials?.password
@@ -50,6 +115,7 @@ export const authorizeCredentialsWithDependencies = async (
           name: true,
           email: true,
           hashedPassword: true,
+          emailVerified: true,
         },
       })
     })
@@ -65,6 +131,28 @@ export const authorizeCredentialsWithDependencies = async (
         },
       })
     })
+  const updateUserEmailVerified =
+    dependencies?.updateUserEmailVerified ??
+    (async (userId: string) => {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          emailVerified: new Date(),
+        },
+      })
+    })
+  const consumeCredentialsRateLimit =
+    dependencies?.consumeCredentialsRateLimit ??
+    (process.env.NODE_ENV === 'test'
+      ? async () => createOpenRateLimitResult()
+      : async (identifier: string) => {
+          return enforceIdentifierRateLimit({
+            identifier,
+            scope: 'auth-credentials',
+            maxRequests: 25,
+            windowMs: 10 * 60_000,
+          })
+        })
   const onError =
     dependencies?.onError ??
     ((error: unknown) => {
@@ -74,6 +162,23 @@ export const authorizeCredentialsWithDependencies = async (
   if (!email || !password) {
     return null
   }
+
+  const clientAddress = getClientAddressFromRequestContext(requestContext)
+
+  const emailRateLimit = await consumeCredentialsRateLimit(`email:${email}`)
+  if (emailRateLimit.isLimited) {
+    return null
+  }
+
+  if (clientAddress) {
+    const clientRateLimit = await consumeCredentialsRateLimit(
+      `ip:${clientAddress}`
+    )
+    if (clientRateLimit.isLimited) {
+      return null
+    }
+  }
+
   try {
     const user = await findUserByEmail(email)
 
@@ -111,6 +216,14 @@ export const authorizeCredentialsWithDependencies = async (
       }
     }
 
+    if (!user.emailVerified) {
+      try {
+        await updateUserEmailVerified(user.id)
+      } catch (error) {
+        onError(error)
+      }
+    }
+
     return {
       id: user.id,
       name: user.name,
@@ -122,11 +235,18 @@ export const authorizeCredentialsWithDependencies = async (
   }
 }
 
-export const authorizeCredentials = async (credentials?: {
-  email?: string
-  password?: string
-}) => {
-  return authorizeCredentialsWithDependencies(credentials)
+export const authorizeCredentials = async (
+  credentials?: {
+    email?: string
+    password?: string
+  },
+  requestContext?: ICredentialsRequestContext
+) => {
+  return authorizeCredentialsWithDependencies(
+    credentials,
+    undefined,
+    requestContext
+  )
 }
 
 export const authOptions: NextAuthOptions = {
@@ -139,7 +259,11 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      authorize: authorizeCredentials,
+      authorize: (credentials, request) =>
+        authorizeCredentials(
+          credentials,
+          request as ICredentialsRequestContext
+        ),
     }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [

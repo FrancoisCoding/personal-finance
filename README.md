@@ -109,9 +109,11 @@ Open `http://localhost:3000`.
 
 | Variable                            | Required            | Purpose                                    |
 | ----------------------------------- | ------------------- | ------------------------------------------ |
-| `DATABASE_URL`                      | Yes                 | PostgreSQL connection string               |
+| `PRISMA_DATABASE_URL`               | Yes                 | Primary Prisma PostgreSQL connection       |
+| `DATABASE_URL`                      | Yes                 | Direct PostgreSQL connection               |
 | `NEXTAUTH_URL`                      | Yes                 | Auth callback base URL                     |
 | `NEXTAUTH_SECRET`                   | Yes                 | Session and JWT signing secret             |
+| `NEXT_PUBLIC_APP_URL`               | Recommended         | Canonical app URL for metadata and links   |
 | `GOOGLE_CLIENT_ID`                  | Optional            | Google OAuth provider                      |
 | `GOOGLE_CLIENT_SECRET`              | Optional            | Google OAuth provider secret               |
 | `GITHUB_ID`                         | Optional            | GitHub OAuth provider                      |
@@ -119,6 +121,8 @@ Open `http://localhost:3000`.
 | `OPENROUTER_API_KEY`                | Yes for AI features | Hosted AI access                           |
 | `OPENROUTER_MODEL`                  | Optional            | Override model ID                          |
 | `OPENROUTER_BASE_URL`               | Optional            | OpenRouter base URL                        |
+| `UPSTASH_REDIS_REST_URL`            | Recommended         | Distributed request-rate limiting backend  |
+| `UPSTASH_REDIS_REST_TOKEN`          | Recommended         | Upstash REST auth token                    |
 | `NEXT_PUBLIC_TELLER_APPLICATION_ID` | Optional            | Teller client application ID               |
 | `NEXT_PUBLIC_TELLER_ENV`            | Optional            | Teller environment (`sandbox` recommended) |
 | `TELLER_ENV`                        | Optional            | Teller server environment                  |

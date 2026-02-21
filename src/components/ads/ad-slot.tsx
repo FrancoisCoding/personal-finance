@@ -27,6 +27,20 @@ interface IAdSlotProps {
 
 const adsenseScriptId = 'financeflow-adsense-script'
 const adEligiblePathPatterns = [/^\/$/, /^\/support(?:\/|$)/]
+const blockedAdPathPatterns = [
+  /^\/auth(?:\/|$)/,
+  /^\/admin(?:\/|$)/,
+  /^\/api(?:\/|$)/,
+  /^\/dashboard(?:\/|$)/,
+]
+const lowValueMainContentPatterns = [
+  /\bsomething went wrong\b/i,
+  /\bnot found\b/i,
+  /\bunder construction\b/i,
+  /\bloading\b/i,
+  /\bplease wait\b/i,
+  /\btemporarily unavailable\b/i,
+]
 const minimumMainContentCharacterCount = 900
 
 const ensureAdsenseScript = (adClientId: string) => {
@@ -46,17 +60,35 @@ const ensureAdsenseScript = (adClientId: string) => {
   window.document.head.appendChild(scriptElement)
 }
 
-const getMainContentCharacterCount = () => {
+const getMainContentSnapshot = () => {
   if (typeof window === 'undefined') {
-    return 0
+    return {
+      characterCount: 0,
+      text: '',
+    }
   }
 
   const mainElement = window.document.querySelector('main')
   if (!mainElement) {
-    return 0
+    return {
+      characterCount: 0,
+      text: '',
+    }
   }
 
-  return (mainElement.textContent || '').replace(/\s+/g, ' ').trim().length
+  const normalizedText = (mainElement.textContent || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return {
+    characterCount: normalizedText.length,
+    text: normalizedText,
+  }
+}
+
+const hasLowValueMainContent = (mainContentText: string) => {
+  return lowValueMainContentPatterns.some((pattern) =>
+    pattern.test(mainContentText)
+  )
 }
 
 export function AdSlot({
@@ -73,17 +105,26 @@ export function AdSlot({
   const [isPageContentReady, setIsPageContentReady] = useState(false)
   const [hasSufficientMainContent, setHasSufficientMainContent] =
     useState(false)
+  const [isLowValueMainContent, setIsLowValueMainContent] = useState(false)
   const [hasAdError, setHasAdError] = useState(false)
   const adElementReference = useRef<HTMLElement | null>(null)
 
   const adClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
   const effectiveConsentValue = resolveAdConsentValue(consentValue)
   const isEligiblePath = useMemo(() => {
+    if (blockedAdPathPatterns.some((pattern) => pattern.test(pathname))) {
+      return false
+    }
     return adEligiblePathPatterns.some((pattern) => pattern.test(pathname))
   }, [pathname])
 
   const canRenderAd = useMemo(() => {
-    if (!isEligiblePath || !isPageContentReady || !hasSufficientMainContent) {
+    if (
+      !isEligiblePath ||
+      !isPageContentReady ||
+      !hasSufficientMainContent ||
+      isLowValueMainContent
+    ) {
       return false
     }
     if (session?.user?.id && isBillingLoading) {
@@ -107,6 +148,7 @@ export function AdSlot({
     hasSufficientMainContent,
     isEligiblePath,
     isBillingLoading,
+    isLowValueMainContent,
     isPageContentReady,
     isReadyForAdsense,
     session?.user?.id,
@@ -156,13 +198,15 @@ export function AdSlot({
   useEffect(() => {
     if (!isEligiblePath || !isPageContentReady) {
       setHasSufficientMainContent(false)
+      setIsLowValueMainContent(false)
       return
     }
 
-    const mainContentCharacterCount = getMainContentCharacterCount()
+    const { characterCount, text } = getMainContentSnapshot()
     setHasSufficientMainContent(
-      mainContentCharacterCount >= minimumMainContentCharacterCount
+      characterCount >= minimumMainContentCharacterCount
     )
+    setIsLowValueMainContent(hasLowValueMainContent(text))
   }, [isEligiblePath, isPageContentReady, pathname])
 
   useEffect(() => {
@@ -170,6 +214,7 @@ export function AdSlot({
       !isEligiblePath ||
       !isPageContentReady ||
       !hasSufficientMainContent ||
+      isLowValueMainContent ||
       !adClientId ||
       effectiveConsentValue !== 'accepted'
     ) {
@@ -183,6 +228,7 @@ export function AdSlot({
     adClientId,
     effectiveConsentValue,
     hasSufficientMainContent,
+    isLowValueMainContent,
     isEligiblePath,
     isPageContentReady,
   ])
@@ -201,7 +247,12 @@ export function AdSlot({
     }
   }, [canRenderAd])
 
-  if (!isEligiblePath || !isPageContentReady || !hasSufficientMainContent) {
+  if (
+    !isEligiblePath ||
+    !isPageContentReady ||
+    !hasSufficientMainContent ||
+    isLowValueMainContent
+  ) {
     return null
   }
 

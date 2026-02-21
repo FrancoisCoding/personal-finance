@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       request,
       scope: 'admin-login',
       maxRequests: 6,

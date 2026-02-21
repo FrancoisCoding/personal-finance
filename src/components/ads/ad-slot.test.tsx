@@ -58,6 +58,18 @@ describe('AdSlot', () => {
     readyStateGetterSpy.mockRestore()
   })
 
+  it('does not render on auth routes', () => {
+    const readyStateGetterSpy = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('complete')
+    mockUsePathname.mockReturnValue('/auth/login')
+
+    renderAdSlot(<AdSlot slotId="slot-1" />, buildRichContent())
+
+    expect(screen.queryByLabelText('Sponsored')).not.toBeInTheDocument()
+    readyStateGetterSpy.mockRestore()
+  })
+
   it('does not render while the page is still loading', () => {
     const readyStateGetterSpy = vi
       .spyOn(document, 'readyState', 'get')
@@ -75,6 +87,20 @@ describe('AdSlot', () => {
       .mockReturnValue('complete')
 
     renderAdSlot(<AdSlot slotId="slot-1" />, 'Short page copy.')
+
+    expect(screen.queryByLabelText('Sponsored')).not.toBeInTheDocument()
+    readyStateGetterSpy.mockRestore()
+  })
+
+  it('does not render on error-like low-value content', () => {
+    const readyStateGetterSpy = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('complete')
+
+    renderAdSlot(
+      <AdSlot slotId="slot-1" />,
+      `${buildRichContent()} Something went wrong. Please try again.`
+    )
 
     expect(screen.queryByLabelText('Sponsored')).not.toBeInTheDocument()
     readyStateGetterSpy.mockRestore()

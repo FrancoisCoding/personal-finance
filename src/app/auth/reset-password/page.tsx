@@ -173,13 +173,13 @@ function ResetPasswordPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-dvh bg-background">
       <Navbar />
 
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+        className="flex min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
       >
         <div className="w-full max-w-md space-y-6">
           <div className="text-center">
@@ -338,12 +338,12 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen min-h-dvh bg-background">
           <Navbar />
           <main
             id="main-content"
             tabIndex={-1}
-            className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
+            className="flex min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8"
           >
             <div className="w-full max-w-md space-y-6">
               <Card>

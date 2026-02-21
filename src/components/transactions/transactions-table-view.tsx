@@ -46,7 +46,7 @@ const TransactionsTableView = <T,>({
                   <TableHead
                     key={header.id}
                     className={cn(
-                      'text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground',
+                      'text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:text-[11px]',
                       alignRight && 'text-right'
                     )}
                   >
@@ -55,7 +55,7 @@ const TransactionsTableView = <T,>({
                         type="button"
                         onClick={header.column.getToggleSortingHandler()}
                         className={cn(
-                          'inline-flex items-center gap-2',
+                          'inline-flex min-h-10 items-center gap-2 py-2',
                           alignRight && 'w-full justify-end'
                         )}
                       >

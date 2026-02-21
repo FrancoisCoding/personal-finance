@@ -35,13 +35,13 @@ const DataTablePaginationControls = <T,>({
         className
       )}
     >
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground sm:text-xs">
         <span>Rows per page</span>
         <Select
           value={String(pageSize)}
           onValueChange={(value) => table.setPageSize(Number(value))}
         >
-          <SelectTrigger className="h-8 w-[90px] text-xs">
+          <SelectTrigger className="h-10 w-[98px] text-sm sm:h-8 sm:w-[90px] sm:text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -55,7 +55,9 @@ const DataTablePaginationControls = <T,>({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="text-xs text-muted-foreground">{pageDisplay}</div>
+        <div className="text-sm text-muted-foreground sm:text-xs">
+          {pageDisplay}
+        </div>
         <Button
           variant="outline"
           size="sm"

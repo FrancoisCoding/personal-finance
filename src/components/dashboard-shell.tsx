@@ -697,15 +697,15 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   }, [activeOptionIndex, isSearchOpen, optionList.length])
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen min-h-dvh bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
       >
         Skip to main content
       </a>
-      <div className="relative min-h-screen px-4 py-6 lg:px-8 lg:py-8">
-        <div className="grid min-h-[calc(100vh-3rem)] grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
+      <div className="relative min-h-screen min-h-dvh px-4 py-6 lg:px-8 lg:py-8">
+        <div className="grid min-h-[calc(100vh-3rem)] min-h-[calc(100dvh-3rem)] grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
           {isSidebarOpen && (
             <button
               aria-label="Close sidebar"
@@ -825,6 +825,15 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
               </div>
 
               <div className="flex flex-1 items-center justify-end gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="md:hidden"
+                  onClick={() => router.push('/assistant')}
+                  aria-label="Open Financial Assistant"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
                 <div
                   className="relative hidden max-w-xs flex-1 items-center md:flex"
                   data-demo-step="demo-search"

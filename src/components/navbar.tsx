@@ -51,20 +51,38 @@ export function Navbar() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link href="/">
-                <Logo size="md" />
+                <>
+                  <span className="sm:hidden">
+                    <LogoCompact size="md" />
+                  </span>
+                  <span className="hidden sm:inline-flex">
+                    <Logo size="md" />
+                  </span>
+                </>
               </Link>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <ThemeToggle />
-              <Link href="/support#contact-form">
+              <Link
+                href="/support#contact-form"
+                className="hidden sm:inline-flex"
+              >
                 <Button variant="ghost" size="sm">
                   Support
                 </Button>
               </Link>
               <Link href="/auth/login">
-                <Button>Sign In</Button>
+                <Button size="sm">Sign In</Button>
               </Link>
             </div>
+          </div>
+          <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium sm:hidden">
+            <Link
+              href="/support#contact-form"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Support
+            </Link>
           </div>
         </div>
       </nav>

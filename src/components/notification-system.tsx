@@ -740,7 +740,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                className="h-11 w-11 p-0 text-muted-foreground hover:text-foreground sm:h-8 sm:w-8"
                 onClick={(e) => {
                   e.stopPropagation()
                   removeNotification(notification.id)
@@ -760,7 +760,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs text-foreground"
+                  className="h-10 px-3 text-xs text-foreground sm:h-8 sm:px-2"
                   onClick={(e) => {
                     e.stopPropagation()
                     notification.action?.onClick()
@@ -907,7 +907,7 @@ export function NotificationCenter() {
         aria-hidden="true"
       />
       <div
-        className="absolute right-4 top-4 bottom-4 w-full max-w-md"
+        className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-[max(1rem,env(safe-area-inset-left))] right-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] sm:left-auto sm:w-full sm:max-w-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -950,7 +950,7 @@ export function NotificationCenter() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowNotificationCenter(false)}
-                className="h-8 w-8 p-0"
+                className="h-11 w-11 p-0 sm:h-8 sm:w-8"
                 aria-label="Close notifications"
               >
                 <X className="h-4 w-4" />
@@ -963,7 +963,7 @@ export function NotificationCenter() {
                   size="sm"
                   onClick={() => setActiveTab('history')}
                   className={cn(
-                    'h-7 px-3 text-xs rounded-full',
+                    'h-10 rounded-full px-3 text-xs sm:h-8',
                     activeTab === 'history'
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -976,7 +976,7 @@ export function NotificationCenter() {
                   size="sm"
                   onClick={() => setActiveTab('rules')}
                   className={cn(
-                    'h-7 px-3 text-xs rounded-full',
+                    'h-10 rounded-full px-3 text-xs sm:h-8',
                     activeTab === 'rules'
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -990,7 +990,7 @@ export function NotificationCenter() {
                   variant="ghost"
                   size="sm"
                   onClick={resetAlertRules}
-                  className="h-8 px-3 text-xs"
+                  className="h-10 px-3 text-xs sm:h-8"
                 >
                   Reset defaults
                 </Button>
@@ -1003,7 +1003,7 @@ export function NotificationCenter() {
                   size="sm"
                   onClick={markAllAsRead}
                   disabled={unreadCount === 0}
-                  className="h-8 px-3 text-xs"
+                  className="h-10 px-3 text-xs sm:h-8"
                 >
                   Mark all read
                 </Button>
@@ -1012,7 +1012,7 @@ export function NotificationCenter() {
                   size="sm"
                   onClick={clearRead}
                   disabled={readCount === 0}
-                  className="h-8 px-3 text-xs"
+                  className="h-10 px-3 text-xs sm:h-8"
                 >
                   Clear read
                 </Button>
@@ -1021,7 +1021,7 @@ export function NotificationCenter() {
                   size="sm"
                   onClick={clearAll}
                   disabled={notifications.length === 0}
-                  className="h-8 px-3 text-xs"
+                  className="h-10 px-3 text-xs sm:h-8"
                 >
                   Clear all
                 </Button>
@@ -1290,8 +1290,8 @@ export function NotificationBell() {
   return (
     <Button
       variant="ghost"
-      size="sm"
-      className="relative p-2"
+      size="icon"
+      className="relative"
       onClick={() => setShowNotificationCenter(true)}
       aria-label={label}
       aria-haspopup="dialog"

@@ -13,6 +13,8 @@
     "secrets:check": "node scripts/check-secrets.cjs",
     "test": "vitest run --config vitest.config.mts --coverage",
     "test:auth": "vitest run --config vitest.config.mts src/lib/auth.test.ts src/lib/auth-credentials.test.ts src/lib/password.test.ts src/lib/password-reset.test.ts src/lib/credentials-signin-result.test.ts src/lib/admin-auth.test.ts src/app/api/auth/register/route.test.ts src/app/api/auth/forgot-password/route.test.ts src/app/api/auth/reset-password/route.test.ts",
+    "test:e2e:mobile": "playwright test --config playwright.config.ts",
+    "test:e2e:mobile:headed": "playwright test --config playwright.config.ts --headed",
     "test:watch": "vitest --config vitest.config.mts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -64,6 +66,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

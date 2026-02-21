@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig(async () => {
   const { default: react } = await import('@vitejs/plugin-react')
@@ -11,6 +11,7 @@ export default defineConfig(async () => {
       setupFiles: ['./vitest.setup.ts'],
       globals: true,
       css: true,
+      exclude: [...configDefaults.exclude, 'tests/e2e/**'],
       coverage: {
         provider: 'istanbul',
         reporter: ['text', 'json', 'lcov'],

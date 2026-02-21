@@ -76,14 +76,6 @@ export function Navbar() {
               </Link>
             </div>
           </div>
-          <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium sm:hidden">
-            <Link
-              href="/support#contact-form"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Support
-            </Link>
-          </div>
         </div>
       </nav>
     )

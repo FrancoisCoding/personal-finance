@@ -146,29 +146,15 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <ThemeToggle />
-              <Link href="/auth/login" className="hidden sm:inline-flex">
-                <Button variant="outline" size="sm">
+              <Link href="/auth/login">
+                <Button variant="outline" size="sm" className="px-3 sm:px-4">
                   Sign In
                 </Button>
               </Link>
-              <Link href="/plans">
+              <Link href="/plans" className="hidden sm:inline-flex">
                 <Button size="sm">Get Started</Button>
               </Link>
             </div>
-          </div>
-          <div className="flex items-center justify-end gap-4 pb-2 text-xs font-medium sm:hidden">
-            <Link
-              href="/support#contact-form"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Support
-            </Link>
-            <Link
-              href="/auth/login"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Sign in
-            </Link>
           </div>
         </div>
       </nav>

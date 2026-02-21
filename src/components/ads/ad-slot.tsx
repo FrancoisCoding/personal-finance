@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useBillingStatus } from '@/hooks/use-billing-status'
 import {
@@ -25,6 +26,7 @@ interface IAdSlotProps {
 }
 
 const adsenseScriptId = 'financeflow-adsense-script'
+const adEligiblePathPatterns = [/^\/$/, /^\/support(?:\/|$)/]
 
 const ensureAdsenseScript = (adClientId: string) => {
   if (typeof window === 'undefined') {
@@ -51,14 +53,23 @@ export function AdSlot({
 }: IAdSlotProps) {
   const { data: session } = useSession()
   const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
+  const pathname = usePathname()
   const [consentValue, setConsentValue] = useState<TAdConsentValue | null>(null)
   const [isReadyForAdsense, setIsReadyForAdsense] = useState(false)
+  const [isPageContentReady, setIsPageContentReady] = useState(false)
   const [hasAdError, setHasAdError] = useState(false)
   const adElementReference = useRef<HTMLElement | null>(null)
 
   const adClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
   const effectiveConsentValue = resolveAdConsentValue(consentValue)
+  const isEligiblePath = useMemo(() => {
+    return adEligiblePathPatterns.some((pattern) => pattern.test(pathname))
+  }, [pathname])
+
   const canRenderAd = useMemo(() => {
+    if (!isEligiblePath || !isPageContentReady) {
+      return false
+    }
     if (session?.user?.id && isBillingLoading) {
       return false
     }
@@ -77,7 +88,9 @@ export function AdSlot({
     billingData?.currentPlan,
     effectiveConsentValue,
     hasAdError,
+    isEligiblePath,
     isBillingLoading,
+    isPageContentReady,
     isReadyForAdsense,
     session?.user?.id,
     slotId,
@@ -108,14 +121,35 @@ export function AdSlot({
   }, [])
 
   useEffect(() => {
-    if (!adClientId || effectiveConsentValue !== 'accepted') {
+    const handleLoad = () => {
+      setIsPageContentReady(true)
+    }
+
+    if (window.document.readyState === 'complete') {
+      setIsPageContentReady(true)
+      return
+    }
+
+    window.addEventListener('load', handleLoad)
+    return () => {
+      window.removeEventListener('load', handleLoad)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (
+      !isEligiblePath ||
+      !isPageContentReady ||
+      !adClientId ||
+      effectiveConsentValue !== 'accepted'
+    ) {
       setIsReadyForAdsense(false)
       return
     }
 
     ensureAdsenseScript(adClientId)
     setIsReadyForAdsense(true)
-  }, [adClientId, effectiveConsentValue])
+  }, [adClientId, effectiveConsentValue, isEligiblePath, isPageContentReady])
 
   useEffect(() => {
     if (!canRenderAd || !adElementReference.current) {
@@ -130,6 +164,10 @@ export function AdSlot({
       setHasAdError(true)
     }
   }, [canRenderAd])
+
+  if (!isEligiblePath || !isPageContentReady) {
+    return null
+  }
 
   if (consentValue === 'declined') {
     return null

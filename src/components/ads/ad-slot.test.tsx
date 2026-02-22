@@ -70,6 +70,18 @@ describe('AdSlot', () => {
     readyStateGetterSpy.mockRestore()
   })
 
+  it('does not render on support route (only landing is ad-eligible)', () => {
+    const readyStateGetterSpy = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('complete')
+    mockUsePathname.mockReturnValue('/support')
+
+    renderAdSlot(<AdSlot slotId="slot-1" />, buildRichContent())
+
+    expect(screen.queryByLabelText('Sponsored')).not.toBeInTheDocument()
+    readyStateGetterSpy.mockRestore()
+  })
+
   it('does not render while the page is still loading', () => {
     const readyStateGetterSpy = vi
       .spyOn(document, 'readyState', 'get')

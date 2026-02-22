@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AdSlot } from '@/components/ads/ad-slot'
 import { ContactForm } from '@/components/support/contact-form'
 
 const contactOptions = [
@@ -22,22 +21,36 @@ const faqItems = [
   {
     question: 'How do I connect a new account?',
     answer:
-      'Go to Dashboard, select Connect Bank Account, and complete the secure prompt.',
+      'From the Dashboard, select Connect Bank Account and follow the secure prompt. We use bank-level encryption and do not store your login credentials. You can disconnect or reconnect accounts anytime from Accounts.',
   },
   {
     question: 'How do I update my subscription?',
     answer:
-      'Open Billing to change plans, update payment methods, or cancel your subscription.',
+      'Open Billing in your account to change plans, update payment methods, or cancel. Changes take effect at the next billing cycle. Refunds follow our terms of service.',
   },
   {
     question: 'How can I export my data?',
-    answer: 'Use Export in Transactions to download your filtered activity.',
+    answer:
+      'In Transactions, use the Export option to download your filtered activity as CSV. You can choose date range and accounts. Exports are generated on demand and include categories and notes.',
+  },
+  {
+    question: 'Is my financial data secure?',
+    answer:
+      'Yes. We use encryption in transit and at rest, and we never sell your data. Our security practices are described in our Privacy Policy. For sensitive actions we support two-factor authentication.',
+  },
+  {
+    question: 'What happens if I miss a payment?',
+    answer:
+      'We will send reminders before due dates. If a payment is missed, you can update the transaction or reminder in the app. We do not report to credit bureaus; your bank or creditor may have their own policies.',
+  },
+  {
+    question: 'Can I use FinanceFlow with multiple currencies?',
+    answer:
+      'You can set a display currency in Profile so all amounts are shown in one currency. Adding accounts in other currencies is supported; we use approximate conversion for summaries. For exact multi-currency reporting, use filters and exports.',
   },
 ]
 
 export default function SupportPage() {
-  const supportSidebarAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_SUPPORT
-
   return (
     <div className="min-h-screen bg-background">
       <a
@@ -97,20 +110,23 @@ export default function SupportPage() {
                 ))}
               </CardContent>
             </Card>
-            <div className="space-y-2">
-              <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Sponsored tools
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                These recommendations focus on secure, reliable services that
-                support budgeting, account hygiene, and financial education.
-              </p>
-            </div>
-            <AdSlot
-              slotId={supportSidebarAdSlotId}
-              title="Sponsored tools"
-              minHeightClassName="min-h-[160px]"
-            />
+            <Card>
+              <CardHeader>
+                <CardTitle>What to include when you contact us</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground space-y-3">
+                <p>
+                  To get the fastest help, include your account email, the page
+                  or feature you were using, and what you expected versus what
+                  happened. For billing questions, mention your plan and last
+                  four digits of the payment method if relevant.
+                </p>
+                <p>
+                  We aim to reply within one business day. For urgent account
+                  access issues, say &ldquo;Urgent&rdquo; in the subject line.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

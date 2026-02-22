@@ -83,6 +83,16 @@ or core finance workflows.
 - Exclude sensitive user-financial data from ad targeting payloads.
 - Keep clear separation between recommendations and sponsored content.
 
+## AdSense policy alignment
+
+To avoid “ads on screens without publisher-content”, “low-value content”, “more ads than content”, and “out of context ads”:
+
+- **Eligible paths**: Ads only on the landing page (`/`). No ads on support, auth, dashboard, or other utility screens.
+- **Content threshold**: Main content must be at least 2,000 characters before any ad slot is shown.
+- **Ad density**: One ad unit per page (e.g. footer “Partner spotlight” on landing). Content must clearly outweigh ads.
+- **Context**: Each ad is in an `<aside>` with a clear label (e.g. “Partner spotlight”) so it is obvious which publisher content it is associated with.
+- **Language**: Site uses `lang="en"` and English as primary language (AdSense supported).
+
 ## Success Metrics
 
 - Primary:

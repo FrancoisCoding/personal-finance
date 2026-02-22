@@ -105,7 +105,8 @@ const testimonials = [
 ]
 
 export default function LandingPage() {
-  const landingHeroAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING_HERO
+  // Single ad slot (footer only) so publisher content clearly outweighs ads
+  // and each ad is clearly associated with the page (AdSense policy).
   const landingFooterAdSlotId =
     process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING_FOOTER
 
@@ -241,26 +242,6 @@ export default function LandingPage() {
                 forecastRange={netWorthForecastRange}
               />
             </FadeIn>
-          </div>
-        </section>
-
-        <section className="px-4 pb-4">
-          <div className="container mx-auto">
-            <div className="mx-auto max-w-5xl space-y-2 pb-3">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Curated financial resources
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Explore vetted budgeting templates, investing explainers, and
-                security guides selected for FinanceFlow readers.
-              </p>
-            </div>
-            <AdSlot
-              slotId={landingHeroAdSlotId}
-              title="Sponsored resources"
-              className="mx-auto max-w-5xl"
-              minHeightClassName="min-h-[140px]"
-            />
           </div>
         </section>
 

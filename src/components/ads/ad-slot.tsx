@@ -26,7 +26,10 @@ interface IAdSlotProps {
 }
 
 const adsenseScriptId = 'financeflow-adsense-script'
-const adEligiblePathPatterns = [/^\/$/, /^\/support(?:\/|$)/]
+// Only show ads on the landing page (substantial, unique content). Support and
+// other thin pages are excluded to comply with AdSense policy on ads without
+// sufficient publisher-content and ad-to-content ratio.
+const adEligiblePathPatterns = [/^\/$/]
 const blockedAdPathPatterns = [
   /^\/auth(?:\/|$)/,
   /^\/admin(?:\/|$)/,
@@ -41,7 +44,9 @@ const lowValueMainContentPatterns = [
   /\bplease wait\b/i,
   /\btemporarily unavailable\b/i,
 ]
-const minimumMainContentCharacterCount = 900
+// Require substantial publisher content so ads are clearly secondary (AdSense:
+// no "more ads than content", no "screens without content or low-value content").
+const minimumMainContentCharacterCount = 2000
 
 const ensureAdsenseScript = (adClientId: string) => {
   if (typeof window === 'undefined') {

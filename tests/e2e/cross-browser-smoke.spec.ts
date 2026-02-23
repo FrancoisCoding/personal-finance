@@ -24,15 +24,33 @@ test.describe('Cross-browser smoke coverage', () => {
   }
 
   test('allows login form interaction', async ({ page }) => {
-    await page.goto('/auth/login', { waitUntil: 'domcontentloaded' })
+    await page.goto('/auth/login', { waitUntil: 'networkidle' })
 
-    await page.locator('#email').fill('cross-browser@example.com')
-    await page.locator('#password').fill('StrongPassword123!')
+    const emailInput = page.getByLabel('Email address')
+    const passwordInput = page.getByLabel('Password')
+    const fillInputUntilStable = async (
+      input: ReturnType<typeof page.locator>,
+      value: string
+    ) => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        await input.click()
+        await input.fill(value)
+        if ((await input.inputValue()) === value) {
+          return
+        }
+        await page.waitForTimeout(150)
+      }
+      await expect(input).toHaveValue(value)
+    }
 
-    await expect(page.locator('#email')).toHaveValue(
-      'cross-browser@example.com'
-    )
-    await expect(page.locator('#password')).toHaveValue('StrongPassword123!')
+    await expect(emailInput).toBeEditable()
+    await expect(passwordInput).toBeEditable()
+
+    await fillInputUntilStable(emailInput, 'cross-browser@example.com')
+    await expect(emailInput).toHaveValue('cross-browser@example.com')
+
+    await fillInputUntilStable(passwordInput, 'StrongPassword123!')
+    await expect(passwordInput).toHaveValue('StrongPassword123!')
   })
 
   test('submits support form with a successful response', async ({ page }) => {

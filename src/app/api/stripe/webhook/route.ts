@@ -19,7 +19,9 @@ const resolveStatus = (status: Stripe.Subscription.Status) => {
   if (status === 'active') return AppSubscriptionStatus.ACTIVE
   if (status === 'trialing') return AppSubscriptionStatus.TRIALING
   if (status === 'past_due') return AppSubscriptionStatus.PAST_DUE
-  if (status === 'incomplete') return AppSubscriptionStatus.INCOMPLETE
+  if (status === 'incomplete' || status === 'incomplete_expired') {
+    return AppSubscriptionStatus.INCOMPLETE
+  }
   if (status === 'canceled' || status === 'unpaid') {
     return AppSubscriptionStatus.CANCELED
   }
@@ -117,6 +119,39 @@ export async function POST(request: NextRequest) {
         const subscription =
           await stripeClient.subscriptions.retrieve(stripeSubscriptionId)
         await upsertFromStripeSubscription(subscription)
+
+        // Ensure only one active subscription per user: cancel any other active
+        // subscriptions (upgrade/downgrade creates a new subscription).
+        const userId = subscription.metadata?.userId as string | undefined
+        if (userId && stripeClient) {
+          const others = await prisma.appSubscription.findMany({
+            where: {
+              userId,
+              stripeSubscriptionId: { not: stripeSubscriptionId },
+              status: {
+                in: [
+                  AppSubscriptionStatus.ACTIVE,
+                  AppSubscriptionStatus.TRIALING,
+                ],
+              },
+            },
+          })
+          for (const other of others) {
+            if (other.stripeSubscriptionId) {
+              try {
+                await stripeClient.subscriptions.cancel(
+                  other.stripeSubscriptionId
+                )
+              } catch (err) {
+                console.error(
+                  'Failed to cancel previous subscription:',
+                  other.stripeSubscriptionId,
+                  err
+                )
+              }
+            }
+          }
+        }
         break
       }
       case 'customer.subscription.created':

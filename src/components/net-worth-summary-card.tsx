@@ -62,12 +62,12 @@ export function NetWorthSummaryCard({
         className
       )}
     >
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Net worth
           </p>
-          <p className="font-display text-3xl mt-2">
+          <p className="font-display text-2xl mt-2 sm:text-3xl">
             {hasData ? formatCurrency(netWorth) : '--'}
           </p>
         </div>
@@ -89,7 +89,7 @@ export function NetWorthSummaryCard({
 
       {hasData ? (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             {summaryItems.map((item) => (
               <div
                 key={item.label}
@@ -108,7 +108,7 @@ export function NetWorthSummaryCard({
               <span>Spending forecast</span>
               <span>Next 30 days</span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
               <div className="rounded-2xl border border-border/60 bg-background/70 px-3 py-2">
                 <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                   7-day avg
@@ -141,7 +141,7 @@ export function NetWorthSummaryCard({
                   <span>Daily range</span>
                   <span>Last 30 days</span>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div
                     className={
                       'rounded-xl border border-border/60 bg-background/80 ' +

@@ -167,11 +167,11 @@ const SpendingChart = memo(function SpendingChart({
       className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
     >
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-foreground">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base font-semibold text-foreground sm:text-lg">
             Spending Breakdown
           </CardTitle>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <div className="text-lg font-bold text-foreground">
               {formatCurrency(totalSpending)}
             </div>
@@ -191,8 +191,8 @@ const SpendingChart = memo(function SpendingChart({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Pie Chart */}
-        <div className="h-52 sm:h-60">
+        {/* Pie Chart - smaller on mobile to reduce vertical clutter */}
+        <div className="h-44 sm:h-52 md:h-60">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -218,22 +218,25 @@ const SpendingChart = memo(function SpendingChart({
           <h4 className="text-sm font-medium text-muted-foreground">
             Categories
           </h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 sm:max-h-64">
             {displayData.map((item, index) => (
               <div
                 key={`${item.category}-${index}`}
                 className={
-                  'flex flex-col gap-2 rounded-lg border border-border/60 ' +
-                  'bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between'
+                  'flex flex-col gap-1 rounded-lg border border-border/60 ' +
+                  'bg-muted/20 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2'
                 }
               >
-                <div className="flex min-w-0 items-center gap-3">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                   <div
-                    className="h-3 w-3 shrink-0 rounded-full"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full sm:h-3 sm:w-3"
                     style={{ backgroundColor: item.color }}
                   />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="text-sm font-medium text-foreground truncate"
+                      title={item.category}
+                    >
                       {item.category}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -241,10 +244,8 @@ const SpendingChart = memo(function SpendingChart({
                     </p>
                   </div>
                 </div>
-                <div className="shrink-0 text-left sm:min-w-[96px] sm:text-right">
-                  <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {formatCurrency(item.amount)}
-                  </p>
+                <div className="shrink-0 text-left text-sm font-semibold text-foreground tabular-nums sm:min-w-[96px] sm:text-right">
+                  {formatCurrency(item.amount)}
                 </div>
               </div>
             ))}

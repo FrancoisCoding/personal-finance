@@ -70,11 +70,11 @@ const CashFlowChart = memo(function CashFlowChart({
       className={`bg-card/80 border border-border/60 shadow-sm ${className}`}
     >
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg font-semibold text-foreground">
             Cash Flow
           </CardTitle>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <div
               className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}
             >
@@ -86,29 +86,33 @@ const CashFlowChart = memo(function CashFlowChart({
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
-              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-300">
+          {/* Summary Cards - stack on mobile to prevent overlap */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 p-3 sm:flex-col sm:justify-center sm:text-center">
+              <span className="text-xs text-muted-foreground sm:order-2">
+                Total Income
+              </span>
+              <div className="text-base font-bold text-emerald-600 dark:text-emerald-300 sm:order-1 sm:text-lg">
                 {formatCurrency(totalIncome)}
               </div>
-              <div className="text-xs text-muted-foreground">Total Income</div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
-              <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
+            <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 p-3 sm:flex-col sm:justify-center sm:text-center">
+              <span className="text-xs text-muted-foreground sm:order-2">
+                Total Expenses
+              </span>
+              <div className="text-base font-bold text-rose-600 dark:text-rose-300 sm:order-1 sm:text-lg">
                 {formatCurrency(totalExpenses)}
               </div>
-              <div className="text-xs text-muted-foreground">
-                Total Expenses
-              </div>
             </div>
-            <div className="text-center p-3 rounded-lg border border-border/60 bg-muted/30">
+            <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 p-3 sm:flex-col sm:justify-center sm:text-center">
+              <span className="text-xs text-muted-foreground sm:order-2">
+                Net Flow
+              </span>
               <div
-                className={`text-lg font-bold ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}
+                className={`text-base font-bold sm:text-lg ${netCashFlow >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-600 dark:text-rose-300'}`}
               >
                 {formatCurrency(netCashFlow)}
               </div>
-              <div className="text-xs text-muted-foreground">Net Flow</div>
             </div>
           </div>
 

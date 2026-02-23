@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { BillingCycle } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getUserCacheKey, invalidateCacheKey } from '@/lib/server-cache'
@@ -57,8 +58,19 @@ export async function PATCH(request: NextRequest, context: IRouteContext) {
     if (body.amount !== undefined && body.amount !== null) {
       updateData.amount = Number.parseFloat(body.amount)
     }
-    if (body.billingCycle) {
-      updateData.billingCycle = body.billingCycle
+    const allowedBillingCycles: BillingCycle[] = [
+      'MONTHLY',
+      'QUARTERLY',
+      'YEARLY',
+      'CUSTOM',
+    ]
+    if (
+      typeof body.billingCycle === 'string' &&
+      allowedBillingCycles.includes(
+        body.billingCycle.toUpperCase() as BillingCycle
+      )
+    ) {
+      updateData.billingCycle = body.billingCycle.toUpperCase() as BillingCycle
     }
     if (body.nextBillingDate) {
       updateData.nextBillingDate = new Date(body.nextBillingDate)

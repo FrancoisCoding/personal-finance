@@ -5,6 +5,10 @@ import { authOptions } from '@/lib/auth'
 import { getStripePriceIdForPlan } from '@/lib/billing'
 import { stripeClient } from '@/lib/stripe'
 import { getUserEntitlements } from '@/lib/user-entitlements'
+import {
+  createRateLimitResponse,
+  enforceRateLimit,
+} from '@/lib/request-rate-limit'
 
 const parsePlan = (value: unknown): AppPlan | null => {
   if (value === 'BASIC' || value === AppPlan.BASIC) {
@@ -26,6 +30,22 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await getServerSession(authOptions)
+    if (session?.user?.id) {
+      const rateLimit = await enforceRateLimit({
+        request,
+        scope: 'billing-checkout',
+        maxRequests: 10,
+        windowMs: 60 * 60 * 1000,
+        userId: session.user.id,
+      })
+      if (rateLimit.isLimited) {
+        return createRateLimitResponse(
+          rateLimit,
+          'Too many checkout attempts. Please try again later.'
+        )
+      }
+    }
+
     if (!session?.user?.id || !session.user.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -61,19 +81,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const userId = session.user.id
+    const userEmail = session.user.email
+
     let stripeCustomerId =
       subscriptions.find((subscription) => subscription.stripeCustomerId)
         ?.stripeCustomerId ?? null
 
     if (!stripeCustomerId) {
       const customer = await stripeClient.customers.create({
-        email: session.user.email,
+        email: userEmail,
         metadata: {
-          userId: session.user.id,
+          userId,
         },
       })
       stripeCustomerId = customer.id
     }
+
+    // Only give a free trial to first-time subscribers. Plan changes or
+    // resubscribing after cancel get no trial.
+    const isFirstTimeSubscriber = subscriptions.length === 0
+    const trialPeriodDays = isFirstTimeSubscriber ? 7 : 0
 
     const origin = request.nextUrl.origin
     const checkoutSession = await stripeClient.checkout.sessions.create({
@@ -86,14 +114,14 @@ export async function POST(request: NextRequest) {
         },
       ],
       subscription_data: {
-        trial_period_days: 7,
+        ...(trialPeriodDays > 0 && { trial_period_days: trialPeriodDays }),
         metadata: {
-          userId: session.user.id,
+          userId,
           plan,
         },
       },
       metadata: {
-        userId: session.user.id,
+        userId,
         plan,
       },
       success_url: `${origin}/billing?checkout=success`,

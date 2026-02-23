@@ -1321,22 +1321,24 @@ export default function DashboardPage() {
               data-demo-step="demo-cashflow-planning-strip"
             >
               <CardHeader className="border-b border-border/60 pb-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <CardTitle>Cash Flow Planning Strip</CardTitle>
-                    <CardDescription>
+                <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base sm:text-lg">
+                      Cash Flow Planning Strip
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       Projected income and outflows over the next 14 and 30
                       days.
                     </CardDescription>
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <p className="shrink-0 text-xs text-muted-foreground">
                     Low-cash threshold:{' '}
                     {formatCurrency(cashFlowPlanningSnapshot.lowCashThreshold)}
-                  </div>
+                  </p>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
                     <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                       Next 14 days
@@ -1421,10 +1423,13 @@ export default function DashboardPage() {
                       {cashFlowPlanningSnapshot.upcomingEvents.map((event) => (
                         <div
                           key={event.id}
-                          className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/10 px-3 py-2"
+                          className="flex flex-col gap-1 rounded-lg border border-border/60 bg-muted/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className="truncate text-sm font-medium text-foreground"
+                              title={event.title}
+                            >
                               {event.title}
                             </p>
                             <p className="text-[11px] text-muted-foreground">
@@ -1435,7 +1440,7 @@ export default function DashboardPage() {
                             </p>
                           </div>
                           <p
-                            className={`text-sm font-semibold ${
+                            className={`shrink-0 text-sm font-semibold sm:text-right ${
                               event.kind === 'income'
                                 ? 'text-emerald-600 dark:text-emerald-300'
                                 : 'text-rose-600 dark:text-rose-300'
@@ -1487,7 +1492,7 @@ export default function DashboardPage() {
               <CardContent className="space-y-3 pt-4">
                 {budgetForecastItems.length > 0 ? (
                   <>
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
                       <div className="rounded-xl border border-border/60 bg-muted/10 p-3">
                         <p className="text-xs uppercase tracking-wide text-muted-foreground">
                           Over risk
@@ -1747,34 +1752,37 @@ export default function DashboardPage() {
                       <div
                         key={transaction.id}
                         className={
-                          'flex items-center justify-between rounded-xl border border-border/50 ' +
-                          'bg-card/70 p-4 shadow-sm transition-colors hover:bg-muted/30'
+                          'flex items-center justify-between gap-3 rounded-xl border border-border/50 ' +
+                          'bg-card/70 p-3 shadow-sm transition-colors hover:bg-muted/30 sm:p-4'
                         }
                       >
-                        <div className="flex items-center space-x-4 min-w-0">
+                        <div className="flex min-w-0 flex-1 items-center gap-3 sm:space-x-4">
                           <div
                             className={
-                              'flex h-12 w-12 items-center justify-center rounded-xl ' +
-                              'text-white shadow-md'
+                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ' +
+                              'text-white shadow-sm sm:h-12 sm:w-12 sm:rounded-xl'
                             }
                             style={{
                               backgroundColor: getCategoryColor(categoryName),
                             }}
                           >
-                            <CategoryIcon className="h-5 w-5" />
+                            <CategoryIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-foreground truncate">
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className="truncate font-medium text-foreground text-sm sm:text-base"
+                              title={transaction.description}
+                            >
                               {transaction.description}
                             </p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="truncate text-xs text-muted-foreground sm:text-sm">
                               {categoryName}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="shrink-0 text-right">
                           <p
-                            className={`text-lg font-semibold ${
+                            className={`text-base font-semibold sm:text-lg ${
                               transaction.type === 'INCOME'
                                 ? 'text-emerald-600 dark:text-emerald-300'
                                 : 'text-rose-600 dark:text-rose-300'
@@ -1783,7 +1791,7 @@ export default function DashboardPage() {
                             {transaction.type === 'INCOME' ? '+' : '-'}
                             {formatCurrency(transaction.amount)}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs text-muted-foreground sm:text-sm">
                             {new Date(transaction.date).toLocaleDateString()}
                           </p>
                         </div>

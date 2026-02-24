@@ -776,7 +776,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       </html>
     `
 
-    const reportWindow = window.open('', '_blank', 'noopener,noreferrer')
+    const reportWindow = window.open('', '_blank')
     if (!reportWindow) {
       toast({
         title: 'Popup blocked',
@@ -784,16 +784,39 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       })
       return
     }
+
+    let hasRequestedPrint = false
+    const handlePrint = () => {
+      if (hasRequestedPrint || reportWindow.closed) {
+        return
+      }
+      hasRequestedPrint = true
+      reportWindow.focus()
+      window.setTimeout(() => {
+        try {
+          reportWindow.print()
+        } catch {
+          toast({
+            title: 'PDF export unavailable',
+            description:
+              'The report opened in a new tab. Use your browser print menu to save as PDF.',
+            variant: 'destructive',
+          })
+        }
+      }, 200)
+    }
+
+    reportWindow.document.open()
     reportWindow.document.write(pdfHtml)
     reportWindow.document.close()
-    reportWindow.focus()
-    window.setTimeout(() => {
-      reportWindow.print()
-    }, 400)
+
+    reportWindow.addEventListener('load', handlePrint, { once: true })
+    window.setTimeout(handlePrint, 900)
 
     toast({
       title: 'PDF ready',
-      description: 'Your PDF report is open and ready to print or save.',
+      description:
+        'Your report opened in a new tab. Save it as PDF from the print dialog.',
     })
   }
 

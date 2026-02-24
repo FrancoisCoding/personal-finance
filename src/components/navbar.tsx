@@ -51,28 +51,13 @@ export function Navbar() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link href="/">
-                <>
-                  <span className="sm:hidden">
-                    <LogoCompact size="md" />
-                  </span>
-                  <span className="hidden sm:inline-flex">
-                    <Logo size="md" />
-                  </span>
-                </>
+                <Logo size="md" />
               </Link>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-4">
               <ThemeToggle />
-              <Link
-                href="/support#contact-form"
-                className="hidden sm:inline-flex"
-              >
-                <Button variant="ghost" size="sm">
-                  Support
-                </Button>
-              </Link>
               <Link href="/auth/login">
-                <Button size="sm">Sign In</Button>
+                <Button>Sign In</Button>
               </Link>
             </div>
           </div>
@@ -179,9 +164,6 @@ export function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/support#contact-form">Contact support</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

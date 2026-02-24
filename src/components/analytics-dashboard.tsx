@@ -295,21 +295,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     })
   }, [displayLocale, reportSchedule])
 
-  const escapeCsv = (value: string | number | undefined) => {
-    if (value === undefined || value === null) {
-      return ''
-    }
-    const baseText = String(value)
-    const text =
-      /^[=+\-@]/.test(baseText) || baseText.startsWith('\t')
-        ? `'${baseText}`
-        : baseText
-    if (/[",\n]/.test(text)) {
-      return `"${text.replace(/"/g, '""')}"`
-    }
-    return text
-  }
-
   const escapeHtml = (value: string | number) => {
     return String(value)
       .replace(/&/g, '&amp;')
@@ -385,138 +370,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
       budgetRows,
       goalRows,
     }
-  }
-
-  const handleExportCsv = () => {
-    if (!hasReportData) {
-      toast({
-        title: 'No data to export',
-        description:
-          'Add transactions, budgets, or goals to generate a report.',
-      })
-      return
-    }
-
-    const reportPayload = buildReportPayload()
-    const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
-    const exportCurrency = getDisplayPreferences().currency
-    const lines: string[] = []
-    const pushRow = (cells: Array<string | number | undefined>) => {
-      lines.push(cells.map((cell) => escapeCsv(cell)).join(','))
-    }
-    const pushBlankRow = () => {
-      lines.push('')
-    }
-
-    pushRow(['FinanceFlow Analytics Report'])
-    pushRow(['Generated', reportDateStamp])
-    pushRow(['Currency', exportCurrency])
-    pushBlankRow()
-
-    pushRow(['Summary'])
-    pushRow(['Metric', 'Value'])
-    pushRow(['Report Date', reportDateStamp])
-    pushRow(['Avg Daily Spend', formatCurrency(avgDailySpend)])
-    pushRow([
-      'Savings Rate',
-      `${Number.isFinite(savingsRate) ? savingsRate.toFixed(1) : '0.0'}%`,
-    ])
-    pushRow(['Total Income', formatCurrency(totalIncome)])
-    pushRow(['Total Expenses', formatCurrency(totalExpenses)])
-    pushBlankRow()
-
-    pushRow(['Transactions'])
-    pushRow(['Date', 'Description', 'Category', 'Type', 'Amount'])
-    if (reportPayload.transactionRows.length === 0) {
-      pushRow(['', 'No transactions available', '', '', ''])
-    } else {
-      reportPayload.transactionRows.forEach((transaction) => {
-        pushRow([
-          transaction.date,
-          transaction.description,
-          transaction.category,
-          transaction.type,
-          transaction.amount.toFixed(2),
-        ])
-      })
-    }
-
-    pushBlankRow()
-    pushRow(['Budgets'])
-    pushRow([
-      'Name',
-      'Category',
-      'Status',
-      'Spent',
-      'Budgeted',
-      'Remaining',
-      'Utilization %',
-    ])
-    if (reportPayload.budgetRows.length === 0) {
-      pushRow(['', 'No budgets available', '', '', '', '', ''])
-    } else {
-      reportPayload.budgetRows.forEach((budget) => {
-        const budgetStatus =
-          budget.utilization > 100
-            ? 'Over Budget'
-            : budget.utilization > 80
-              ? 'Warning'
-              : 'On Track'
-        pushRow([
-          budget.name,
-          budget.category,
-          budgetStatus,
-          budget.spent.toFixed(2),
-          budget.budgeted.toFixed(2),
-          budget.remaining.toFixed(2),
-          budget.utilization.toFixed(1),
-        ])
-      })
-    }
-
-    pushBlankRow()
-    pushRow(['Goals'])
-    pushRow([
-      'Name',
-      'Target Date',
-      'Status',
-      'Current',
-      'Target',
-      'Remaining',
-      'Progress %',
-    ])
-    if (reportPayload.goalRows.length === 0) {
-      pushRow(['', 'No goals available', '', '', '', '', ''])
-    } else {
-      reportPayload.goalRows.forEach((goal) => {
-        pushRow([
-          goal.name,
-          goal.targetDate === '—' ? '' : goal.targetDate,
-          goal.progress >= 100 ? 'Completed' : 'In Progress',
-          goal.current.toFixed(2),
-          goal.target.toFixed(2),
-          goal.remaining.toFixed(2),
-          goal.progress.toFixed(1),
-        ])
-      })
-    }
-
-    const blob = new Blob([lines.join('\n')], {
-      type: 'text/csv;charset=utf-8;',
-    })
-    const url = URL.createObjectURL(blob)
-    const link = document.body.appendChild(document.createElement('a'))
-    link.href = url
-    link.download = `financeflow-report-${reportDateStamp}.csv`
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-
-    toast({
-      title: 'CSV exported',
-      description:
-        'Your CSV now uses spreadsheet-friendly sections and shorter headers.',
-    })
   }
 
   const handleExportExcel = async () => {
@@ -1360,15 +1213,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                   variant="outline"
                   size="sm"
                   className="rounded-full text-xs font-semibold"
-                  onClick={handleExportCsv}
-                  disabled={!hasReportData}
-                >
-                  Export CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full text-xs font-semibold"
                   onClick={handleExportPdf}
                   disabled={!hasReportData}
                 >
@@ -1393,7 +1237,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                   Reporting & Export
                 </h4>
                 <p className="text-xs text-muted-foreground">
-                  Clean CSV and PDF exports with scheduling built in.
+                  Clean Excel and PDF exports with scheduling built in.
                 </p>
               </div>
               <Badge
@@ -1423,15 +1267,6 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                       disabled={!hasReportData}
                     >
                       Export Excel
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs font-semibold rounded-full"
-                      onClick={handleExportCsv}
-                      disabled={!hasReportData}
-                    >
-                      Export CSV
                     </Button>
                     <Button
                       variant="outline"

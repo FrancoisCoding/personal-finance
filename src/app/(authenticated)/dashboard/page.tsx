@@ -1477,7 +1477,7 @@ export default function DashboardPage() {
               <CardHeader className="border-b border-border/60 pb-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <CardTitle>Budget Forecast</CardTitle>
+                    <CardTitle className="text-lg">Budget Forecast</CardTitle>
                     <CardDescription>
                       Snapshot only. Open budgets for full analysis.
                     </CardDescription>
@@ -1662,7 +1662,9 @@ export default function DashboardPage() {
               ) : (
                 <Card className="h-full border-border/60 bg-card/80 shadow-sm">
                   <CardHeader>
-                    <CardTitle>Advanced AI insights</CardTitle>
+                    <CardTitle className="text-lg">
+                      Advanced AI insights
+                    </CardTitle>
                     <CardDescription>
                       Upgrade to Pro to unlock deep AI analysis and
                       recommendation panels.
@@ -1705,7 +1707,9 @@ export default function DashboardPage() {
               ) : (
                 <Card className="h-full border-border/60 bg-card/80 shadow-sm">
                   <CardHeader>
-                    <CardTitle>Pro analytics dashboard</CardTitle>
+                    <CardTitle className="text-lg">
+                      Pro analytics dashboard
+                    </CardTitle>
                     <CardDescription>
                       Pro members get richer financial signal breakdowns and
                       AI-driven trend interpretation.
@@ -1911,7 +1915,9 @@ export default function DashboardPage() {
               <CardHeader className="border-b border-border/60 pb-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <CardTitle>Recent Transactions</CardTitle>
+                    <CardTitle className="text-lg">
+                      Recent Transactions
+                    </CardTitle>
                     <CardDescription>
                       Your latest financial activity
                     </CardDescription>
@@ -2013,7 +2019,7 @@ export default function DashboardPage() {
                 data-demo-step="demo-budget-progress"
               >
                 <CardHeader className="border-b border-border/60 pb-3">
-                  <CardTitle>Budget Progress</CardTitle>
+                  <CardTitle className="text-lg">Budget Progress</CardTitle>
                   <CardDescription>This month&apos;s spending</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -2054,7 +2060,7 @@ export default function DashboardPage() {
                 data-demo-step="demo-goals-progress"
               >
                 <CardHeader className="border-b border-border/60 pb-3">
-                  <CardTitle>Financial Goals</CardTitle>
+                  <CardTitle className="text-lg">Financial Goals</CardTitle>
                   <CardDescription>Track your progress</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">

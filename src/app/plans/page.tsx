@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { CheckCircle2, Loader2 } from 'lucide-react'
+import { CheckCircle2, Loader2, MinusCircle } from 'lucide-react'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Button } from '@/components/ui/button'
@@ -58,6 +58,47 @@ const publicPlanCatalog = [
     ],
   },
 ] as const
+
+const planCapabilitiesByPlan = {
+  FREE: {
+    included: [
+      'Core dashboard, accounts, transactions, and budgets',
+      'Starter insights and recommendations',
+      'Manual subscription tracking',
+      'Limited daily interactions',
+    ],
+    limited: [
+      'AI Assistant chat is not included',
+      'Advanced AI insights and optimizer',
+      'Credit score lab, card perks, investments, and invoices',
+      'Priority support',
+    ],
+  },
+  BASIC: {
+    included: [
+      'Full tracking with budgets and reminders',
+      'AI Assistant for everyday questions',
+      'Live subscription tracking',
+      '7-day free trial for paid features',
+    ],
+    limited: [
+      'Lower AI message allowance than Pro',
+      'Advanced AI insights (Pro)',
+      'Subscription optimizer (Pro)',
+      'Credit score lab and premium Pro tools',
+    ],
+  },
+  PRO: {
+    included: [
+      'Everything in Basic',
+      'More AI Assistant access for frequent usage',
+      'Advanced AI insights and subscription optimizer',
+      'Credit score lab, card perks, investments, and invoices',
+      'Priority support',
+    ],
+    limited: ['AI fair-use safeguards still apply'],
+  },
+} as const
 
 export default function PlansPage() {
   const router = useRouter()
@@ -260,6 +301,47 @@ export default function PlansPage() {
                         </li>
                       ))}
                     </ul>
+                    <div
+                      className={
+                        'rounded-xl border p-4 space-y-4 ' +
+                        (isCurrentPlan
+                          ? 'border-emerald-400/35 bg-emerald-500/5'
+                          : 'border-border/60 bg-muted/10')
+                      }
+                    >
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/80">
+                          Included on this plan
+                        </p>
+                        <ul className="space-y-2 text-sm">
+                          {planCapabilitiesByPlan[
+                            plan.plan as keyof typeof planCapabilitiesByPlan
+                          ].included.map((item) => (
+                            <li key={item} className="flex items-start gap-2">
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                              <span className="text-foreground/90">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="space-y-2 border-t border-border/50 pt-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          Limited on this plan
+                        </p>
+                        <ul className="space-y-2 text-sm">
+                          {planCapabilitiesByPlan[
+                            plan.plan as keyof typeof planCapabilitiesByPlan
+                          ].limited.map((item) => (
+                            <li key={item} className="flex items-start gap-2">
+                              <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/70" />
+                              <span className="text-muted-foreground">
+                                {item}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                     <Button
                       className={
                         'min-h-11 ' +

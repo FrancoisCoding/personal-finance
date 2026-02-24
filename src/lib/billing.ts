@@ -3,7 +3,6 @@ import {
   AppSubscriptionStatus,
   type AppSubscription,
 } from '@prisma/client'
-import { aiChatPlanMessaging } from '@/lib/ai-chat-rate-limits'
 
 export interface IPlanDefinition {
   plan: AppPlan
@@ -25,7 +24,7 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
-      aiChatPlanMessaging.BASIC,
+      'AI Assistant access for everyday questions and planning.',
       '7-day free trial',
     ],
   },
@@ -38,7 +37,7 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
       'Everything in Basic',
-      aiChatPlanMessaging.PRO,
+      'More AI Assistant access for frequent conversations and deeper planning.',
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',

@@ -101,7 +101,6 @@ export default function LandingPage() {
       >
         <div className="absolute -top-24 right-0 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl dark:bg-emerald-500/20" />
         <div className="absolute top-32 -left-24 h-80 w-80 rounded-full bg-cyan-300/25 blur-3xl dark:bg-cyan-500/15" />
-        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl dark:bg-amber-400/10" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.08),_transparent_50%)] dark:bg-[radial-gradient(circle_at_top,_rgba(94,234,212,0.12),_transparent_50%)]" />
       </div>
 

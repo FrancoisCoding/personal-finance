@@ -2,11 +2,6 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/logo'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Spotlight } from '@/components/ui/spotlight'
-import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
-import { FadeIn } from '@/components/motion/fade-in'
-import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
-import { AdSlot } from '@/components/ads/ad-slot'
 import {
   Shield,
   Zap,
@@ -15,10 +10,12 @@ import {
   Target,
   CheckCircle,
   ArrowRight,
-  Star,
-  Users,
   Globe,
 } from 'lucide-react'
+import { Spotlight } from '@/components/ui/spotlight'
+import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
+import { FadeIn } from '@/components/motion/fade-in'
+import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
 
 const features = [
   {
@@ -80,35 +77,10 @@ const netWorthSummaryItems = [
 
 const netWorthForecastRange = { low: 120, typical: 165, high: 210 }
 
-const testimonials = [
-  {
-    name: 'Sarah Johnson',
-    role: 'Software Engineer',
-    quote:
-      'FinanceFlow finally gives me a clear picture. The weekly AI nudges have cut my overspending in half.',
-    accent: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
-  },
-  {
-    name: 'Mike Chen',
-    role: 'Financial Advisor',
-    quote:
-      'The insights are fast, relevant, and easy to share. It is the quickest way to prep a client review.',
-    accent: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-300',
-  },
-  {
-    name: 'Emily Rodriguez',
-    role: 'Entrepreneur',
-    quote:
-      'I can see runway, burn, and runway alerts in minutes. It is like having a CFO on call.',
-    accent: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
-  },
-]
-
 export default function LandingPage() {
   // Single ad slot (footer only) so publisher content clearly outweighs ads
   // and each ad is clearly associated with the page (AdSense policy).
-  const landingFooterAdSlotId =
-    process.env.NEXT_PUBLIC_ADSENSE_SLOT_LANDING_FOOTER
+  // No ad slots used to keep the experience pure and focused on user tools.
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
@@ -200,7 +172,7 @@ export default function LandingPage() {
                       size="lg"
                       className="w-full text-base sm:w-auto sm:text-lg"
                     >
-                      Start free trial
+                      Get started
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -217,14 +189,6 @@ export default function LandingPage() {
               </FadeIn>
               <FadeIn delay={0.38}>
                 <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    No credit card required
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                    Cancel anytime
-                  </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-primary" />
                     Syncs in minutes
@@ -291,76 +255,6 @@ export default function LandingPage() {
 
         <section className="px-4 py-14 sm:py-20">
           <div className="container mx-auto">
-            <FadeIn className="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white shadow-2xl sm:p-10">
-              <div className="grid grid-cols-1 gap-6 text-center md:grid-cols-3 md:gap-8">
-                <div>
-                  <div className="text-4xl font-semibold mb-2">10,000+</div>
-                  <div className="text-white/80">Active users</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-semibold mb-2">$50M+</div>
-                  <div className="text-white/80">Tracked assets</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-semibold mb-2">99.9%</div>
-                  <div className="text-white/80">Verified uptime</div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
-
-        <section className="px-4 py-14 sm:py-20">
-          <div className="container mx-auto">
-            <FadeIn className="mb-12 text-center sm:mb-16">
-              <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
-                Loved by builders, advisors, and founders.
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                A modern experience that feels premium on day one and keeps
-                getting smarter.
-              </p>
-            </FadeIn>
-
-            <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
-              {testimonials.map((testimonial, index) => (
-                <FadeIn
-                  key={testimonial.name}
-                  delay={0.08 * index}
-                  className="rounded-2xl border border-border/60 bg-card/80 p-6 shadow-sm"
-                >
-                  <div className="flex items-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={`star-${testimonial.name}-${i}`}
-                        className="h-5 w-5 text-amber-400 fill-current"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground mb-6">
-                    &ldquo;{testimonial.quote}&rdquo;
-                  </p>
-                  <div className="flex items-center">
-                    <div
-                      className={`mr-3 flex h-10 w-10 items-center justify-center rounded-full ${testimonial.accent}`}
-                    >
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold">{testimonial.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {testimonial.role}
-                      </div>
-                    </div>
-                  </div>
-                </FadeIn>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-14 sm:py-20">
-          <div className="container mx-auto">
             <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-8 text-white shadow-2xl sm:p-12">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" />
               <div className="relative text-center">
@@ -379,32 +273,12 @@ export default function LandingPage() {
                     size="lg"
                     className="w-full text-base sm:w-auto sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
                   >
-                    Get started free
+                    Get started
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>
             </FadeIn>
-          </div>
-        </section>
-
-        <section className="px-4 pb-8">
-          <div className="container mx-auto">
-            <div className="mx-auto max-w-5xl space-y-2 pb-3">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Partner spotlight
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                We occasionally feature tools that complement long-term planning
-                and responsible money management.
-              </p>
-            </div>
-            <AdSlot
-              slotId={landingFooterAdSlotId}
-              title="Partner spotlight"
-              className="mx-auto max-w-5xl"
-              minHeightClassName="min-h-[140px]"
-            />
           </div>
         </section>
       </main>

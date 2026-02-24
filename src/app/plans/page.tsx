@@ -24,7 +24,6 @@ const publicPlanCatalog = [
       'Budgets and reminders',
       'Subscription tracking',
       'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
-      '7-day free trial',
     ],
   },
   {
@@ -40,7 +39,6 @@ const publicPlanCatalog = [
       'Subscription optimizer',
       'Credit score lab & report',
       'Priority support',
-      '7-day free trial',
     ],
   },
 ] as const
@@ -230,7 +228,7 @@ export default function PlansPage() {
                       ) : isCurrentPlan ? (
                         'Current plan'
                       ) : session?.user?.id ? (
-                        `Start ${plan.name} trial`
+                        `Sign up for ${plan.name}`
                       ) : (
                         `Sign in for ${plan.name}`
                       )}

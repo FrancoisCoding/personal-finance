@@ -416,6 +416,12 @@ export default function AdminPortalPage() {
         : [],
     [analytics]
   )
+  const freePlanUsersCount = Math.max(
+    0,
+    (analytics?.userMetrics.totalUsers ?? 0) -
+      (analytics?.subscriptionMetrics.basicSubscribers ?? 0) -
+      (analytics?.subscriptionMetrics.proSubscribers ?? 0)
+  )
 
   useEffect(() => {
     const initialize = async () => {
@@ -788,6 +794,17 @@ export default function AdminPortalPage() {
                             .trialing ?? 0}
                         </p>
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md border border-slate-400/30 bg-slate-500/10 p-1">
+                          <LayoutDashboard className="h-3.5 w-3.5 text-slate-300" />
+                        </div>
+                        <span className="text-muted-foreground">Free</span>
+                      </div>
+                      <span className="font-semibold">
+                        {freePlanUsersCount}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
                       <div className="flex items-center gap-2">

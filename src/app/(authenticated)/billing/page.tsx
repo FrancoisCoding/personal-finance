@@ -254,6 +254,7 @@ export default function BillingPage() {
         </Card>
 
         {availablePlans.map((plan) => {
+          const isPopularPlan = plan.plan === 'PRO'
           const isCurrentPlan = currentPlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan
           const isDisabled =
@@ -265,14 +266,33 @@ export default function BillingPage() {
             <Card
               key={plan.plan}
               className={
-                'border-border/70 bg-card/90 ' +
-                (plan.plan === 'PRO' ? 'ring-1 ring-emerald-500/40' : '')
+                'relative border-border/70 bg-card/90 transition-colors ' +
+                (isPopularPlan
+                  ? 'border-emerald-400/50 bg-gradient-to-b from-emerald-500/[0.07] via-card/95 to-card/95 shadow-[0_18px_45px_-28px_rgba(16,185,129,0.6)] ring-1 ring-emerald-400/35'
+                  : '')
               }
             >
+              {isPopularPlan ? (
+                <div className="absolute inset-x-4 -top-3 flex justify-center">
+                  <span className="inline-flex items-center rounded-full border border-emerald-300/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">
+                    Most popular
+                  </span>
+                </div>
+              ) : null}
               <CardHeader>
+                {isPopularPlan ? (
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-300/90">
+                    Best value for active users
+                  </p>
+                ) : null}
                 <CardTitle className="flex items-center justify-between text-xl">
                   <span>{plan.name}</span>
-                  <span className="text-base text-emerald-400">
+                  <span
+                    className={
+                      'text-base ' +
+                      (isPopularPlan ? 'text-emerald-300' : 'text-emerald-400')
+                    }
+                  >
                     {plan.monthlyPriceLabel}
                   </span>
                 </CardTitle>
@@ -298,7 +318,13 @@ export default function BillingPage() {
                       handleStartCheckout(plan.plan as 'BASIC' | 'PRO')
                     }
                     disabled={isDisabled}
-                    className="min-h-11"
+                    className={
+                      'min-h-11 ' +
+                      (isPopularPlan
+                        ? 'w-full bg-emerald-400 text-slate-950 hover:bg-emerald-300'
+                        : '')
+                    }
+                    variant={isPopularPlan ? 'default' : 'outline'}
                   >
                     {isSubmitting ? (
                       <>
@@ -311,6 +337,8 @@ export default function BillingPage() {
                       'Billing unavailable'
                     ) : isCurrentPlan ? (
                       'Current plan'
+                    ) : isPopularPlan ? (
+                      'Start Pro trial'
                     ) : (
                       `Start ${plan.name} trial`
                     )}

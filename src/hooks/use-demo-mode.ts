@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
+  DEMO_MODE_CHANGE_EVENT,
   disableDemoMode,
   enableDemoMode,
   isDemoModeClient,
@@ -11,7 +12,18 @@ export const useDemoMode = () => {
   const [isDemoMode, setIsDemoMode] = useState(() => isDemoModeClient())
 
   useEffect(() => {
-    setIsDemoMode(isDemoModeClient())
+    const syncDemoMode = () => {
+      setIsDemoMode(isDemoModeClient())
+    }
+
+    syncDemoMode()
+    window.addEventListener(DEMO_MODE_CHANGE_EVENT, syncDemoMode)
+    window.addEventListener('focus', syncDemoMode)
+
+    return () => {
+      window.removeEventListener(DEMO_MODE_CHANGE_EVENT, syncDemoMode)
+      window.removeEventListener('focus', syncDemoMode)
+    }
   }, [])
 
   const startDemoMode = useCallback(() => {

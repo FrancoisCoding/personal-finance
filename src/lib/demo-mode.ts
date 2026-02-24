@@ -1,6 +1,7 @@
 import type { Session } from 'next-auth'
 
 export const DEMO_MODE_COOKIE = 'demo_mode'
+export const DEMO_MODE_CHANGE_EVENT = 'financeflow:demo-mode-change'
 const DEMO_MODE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
 
 export const demoSession: Session = {
@@ -32,10 +33,12 @@ export const enableDemoMode = () => {
   if (typeof document === 'undefined') return
   document.cookie = `${DEMO_MODE_COOKIE}=1; path=/; max-age=${DEMO_MODE_MAX_AGE_SECONDS}; samesite=lax`
   localStorage.setItem('finance-demo-mode', '1')
+  window.dispatchEvent(new CustomEvent(DEMO_MODE_CHANGE_EVENT))
 }
 
 export const disableDemoMode = () => {
   if (typeof document === 'undefined') return
   document.cookie = `${DEMO_MODE_COOKIE}=; path=/; max-age=0; samesite=lax`
   localStorage.removeItem('finance-demo-mode')
+  window.dispatchEvent(new CustomEvent(DEMO_MODE_CHANGE_EVENT))
 }

@@ -1364,7 +1364,7 @@ export function ToastNotification({
   return (
     <div
       className={cn(
-        'fixed top-4 right-4 z-50 w-80 transform transition-all duration-300',
+        'w-80 transform transition-all duration-300',
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
     >

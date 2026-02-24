@@ -25,6 +25,8 @@ interface ICurrentSubscription {
 interface IBillingStatusResponse {
   currentPlan: 'BASIC' | 'PRO' | null
   isSuperUser?: boolean
+  isStripeCheckoutConfigured?: boolean
+  isStripePortalConfigured?: boolean
   currentSubscription: ICurrentSubscription | null
   availablePlans: IPlanDefinition[]
 }

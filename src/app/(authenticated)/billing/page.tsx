@@ -133,6 +133,8 @@ export default function BillingPage() {
 
   const currentPlan = data?.currentPlan
   const isSuperUser = data?.isSuperUser === true
+  const isStripeCheckoutConfigured = data?.isStripeCheckoutConfigured === true
+  const isStripePortalConfigured = data?.isStripePortalConfigured === true
   const availablePlans =
     data?.availablePlans.slice().sort((left, right) => {
       return (
@@ -165,6 +167,14 @@ export default function BillingPage() {
         </div>
       ) : null}
 
+      {!isSuperUser && !isStripeCheckoutConfigured ? (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          Stripe billing is not configured for this environment. Add
+          `STRIPE_SECRET_KEY`, `STRIPE_PRICE_BASIC_MONTHLY`, and
+          `STRIPE_PRICE_PRO_MONTHLY` to enable paid plan checkout.
+        </div>
+      ) : null}
+
       {data?.currentSubscription ? (
         <Card className="border-border/70 bg-card/90">
           <CardHeader>
@@ -189,13 +199,15 @@ export default function BillingPage() {
                 variant="outline"
                 className="min-h-11"
                 onClick={handleOpenCustomerPortal}
-                disabled={isOpeningPortal}
+                disabled={isOpeningPortal || !isStripePortalConfigured}
               >
                 {isOpeningPortal ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Opening portal...
                   </>
+                ) : !isStripePortalConfigured ? (
+                  'Portal unavailable'
                 ) : (
                   'Manage subscription'
                 )}
@@ -245,7 +257,11 @@ export default function BillingPage() {
         {availablePlans.map((plan) => {
           const isCurrentPlan = currentPlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan
-          const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
+          const isDisabled =
+            !isStripeCheckoutConfigured ||
+            isSuperUser ||
+            isCurrentPlan ||
+            isSubmitting
           return (
             <Card
               key={plan.plan}
@@ -292,6 +308,8 @@ export default function BillingPage() {
                       </>
                     ) : isSuperUser ? (
                       'Superuser access enabled'
+                    ) : !isStripeCheckoutConfigured ? (
+                      'Billing unavailable'
                     ) : isCurrentPlan ? (
                       'Current plan'
                     ) : (

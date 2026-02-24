@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-import { planDefinitions } from '@/lib/billing'
+import { getStripePriceIdForPlan, planDefinitions } from '@/lib/billing'
+import { stripeClient } from '@/lib/stripe'
 import { getUserEntitlements } from '@/lib/user-entitlements'
 
 export const dynamic = 'force-dynamic'
@@ -16,10 +17,18 @@ export async function GET() {
 
     const { isSuperUser, currentPlan, effectiveSubscription } =
       await getUserEntitlements(session.user.id)
+    const isStripePortalConfigured = Boolean(stripeClient)
+    const isStripeCheckoutConfigured = Boolean(
+      stripeClient &&
+        getStripePriceIdForPlan(AppPlan.BASIC) &&
+        getStripePriceIdForPlan(AppPlan.PRO)
+    )
 
     return NextResponse.json({
       currentPlan,
       isSuperUser,
+      isStripePortalConfigured,
+      isStripeCheckoutConfigured,
       currentSubscription: effectiveSubscription
         ? {
             id: effectiveSubscription.id,

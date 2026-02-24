@@ -422,6 +422,85 @@ export default function AdminPortalPage() {
       (analytics?.subscriptionMetrics.basicSubscribers ?? 0) -
       (analytics?.subscriptionMetrics.proSubscribers ?? 0)
   )
+  const demographics = useMemo(() => {
+    const topLoginLocations =
+      analytics?.engagementMetrics.topLoginLocations ?? []
+    const totalVisibleSessions = topLoginLocations.reduce(
+      (sum, location) => sum + location.count,
+      0
+    )
+    const accentStyles = [
+      {
+        dotClassName: 'bg-cyan-300',
+        badgeClassName: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-200',
+        glowClassName: 'bg-cyan-400/40',
+      },
+      {
+        dotClassName: 'bg-violet-300',
+        badgeClassName: 'border-violet-400/30 bg-violet-500/10 text-violet-200',
+        glowClassName: 'bg-violet-400/40',
+      },
+      {
+        dotClassName: 'bg-emerald-300',
+        badgeClassName:
+          'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
+        glowClassName: 'bg-emerald-400/40',
+      },
+      {
+        dotClassName: 'bg-amber-300',
+        badgeClassName: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
+        glowClassName: 'bg-amber-400/40',
+      },
+      {
+        dotClassName: 'bg-rose-300',
+        badgeClassName: 'border-rose-400/30 bg-rose-500/10 text-rose-200',
+        glowClassName: 'bg-rose-400/40',
+      },
+      {
+        dotClassName: 'bg-slate-300',
+        badgeClassName: 'border-slate-400/30 bg-slate-500/10 text-slate-200',
+        glowClassName: 'bg-slate-300/40',
+      },
+    ] as const
+
+    const rows = topLoginLocations.slice(0, 6).map((location, index) => {
+      const locationLabel = location.location.trim() || 'Unknown'
+      const locationSegments = locationLabel
+        .split(',')
+        .map((segment) => segment.trim())
+        .filter(Boolean)
+      const countryLabel =
+        locationSegments[locationSegments.length - 1] ?? locationLabel
+      const percentage =
+        totalVisibleSessions > 0
+          ? (location.count / totalVisibleSessions) * 100
+          : 0
+      const accentStyle = accentStyles[index % accentStyles.length]
+
+      return {
+        id: `${locationLabel}-${location.count}`,
+        index,
+        locationLabel,
+        countryLabel,
+        count: location.count,
+        percentage,
+        ...accentStyle,
+      }
+    })
+
+    return {
+      rows,
+      totalVisibleSessions,
+    }
+  }, [analytics])
+  const demographicsMarkerPositions = [
+    { left: '16%', top: '42%' },
+    { left: '23%', top: '56%' },
+    { left: '46%', top: '44%' },
+    { left: '58%', top: '36%' },
+    { left: '70%', top: '46%' },
+    { left: '84%', top: '58%' },
+  ] as const
 
   useEffect(() => {
     const initialize = async () => {
@@ -858,50 +937,130 @@ export default function AdminPortalPage() {
 
               <Card className="border-border/70 bg-card/90">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-1.5">
-                      <MapPin className="h-4 w-4 text-cyan-300" />
-                    </div>
-                    Top login locations
-                  </CardTitle>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-1.5">
+                        <MapPin className="h-4 w-4 text-cyan-300" />
+                      </div>
+                      Demographics
+                    </CardTitle>
+                    <Badge variant="outline" className="w-fit border-border/60">
+                      Last 7 days
+                    </Badge>
+                  </div>
                 </CardHeader>
-                <CardContent className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  {analytics?.engagementMetrics.topLoginLocations.length ? (
-                    analytics.engagementMetrics.topLoginLocations.map(
-                      (location, index, allLocations) => {
-                        const total = allLocations.reduce(
-                          (sum, item) => sum + item.count,
-                          0
-                        )
-                        const percentage =
-                          total > 0
-                            ? ((location.count / total) * 100).toFixed(1)
-                            : '0.0'
-                        return (
-                          <div
-                            key={`${location.location}-${location.count}`}
-                            className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/60 p-2.5 text-sm"
-                          >
-                            <div className="flex min-w-0 items-center gap-2">
-                              <div className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/60 bg-card/80 text-xs font-semibold text-muted-foreground">
-                                {index + 1}
+                <CardContent>
+                  {demographics.rows.length ? (
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+                      <div className="rounded-xl border border-border/60 bg-background/50">
+                        <div className="grid grid-cols-[minmax(0,1fr)_80px_60px] gap-2 border-b border-border/60 px-3 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                          <span>Country</span>
+                          <span className="text-right">Sessions</span>
+                          <span className="text-right">%</span>
+                        </div>
+                        <div className="divide-y divide-border/50">
+                          {demographics.rows.map((location) => (
+                            <div
+                              key={location.id}
+                              className="grid grid-cols-[minmax(0,1fr)_80px_60px] items-center gap-2 px-3 py-2.5 text-sm"
+                            >
+                              <div className="flex min-w-0 items-center gap-2.5">
+                                <div className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border/60 bg-card/80 text-[11px] font-semibold text-muted-foreground">
+                                  {location.index + 1}
+                                </div>
+                                <span
+                                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${location.dotClassName}`}
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate font-medium text-foreground">
+                                    {location.countryLabel}
+                                  </p>
+                                  <p className="truncate text-[11px] text-muted-foreground">
+                                    {location.locationLabel}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <p className="truncate font-medium text-foreground">
-                                  {location.location}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {percentage}% of visible sessions
-                                </p>
+                              <div className="text-right font-medium text-foreground">
+                                {location.count.toLocaleString()}
+                              </div>
+                              <div className="text-right text-muted-foreground">
+                                {location.percentage.toFixed(1)}%
                               </div>
                             </div>
-                            <Badge variant="secondary" className="shrink-0">
-                              {location.count}
-                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="relative overflow-hidden rounded-xl border border-border/60 bg-background/40 p-3">
+                        <div className="pointer-events-none absolute inset-0 opacity-80">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(34,211,238,0.08),transparent_45%),radial-gradient(circle_at_65%_35%,rgba(99,102,241,0.10),transparent_45%),radial-gradient(circle_at_78%_66%,rgba(20,184,166,0.08),transparent_50%)]" />
+                          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:22px_22px]" />
+                        </div>
+                        <div className="relative grid min-h-[260px] grid-cols-10 grid-rows-6 gap-1 rounded-lg border border-border/40 bg-card/50 p-2">
+                          {Array.from({ length: 60 }).map((_, index) => (
+                            <div
+                              key={index}
+                              className="rounded-full border border-border/30 bg-background/40"
+                            />
+                          ))}
+                          {demographics.rows.map((location, index) => {
+                            const position =
+                              demographicsMarkerPositions[
+                                index % demographicsMarkerPositions.length
+                              ]
+                            return (
+                              <div
+                                key={`${location.id}-marker`}
+                                className="absolute"
+                                style={{
+                                  left: position.left,
+                                  top: position.top,
+                                }}
+                              >
+                                <div className="relative flex h-3.5 w-3.5 items-center justify-center">
+                                  <span
+                                    className={`absolute h-6 w-6 rounded-full blur-md ${location.glowClassName}`}
+                                  />
+                                  <span
+                                    className={`relative h-3.5 w-3.5 rounded-full border border-background ${location.dotClassName}`}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          })}
+                          <div className="pointer-events-none absolute inset-0">
+                            <div className="absolute left-[10%] top-[28%] h-[32%] w-[26%] rounded-[40%] border border-border/20 bg-background/25 blur-[1px]" />
+                            <div className="absolute left-[39%] top-[26%] h-[34%] w-[22%] rounded-[42%] border border-border/20 bg-background/20 blur-[1px]" />
+                            <div className="absolute left-[62%] top-[22%] h-[30%] w-[26%] rounded-[40%] border border-border/20 bg-background/20 blur-[1px]" />
+                            <div className="absolute left-[72%] top-[54%] h-[16%] w-[10%] rounded-[40%] border border-border/20 bg-background/20 blur-[1px]" />
                           </div>
-                        )
-                      }
-                    )
+                        </div>
+                        <div className="mt-3 rounded-lg border border-border/50 bg-card/60 px-3 py-2">
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                            <span className="font-medium uppercase tracking-[0.14em]">
+                              Visible session mix
+                            </span>
+                            <span>•</span>
+                            <span>
+                              {demographics.totalVisibleSessions.toLocaleString()}{' '}
+                              tracked sessions
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {demographics.rows.slice(0, 4).map((location) => (
+                              <div
+                                key={`${location.id}-legend`}
+                                className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs ${location.badgeClassName}`}
+                              >
+                                <span
+                                  className={`h-2 w-2 rounded-full ${location.dotClassName}`}
+                                />
+                                <span>{location.countryLabel}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       No session location data available.

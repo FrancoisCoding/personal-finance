@@ -86,4 +86,29 @@ describe('credit card perks analysis', () => {
     expect(result.trackedCardCount).toBe(0)
     expect(result.cards).toHaveLength(0)
   })
+
+  it('does not crash when account or transaction text fields are malformed', () => {
+    expect(() =>
+      analyzeCreditCardPerks({
+        now: new Date('2026-02-24T12:00:00.000Z'),
+        accounts: [
+          {
+            id: 'card-amex',
+            name: 'Amex Gold',
+            type: 'CREDIT_CARD',
+          },
+        ],
+        transactions: [
+          {
+            id: 'txn-bad',
+            accountId: 'card-amex',
+            description: undefined as unknown as string,
+            amount: 12,
+            date: '2026-02-10T12:00:00.000Z',
+            type: 'EXPENSE',
+          },
+        ],
+      })
+    ).not.toThrow()
+  })
 })

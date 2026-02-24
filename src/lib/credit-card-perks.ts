@@ -164,7 +164,8 @@ const creditCardPerkPrograms: ICardPerkProgram[] = [
   },
 ]
 
-const normalize = (value: string) => value.trim().toLowerCase()
+const normalize = (value: unknown) =>
+  typeof value === 'string' ? value.trim().toLowerCase() : ''
 
 const isDateInCurrentCycle = (date: Date, now: Date) => {
   const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -202,7 +203,7 @@ const getDaysRemainingInCycle = (cycleEndDate: Date, now: Date) => {
   )
 }
 
-const getProgramForCard = (cardName: string) => {
+const getProgramForCard = (cardName: unknown) => {
   const normalizedCardName = normalize(cardName)
   return (
     creditCardPerkPrograms.find((program) =>

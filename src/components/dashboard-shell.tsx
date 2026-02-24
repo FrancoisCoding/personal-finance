@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAtom } from 'jotai'
 import {
   CreditCard,
+  FileText,
   Gift,
   Gauge,
   LayoutGrid,
@@ -26,6 +27,7 @@ import {
   Receipt,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   UserCircle2,
   Wallet,
   X,
@@ -141,6 +143,29 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         keywords: ['amex', 'card perks', 'credits', 'expiry', 'uber', 'dining'],
       },
       {
+        name: 'Investments',
+        href: '/investments',
+        icon: TrendingUp,
+        description:
+          'Track portfolio balances across 401(k), stocks, crypto, and assets.',
+        keywords: [
+          '401k',
+          'assets',
+          'brokerage',
+          'crypto',
+          'investing',
+          'portfolio',
+          'stocks',
+        ],
+      },
+      {
+        name: 'Invoices',
+        href: '/invoices',
+        icon: FileText,
+        description: 'Create invoices, track due dates, and monitor payments.',
+        keywords: ['billing', 'client', 'invoices', 'paid', 'receivables'],
+      },
+      {
         name: 'Billing',
         href: '/billing',
         icon: CreditCard,
@@ -211,6 +236,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       budgets: 'Budgets',
       'credit-score': 'Credit Score',
       'card-perks': 'Card Perks',
+      investments: 'Investments',
+      invoices: 'Invoices',
       profile: 'Profile',
     }
 
@@ -225,6 +252,8 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       budgets: Wallet,
       'credit-score': Gauge,
       'card-perks': Gift,
+      investments: TrendingUp,
+      invoices: FileText,
       profile: UserCircle2,
     }
 

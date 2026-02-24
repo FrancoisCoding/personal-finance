@@ -43,7 +43,7 @@ const publicPlanCatalog = [
     plan: 'PRO',
     name: 'Pro',
     compareAtMonthlyPriceLabel: '$10/mo',
-    monthlyPriceLabel: '$9/mo',
+    monthlyPriceLabel: '$8/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [

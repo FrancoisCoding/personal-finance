@@ -31,8 +31,8 @@ export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
   [AppPlan.PRO]: {
     plan: AppPlan.PRO,
     name: 'Pro',
-    monthlyPriceInCents: 900,
-    monthlyPriceLabel: '$9/mo',
+    monthlyPriceInCents: 800,
+    monthlyPriceLabel: '$8/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [

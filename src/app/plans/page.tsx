@@ -31,6 +31,7 @@ const publicPlanCatalog = [
   {
     plan: 'BASIC',
     name: 'Basic',
+    compareAtMonthlyPriceLabel: '$5/mo',
     monthlyPriceLabel: '$4/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
@@ -44,7 +45,8 @@ const publicPlanCatalog = [
   {
     plan: 'PRO',
     name: 'Pro',
-    monthlyPriceLabel: '$9/mo',
+    compareAtMonthlyPriceLabel: '$10/mo',
+    monthlyPriceLabel: '$8/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
@@ -263,7 +265,7 @@ export default function PlansPage() {
                         Best value for active users
                       </p>
                     ) : null}
-                    <CardTitle className="space-y-2">
+                    <CardTitle className="space-y-2.5">
                       <div className="flex items-center justify-between gap-3">
                         <span className="flex items-center gap-2 text-lg">
                           <span>{plan.name}</span>
@@ -274,16 +276,38 @@ export default function PlansPage() {
                           ) : null}
                         </span>
                       </div>
-                      <span
-                        className={
-                          'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
-                          (isPopularPlan
-                            ? 'text-emerald-200'
-                            : 'text-foreground')
-                        }
-                      >
-                        {plan.monthlyPriceLabel}
-                      </span>
+                      <div className="space-y-1.5">
+                        {'compareAtMonthlyPriceLabel' in plan &&
+                        plan.compareAtMonthlyPriceLabel ? (
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <span className="text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
+                              {plan.compareAtMonthlyPriceLabel}
+                            </span>
+                            <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                              Discount
+                            </span>
+                          </div>
+                        ) : null}
+                        <span
+                          className={
+                            'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
+                            (isPopularPlan
+                              ? 'text-emerald-200'
+                              : 'text-foreground')
+                          }
+                        >
+                          {plan.monthlyPriceLabel}
+                        </span>
+                        {'compareAtMonthlyPriceLabel' in plan &&
+                        plan.compareAtMonthlyPriceLabel ? (
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {plan.compareAtMonthlyPriceLabel.replace('/mo', '')}
+                            {' -> '}
+                            {plan.monthlyPriceLabel.replace('/mo', '')} per
+                            month
+                          </p>
+                        ) : null}
+                      </div>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {plan.description}

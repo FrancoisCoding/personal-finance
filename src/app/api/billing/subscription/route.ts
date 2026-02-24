@@ -17,6 +17,7 @@ export async function GET() {
 
     const { isSuperUser, currentPlan, effectiveSubscription } =
       await getUserEntitlements(session.user.id)
+    const effectiveCurrentPlan = currentPlan ?? 'FREE'
     const isStripePortalConfigured = Boolean(stripeClient)
     const isStripeCheckoutConfigured = Boolean(
       stripeClient &&
@@ -25,7 +26,7 @@ export async function GET() {
     )
 
     return NextResponse.json({
-      currentPlan,
+      currentPlan: effectiveCurrentPlan,
       isSuperUser,
       isStripePortalConfigured,
       isStripeCheckoutConfigured,
@@ -41,9 +42,25 @@ export async function GET() {
             cancelAtPeriodEnd: effectiveSubscription.cancelAtPeriodEnd,
           }
         : null,
-      availablePlans: [AppPlan.BASIC, AppPlan.PRO].map((plan) => ({
-        ...planDefinitions[plan],
-      })),
+      availablePlans: [
+        {
+          plan: 'FREE',
+          name: 'Free',
+          monthlyPriceInCents: 0,
+          monthlyPriceLabel: '$0/mo',
+          description:
+            'Use the core app with limited access and a smaller daily allowance.',
+          featureList: [
+            'Core dashboard, accounts, transactions, and budgets',
+            'A smaller set of insights and recommendations',
+            'Limited daily interactions to explore the app',
+            'Upgrade anytime to unlock more automation and AI usage',
+          ],
+        },
+        ...[AppPlan.BASIC, AppPlan.PRO].map((plan) => ({
+          ...planDefinitions[plan],
+        })),
+      ],
     })
   } catch (error) {
     console.error('Error fetching subscription status:', error)

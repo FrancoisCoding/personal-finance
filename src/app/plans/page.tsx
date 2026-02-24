@@ -13,8 +13,21 @@ import { useBillingStatus } from '@/hooks/use-billing-status'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useToast } from '@/hooks/use-toast'
 
-const planOrder = ['BASIC', 'PRO'] as const
+const planOrder = ['FREE', 'BASIC', 'PRO'] as const
 const publicPlanCatalog = [
+  {
+    plan: 'FREE',
+    name: 'Free',
+    monthlyPriceLabel: '$0/mo',
+    description:
+      'A lightweight live plan for basic tracking, limited interactions, and starter insights.',
+    featureList: [
+      'Core dashboard, accounts, transactions, and budgets',
+      'Starter insights and recommendations',
+      'Limited daily interactions',
+      'Upgrade anytime for more automation and AI access',
+    ],
+  },
   {
     plan: 'BASIC',
     name: 'Basic',
@@ -24,7 +37,7 @@ const publicPlanCatalog = [
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
-      'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
+      'AI Assistant access for everyday questions and planning.',
       '7-day free trial',
     ],
   },
@@ -36,7 +49,7 @@ const publicPlanCatalog = [
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
       'Everything in Basic',
-      'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).',
+      'More AI Assistant access for frequent conversations and deeper planning.',
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',
@@ -99,7 +112,7 @@ export default function PlansPage() {
       )
     }) ?? publicPlanCatalog
 
-  const currentPlan = data?.currentPlan ?? null
+  const currentPlan = session?.user?.id ? (data?.currentPlan ?? 'FREE') : null
   const isSuperUser = data?.isSuperUser === true
   const shouldShowPlanLoading = Boolean(session?.user?.id) && isLoading
 
@@ -119,8 +132,8 @@ export default function PlansPage() {
             Choose how you want to use FinanceFlow
           </h1>
           <p className="max-w-2xl text-muted-foreground">
-            Start in demo mode, or unlock live account features with Basic or
-            Pro. AI chat is available on paid plans only.
+            Start in demo mode, use the Free plan for core tracking, or upgrade
+            to Basic or Pro for more AI and advanced features.
           </p>
           {currentPlan ? (
             <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-200">
@@ -138,7 +151,7 @@ export default function PlansPage() {
           ) : null}
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Card className="border-border/70 bg-card/90">
             <CardHeader>
               <CardTitle className="text-xl">Demo mode</CardTitle>
@@ -183,6 +196,8 @@ export default function PlansPage() {
             </Card>
           ) : (
             availablePlans.map((plan) => {
+              const isFreePlan = plan.plan === 'FREE'
+              const isPopularPlan = plan.plan === 'PRO'
               const isCurrentPlan = currentPlan === plan.plan
               const isSubmitting = isSubmittingPlan === plan.plan
               const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
@@ -190,13 +205,32 @@ export default function PlansPage() {
                 <Card
                   key={plan.plan}
                   className={
-                    'border-border/70 bg-card/90 ' +
-                    (plan.plan === 'PRO' ? 'ring-1 ring-emerald-500/40' : '')
+                    'relative border-border/70 bg-card/90 ' +
+                    (isPopularPlan ? 'ring-1 ring-emerald-500/40' : '')
                   }
                 >
+                  {isPopularPlan ? (
+                    <div className="absolute inset-x-4 -top-3 flex justify-center">
+                      <span className="inline-flex min-h-7 items-center rounded-full border border-emerald-300/35 bg-emerald-400 px-3.5 py-1 text-xs font-semibold tracking-[0.08em] text-slate-950 shadow-sm shadow-emerald-950/20">
+                        Most popular
+                      </span>
+                    </div>
+                  ) : null}
                   <CardHeader>
+                    {isPopularPlan ? (
+                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-300/90">
+                        Best value for active users
+                      </p>
+                    ) : null}
                     <CardTitle className="flex items-center justify-between text-xl">
-                      <span>{plan.name}</span>
+                      <span className="flex items-center gap-2">
+                        <span>{plan.name}</span>
+                        {isCurrentPlan ? (
+                          <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                            Current
+                          </span>
+                        ) : null}
+                      </span>
                       <span className="text-base text-emerald-400">
                         {plan.monthlyPriceLabel}
                       </span>
@@ -218,11 +252,31 @@ export default function PlansPage() {
                       ))}
                     </ul>
                     <Button
-                      className="min-h-11"
-                      disabled={isDisabled}
-                      onClick={() =>
-                        handleSelectPlan(plan.plan as 'BASIC' | 'PRO')
+                      className={
+                        'min-h-11 ' +
+                        (isPopularPlan
+                          ? 'w-full bg-emerald-400 text-slate-950 hover:bg-emerald-300'
+                          : '')
                       }
+                      variant={isPopularPlan ? 'default' : 'outline'}
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (isFreePlan) {
+                          if (!session?.user?.id) {
+                            router.push(
+                              `/auth/register?callbackUrl=${encodeURIComponent('/dashboard')}`
+                            )
+                            return
+                          }
+                          if (isCurrentPlan) {
+                            router.push('/dashboard')
+                            return
+                          }
+                          router.push('/billing')
+                          return
+                        }
+                        handleSelectPlan(plan.plan as 'BASIC' | 'PRO')
+                      }}
                     >
                       {isSubmitting ? (
                         <>
@@ -231,6 +285,14 @@ export default function PlansPage() {
                         </>
                       ) : isSuperUser ? (
                         'Superuser access enabled'
+                      ) : isFreePlan && isCurrentPlan ? (
+                        'Current plan'
+                      ) : isFreePlan ? (
+                        session?.user?.id ? (
+                          'Manage in billing'
+                        ) : (
+                          'Get started free'
+                        )
                       ) : isCurrentPlan ? (
                         'Current plan'
                       ) : session?.user?.id ? (

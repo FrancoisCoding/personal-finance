@@ -10,8 +10,21 @@ import { useBillingStatus } from '@/hooks/use-billing-status'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 import { useToast } from '@/hooks/use-toast'
 
-const planOrder = ['BASIC', 'PRO'] as const
+const planOrder = ['FREE', 'BASIC', 'PRO'] as const
 const publicPlanCatalog = [
+  {
+    plan: 'FREE',
+    name: 'Free',
+    monthlyPriceLabel: '$0/mo',
+    description:
+      'A lightweight live plan for basic tracking, limited interactions, and starter insights.',
+    featureList: [
+      'Core dashboard, accounts, transactions, and budgets',
+      'Starter insights and recommendations',
+      'Limited daily interactions',
+      'Upgrade anytime to unlock more automation and AI usage',
+    ],
+  },
   {
     plan: 'BASIC',
     name: 'Basic',
@@ -47,7 +60,7 @@ export default function BillingPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const searchParams = useSearchParams()
-  const { startDemoMode } = useDemoMode()
+  const { startDemoMode, isDemoMode } = useDemoMode()
   const { toast } = useToast()
   const { data, isLoading } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
@@ -131,10 +144,12 @@ export default function BillingPage() {
     )
   }
 
-  const currentPlan = data?.currentPlan
+  const currentPlan = data?.currentPlan ?? null
+  const activeLivePlan = currentPlan ?? 'FREE'
   const isSuperUser = data?.isSuperUser === true
   const isStripeCheckoutConfigured = data?.isStripeCheckoutConfigured === true
   const isStripePortalConfigured = data?.isStripePortalConfigured === true
+  const hasPaidSubscription = Boolean(data?.currentSubscription)
   const availablePlans =
     data?.availablePlans.slice().sort((left, right) => {
       return (
@@ -149,14 +164,15 @@ export default function BillingPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Subscription plans</h1>
         <p className="text-sm text-muted-foreground">
-          Choose between Basic and Pro. Both include a 7-day free trial.
+          Start on Free, or upgrade to Basic or Pro. Paid plans include a 7-day
+          free trial.
         </p>
       </div>
 
       {isLockedAccess ? (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-300">
-          Your account is in live-locked mode until you choose a paid plan. You
-          can still continue in demo mode anytime.
+          Your account is currently on the Free plan. Upgrade anytime for more
+          AI access and premium features, or continue in demo mode.
         </div>
       ) : null}
 
@@ -174,25 +190,46 @@ export default function BillingPage() {
         </div>
       ) : null}
 
-      {data?.currentSubscription ? (
-        <Card className="border-border/70 bg-card/90">
-          <CardHeader>
-            <CardTitle className="text-lg">Current subscription</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
+      <Card className="border-border/70 bg-card/90">
+        <CardHeader>
+          <CardTitle className="text-lg">Current access</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          <p>
+            Active plan:{' '}
+            <span className="font-medium text-foreground">
+              {isDemoMode
+                ? 'DEMO'
+                : isSuperUser
+                  ? 'PRO (Superuser)'
+                  : activeLivePlan}
+            </span>
+          </p>
+          {data?.currentSubscription ? (
+            <>
+              <p>Status: {data.currentSubscription.status}</p>
+              {data.currentSubscription.trialEndsAt ? (
+                <p>
+                  Trial ends:{' '}
+                  {new Date(
+                    data.currentSubscription.trialEndsAt
+                  ).toLocaleDateString()}
+                </p>
+              ) : null}
+            </>
+          ) : !isDemoMode ? (
             <p>
-              Plan:{' '}
-              <span className="font-medium text-foreground">{currentPlan}</span>
+              {activeLivePlan === 'FREE'
+                ? 'You can continue using the Free plan and upgrade anytime.'
+                : 'No active paid subscription found.'}
             </p>
-            <p>Status: {data.currentSubscription.status}</p>
-            {data.currentSubscription.trialEndsAt ? (
-              <p>
-                Trial ends:{' '}
-                {new Date(
-                  data.currentSubscription.trialEndsAt
-                ).toLocaleDateString()}
-              </p>
-            ) : null}
+          ) : (
+            <p>
+              Demo mode uses sample data and does not create a live
+              subscription.
+            </p>
+          )}
+          {data?.currentSubscription ? (
             <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 variant="outline"
@@ -212,11 +249,11 @@ export default function BillingPage() {
                 )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      ) : null}
+          ) : null}
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="border-border/70 bg-card/90">
           <CardHeader>
             <CardTitle className="text-xl">Demo mode</CardTitle>
@@ -254,14 +291,18 @@ export default function BillingPage() {
         </Card>
 
         {availablePlans.map((plan) => {
+          const isFreePlan = plan.plan === 'FREE'
           const isPopularPlan = plan.plan === 'PRO'
-          const isCurrentPlan = currentPlan === plan.plan
+          const isCurrentPlan = activeLivePlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan
+          const isDowngradeViaPortal = isFreePlan && hasPaidSubscription
           const isDisabled =
-            !isStripeCheckoutConfigured ||
             isSuperUser ||
             isCurrentPlan ||
-            isSubmitting
+            isSubmitting ||
+            (isDowngradeViaPortal &&
+              (isOpeningPortal || !isStripePortalConfigured)) ||
+            (!isFreePlan && !isStripeCheckoutConfigured)
           return (
             <Card
               key={plan.plan}
@@ -286,7 +327,14 @@ export default function BillingPage() {
                   </p>
                 ) : null}
                 <CardTitle className="flex items-center justify-between text-xl">
-                  <span>{plan.name}</span>
+                  <span className="flex items-center gap-2">
+                    <span>{plan.name}</span>
+                    {isCurrentPlan ? (
+                      <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                        Current
+                      </span>
+                    ) : null}
+                  </span>
                   <span
                     className={
                       'text-base ' +
@@ -314,9 +362,17 @@ export default function BillingPage() {
                 </ul>
                 <div className="flex flex-wrap gap-2">
                   <Button
-                    onClick={() =>
+                    onClick={() => {
+                      if (isFreePlan) {
+                        if (isDowngradeViaPortal) {
+                          void handleOpenCustomerPortal()
+                          return
+                        }
+                        router.push('/dashboard')
+                        return
+                      }
                       handleStartCheckout(plan.plan as 'BASIC' | 'PRO')
-                    }
+                    }}
                     disabled={isDisabled}
                     className={
                       'min-h-11 ' +
@@ -333,6 +389,18 @@ export default function BillingPage() {
                       </>
                     ) : isSuperUser ? (
                       'Superuser access enabled'
+                    ) : isFreePlan && isCurrentPlan ? (
+                      'Current plan'
+                    ) : isFreePlan && isDowngradeViaPortal ? (
+                      isOpeningPortal ? (
+                        'Opening portal...'
+                      ) : isStripePortalConfigured ? (
+                        'Manage in billing'
+                      ) : (
+                        'Portal unavailable'
+                      )
+                    ) : isFreePlan ? (
+                      'Continue with Free'
                     ) : !isStripeCheckoutConfigured ? (
                       'Billing unavailable'
                     ) : isCurrentPlan ? (

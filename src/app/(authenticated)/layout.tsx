@@ -35,7 +35,9 @@ export default function AuthenticatedLayout({
   const requiresSubscriptionCheck =
     Boolean(session?.user?.id) && !isDemoReady && !isBillingRoute
   const isSubscriptionLocked =
-    requiresSubscriptionCheck && !isBillingLoading && !billingData?.currentPlan
+    requiresSubscriptionCheck &&
+    !isBillingLoading &&
+    billingData?.currentPlan === null
   const effectiveSession = session ?? (isDemoReady ? demoSession : null)
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function AuthenticatedLayout({
     if (!session?.user?.id) return
     if (isDemoReady) return
     if (isBillingLoading) return
-    if (!billingData?.currentPlan && !isBillingRoute) {
+    if (billingData?.currentPlan === null && !isBillingRoute) {
       router.replace('/billing?locked=1')
     }
   }, [

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 
 interface IPlanDefinition {
-  plan: 'BASIC' | 'PRO'
+  plan: 'FREE' | 'BASIC' | 'PRO'
   name: string
   monthlyPriceInCents: number
   monthlyPriceLabel: string
@@ -23,7 +23,7 @@ interface ICurrentSubscription {
 }
 
 interface IBillingStatusResponse {
-  currentPlan: 'BASIC' | 'PRO' | null
+  currentPlan: 'FREE' | 'BASIC' | 'PRO' | null
   isSuperUser?: boolean
   isStripeCheckoutConfigured?: boolean
   isStripePortalConfigured?: boolean

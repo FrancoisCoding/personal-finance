@@ -68,7 +68,6 @@ export const getAiChatRateLimitPolicy = ({
 }
 
 export const aiChatPlanMessaging = {
-  BASIC:
-    'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
-  PRO: 'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).',
+  BASIC: 'Intelligent AI Assistant for everyday financial guidance.',
+  PRO: 'Advanced AI Assistant with high-priority deep insights.',
 } as const

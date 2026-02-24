@@ -1,6 +1,9 @@
 import Link from 'next/link'
+import { LandingNavbar } from '@/components/landing-navbar'
+import { LandingFooter } from '@/components/landing-footer'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { CheckCircle, AlertTriangle, Clock } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Clock, ArrowRight } from 'lucide-react'
 
 const services = [
   { name: 'Core Dashboard', status: 'operational', uptime: '100%' },
@@ -18,13 +21,15 @@ const services = [
 export default function StatusPage() {
   return (
     <div className="min-h-screen bg-background">
+      <LandingNavbar />
+
       <main className="container mx-auto px-4 py-20 max-w-4xl space-y-12">
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 font-medium text-sm">
             <CheckCircle className="w-4 h-4" />
             All systems operational
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-semibold">
+          <h1 className="text-4xl md:text-5xl font-display font-semibold tracking-tight">
             Service Status
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -34,7 +39,10 @@ export default function StatusPage() {
 
         <div className="space-y-4">
           {services.map((service) => (
-            <Card key={service.name} className="overflow-hidden">
+            <Card
+              key={service.name}
+              className="overflow-hidden border-border/60 bg-card/50 backdrop-blur-sm"
+            >
               <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div
@@ -84,17 +92,26 @@ export default function StatusPage() {
           ))}
         </div>
 
-        <div className="text-center">
-          <p className="text-muted-foreground text-sm mb-6">
-            Experiencing an issue not listed here?
-          </p>
-          <Link href="/support">
-            <button className="text-primary font-semibold hover:underline">
-              Contact our support team
-            </button>
-          </Link>
+        <div className="text-center pt-8">
+          <div className="bg-muted/40 rounded-3xl p-8 space-y-4 max-w-2xl mx-auto">
+            <p className="text-muted-foreground">
+              Experiencing an issue not listed here? Our support team is
+              available 24/7 to help resolve any technical difficulties.
+            </p>
+            <Link href="/support">
+              <Button
+                variant="link"
+                className="text-primary font-semibold text-lg h-auto"
+              >
+                Contact our support team
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }

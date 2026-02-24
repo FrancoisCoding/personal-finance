@@ -1,6 +1,11 @@
+'use client'
+
+import { LandingNavbar } from '@/components/landing-navbar'
+import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Accordion } from '@/components/ui/accordion'
 import { ContactForm } from '@/components/support/contact-form'
-import { Navbar } from '@/components/navbar'
+import { Info } from 'lucide-react'
 
 const contactOptions = [
   {
@@ -54,26 +59,20 @@ const faqItems = [
 export default function SupportPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
-      >
-        Skip to main content
-      </a>
+      <LandingNavbar />
       <main
         id="main-content"
         tabIndex={-1}
-        className="container mx-auto px-4 py-12 space-y-10"
+        className="container mx-auto px-4 py-20 space-y-16"
       >
-        <div className="space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Support
+        <div className="space-y-4 text-center max-w-3xl mx-auto">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+            Help Center
           </p>
-          <h1 className="font-display text-4xl md:text-5xl font-semibold">
+          <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
             Support that keeps you moving.
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground text-lg text-balance">
             Get fast answers, contact support, and resolve common issues without
             breaking your workflow.
           </p>
@@ -81,57 +80,63 @@ export default function SupportPage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {contactOptions.map((option) => (
-            <Card key={option.title}>
+            <Card
+              key={option.title}
+              className="border-border/60 bg-card/50 backdrop-blur-sm"
+            >
               <CardHeader>
                 <CardTitle className="text-lg">{option.title}</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
+              <CardContent className="text-sm text-muted-foreground leading-relaxed">
                 {option.description}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div id="contact-form">
-            <ContactForm />
-          </div>
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Frequently asked questions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {faqItems.map((item) => (
-                  <div key={item.question} className="space-y-2">
-                    <h3 className="text-base font-semibold">{item.question}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {item.answer}
-                    </p>
-                  </div>
-                ))}
+        <div className="grid gap-12 xl:grid-cols-[1.1fr_0.9fr] items-start">
+          <div className="space-y-8">
+            <div id="contact-form">
+              <ContactForm />
+            </div>
+
+            <Card className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm overflow-hidden border">
+              <div className="bg-emerald-500/10 px-6 py-3 border-b border-emerald-500/10 flex items-center gap-2">
+                <Info className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                  Speed up your request
+                </span>
+              </div>
+              <CardContent className="p-6 text-sm text-muted-foreground space-y-4 leading-relaxed">
+                <p>To get the fastest help, please include:</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Your account email address</li>
+                  <li>The specific page or feature you were using</li>
+                  <li>What you expected versus what actually happened</li>
+                  <li>For billing: Last four digits of your payment method</li>
+                </ul>
+                <p className="pt-2 italic border-t border-emerald-500/10">
+                  We usually respond within one business day. For account
+                  lockouts, use &ldquo;Urgent&rdquo; in the subject.
+                </p>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>What to include when you contact us</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground space-y-3">
-                <p>
-                  To get the fastest help, include your account email, the page
-                  or feature you were using, and what you expected versus what
-                  happened. For billing questions, mention your plan and last
-                  four digits of the payment method if relevant.
-                </p>
-                <p>
-                  We aim to reply within one business day. For urgent account
-                  access issues, say &ldquo;Urgent&rdquo; in the subject line.
-                </p>
+          </div>
+
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Frequently Asked Questions
+            </h2>
+            <Card className="border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-6">
+                <Accordion items={faqItems} />
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }

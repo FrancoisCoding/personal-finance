@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { CheckCircle2, Loader2 } from 'lucide-react'
-import { Navbar } from '@/components/navbar'
+import { LandingNavbar } from '@/components/landing-navbar'
+import { LandingFooter } from '@/components/landing-footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useBillingStatus } from '@/hooks/use-billing-status'
@@ -17,19 +18,20 @@ const publicPlanCatalog = [
   {
     plan: 'BASIC',
     name: 'Basic',
-    monthlyPriceLabel: '$5/mo',
+    monthlyPriceLabel: '$4/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
       'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
+      '7-day free trial',
     ],
   },
   {
     plan: 'PRO',
     name: 'Pro',
-    monthlyPriceLabel: '$10/mo',
+    monthlyPriceLabel: '$9/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
@@ -39,6 +41,7 @@ const publicPlanCatalog = [
       'Subscription optimizer',
       'Credit score lab & report',
       'Priority support',
+      '7-day free trial',
     ],
   },
 ] as const
@@ -102,11 +105,11 @@ export default function PlansPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <LandingNavbar />
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8"
+        className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-20 sm:px-6 lg:px-8"
       >
         <section className="space-y-3">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -145,20 +148,20 @@ export default function PlansPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <li className="flex items-start gap-2 text-balance">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                   <span>No subscription required</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <li className="flex items-start gap-2 text-balance">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                   <span>Guided product walkthrough</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <li className="flex items-start gap-2 text-balance">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                   <span>Ideal for evaluation and recruiting demos</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                <li className="flex items-start gap-2 text-balance">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                   <span>AI Assistant chat is disabled in demo mode</span>
                 </li>
               </ul>
@@ -205,8 +208,11 @@ export default function PlansPage() {
                   <CardContent className="space-y-4">
                     <ul className="space-y-2 text-sm text-muted-foreground">
                       {plan.featureList.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                        <li
+                          key={feature}
+                          className="flex items-start gap-2 text-balance"
+                        >
+                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -252,6 +258,7 @@ export default function PlansPage() {
           .
         </div>
       </main>
+      <LandingFooter />
     </div>
   )
 }

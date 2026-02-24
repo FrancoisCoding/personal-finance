@@ -1,27 +1,25 @@
+import { LandingNavbar } from '@/components/landing-navbar'
+import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function CookiesPage() {
   return (
     <div className="min-h-screen bg-background">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
-      >
-        Skip to main content
-      </a>
+      <LandingNavbar />
+
       <main
         id="main-content"
         tabIndex={-1}
-        className="container mx-auto px-4 py-12 space-y-10"
+        className="container mx-auto px-4 py-20 space-y-10"
       >
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Legal
           </p>
-          <h1 className="font-display text-4xl md:text-5xl font-semibold">
+          <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
             Cookie Policy
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl text-lg">
             This policy describes how FinanceFlow uses cookies and similar
             technologies to provide, customize, evaluate, and improve our
             services.
@@ -29,11 +27,11 @@ export default function CookiesPage() {
         </div>
 
         <div className="grid gap-6">
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>What are cookies?</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 Cookies are small text files sent to your computer or mobile
                 device that allow FinanceFlow features and functionality to
@@ -42,11 +40,11 @@ export default function CookiesPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>How we use cookies</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 We use cookies for several reasons, including security,
                 authentication, and remembering your preferences.
@@ -72,11 +70,11 @@ export default function CookiesPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Controlling cookies</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 Most browsers allow you to control cookies through their
                 settings preferences. However, if you limit the ability of
@@ -87,6 +85,8 @@ export default function CookiesPage() {
           </Card>
         </div>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }

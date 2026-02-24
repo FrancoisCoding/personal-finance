@@ -1,39 +1,37 @@
 import Link from 'next/link'
+import { LandingNavbar } from '@/components/landing-navbar'
+import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
-      >
-        Skip to main content
-      </a>
+      <LandingNavbar />
+
       <main
         id="main-content"
         tabIndex={-1}
-        className="container mx-auto px-4 py-12 space-y-10"
+        className="container mx-auto px-4 py-20 space-y-10"
       >
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Privacy
           </p>
-          <h1 className="font-display text-4xl md:text-5xl font-semibold">
+          <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
             Privacy Policy
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl text-lg">
             This policy explains how FinanceFlow collects, uses, and protects
             your information. Last updated: January 28, 2026.
           </p>
         </div>
 
         <div className="grid gap-6">
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Information we collect</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 We collect information you provide directly, including account
                 details, profile information, and financial data you choose to
@@ -47,11 +45,11 @@ export default function PrivacyPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>How we use information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 We use your information to provide, improve, and secure the
                 FinanceFlow experience.
@@ -64,11 +62,11 @@ export default function PrivacyPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Sharing and disclosure</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 We do not sell your personal data. We share information only
                 with trusted service providers needed to operate the platform or
@@ -77,11 +75,11 @@ export default function PrivacyPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Security and retention</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 We use industry-standard safeguards to protect data in transit
                 and at rest. We retain data as long as your account is active or
@@ -90,11 +88,11 @@ export default function PrivacyPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Your choices</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
               <p>
                 You can update your profile, disconnect accounts, or request
                 data deletion by contacting support.
@@ -109,6 +107,8 @@ export default function PrivacyPage() {
           </Card>
         </div>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }

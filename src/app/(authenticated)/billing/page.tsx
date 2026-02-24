@@ -15,7 +15,7 @@ const publicPlanCatalog = [
   {
     plan: 'BASIC',
     name: 'Basic',
-    monthlyPriceLabel: '$5/mo',
+    monthlyPriceLabel: '$4/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
       'Accounts and transactions',
@@ -28,7 +28,7 @@ const publicPlanCatalog = [
   {
     plan: 'PRO',
     name: 'Pro',
-    monthlyPriceLabel: '$10/mo',
+    monthlyPriceLabel: '$9/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
@@ -37,7 +37,6 @@ const publicPlanCatalog = [
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',
-      'Credit card perk insights',
       'Priority support',
       '7-day free trial',
     ],
@@ -50,10 +49,9 @@ export default function BillingPage() {
   const searchParams = useSearchParams()
   const { startDemoMode } = useDemoMode()
   const { toast } = useToast()
-  const { data, isLoading, refetch } = useBillingStatus()
+  const { data, isLoading } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
-  const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
 
   const handleStartCheckout = async (plan: 'BASIC' | 'PRO') => {
     if (!session?.user?.id) {
@@ -122,31 +120,6 @@ export default function BillingPage() {
   const handleStartDemoMode = () => {
     startDemoMode()
     router.push('/dashboard?demo=1')
-  }
-
-  const handleRefreshBillingStatus = async () => {
-    setIsRefreshingStatus(true)
-    try {
-      const result = await refetch()
-      if (result.error) {
-        throw result.error
-      }
-      toast({
-        title: 'Plan status updated',
-        description: 'Plan details have been refreshed.',
-      })
-    } catch (error) {
-      toast({
-        title: 'Billing error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Unable to refresh plan status.',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsRefreshingStatus(false)
-    }
   }
 
   if (isLoading) {
@@ -242,20 +215,20 @@ export default function BillingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+              <li className="flex items-start gap-2 text-balance">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                 <span>Instant access, no payment required</span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+              <li className="flex items-start gap-2 text-balance">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                 <span>Sample transactions and walkthrough</span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+              <li className="flex items-start gap-2 text-balance">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                 <span>Safe environment for trying features</span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+              <li className="flex items-start gap-2 text-balance">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                 <span>AI Assistant chat is disabled in demo mode</span>
               </li>
             </ul>
@@ -295,8 +268,11 @@ export default function BillingPage() {
               <CardContent className="space-y-4">
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {plan.featureList.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2 text-balance"
+                    >
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -320,20 +296,6 @@ export default function BillingPage() {
                       'Current plan'
                     ) : (
                       `Start ${plan.name} trial`
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleRefreshBillingStatus}
-                    disabled={isRefreshingStatus}
-                  >
-                    {isRefreshingStatus ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Refreshing...
-                      </>
-                    ) : (
-                      'Refresh status'
                     )}
                   </Button>
                 </div>

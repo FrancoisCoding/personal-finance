@@ -202,12 +202,20 @@ export function AutoCategorizeModal() {
     const uncategorizedIds = new Set(
       uncategorizedTransactions.map((transaction) => transaction.id)
     )
-    setSuppressedReviewIds((previous) =>
-      previous.filter((id) => uncategorizedIds.has(id))
-    )
-    setProcessedTransactionIds((previous) =>
-      previous.filter((id) => uncategorizedIds.has(id))
-    )
+    setSuppressedReviewIds((previous) => {
+      const next = previous.filter((id) => uncategorizedIds.has(id))
+      const isUnchanged =
+        next.length === previous.length &&
+        next.every((id, index) => id === previous[index])
+      return isUnchanged ? previous : next
+    })
+    setProcessedTransactionIds((previous) => {
+      const next = previous.filter((id) => uncategorizedIds.has(id))
+      const isUnchanged =
+        next.length === previous.length &&
+        next.every((id, index) => id === previous[index])
+      return isUnchanged ? previous : next
+    })
   }, [uncategorizedTransactions])
 
   useEffect(() => {

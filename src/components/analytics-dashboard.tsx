@@ -398,102 +398,119 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     }
 
     const reportPayload = buildReportPayload()
-    const lines: string[] = []
     const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
+    const lines: string[] = []
 
-    const addSection = (title: string, headers: string[], rows: string[][]) => {
-      lines.push(title)
-      lines.push(headers.map((header) => escapeCsv(header)).join(','))
-      if (rows.length === 0) {
-        lines.push(
-          [
-            escapeCsv('No data available'),
-            ...Array(headers.length - 1).fill(''),
-          ].join(',')
-        )
-      } else {
-        rows.forEach((row) => {
-          lines.push(row.map((cell) => escapeCsv(cell)).join(','))
-        })
-      }
-      lines.push('')
+    // Unified Header for the entire CSV to make it processable
+    // Schema: Section, Date, Description/Name, Category/Target, Type/Status, Amount/Value, Progress/Utilization %
+    const headers = [
+      'Section',
+      'Date',
+      'Description',
+      'Category',
+      'Type/Status',
+      'Amount',
+      'Progress %',
+    ]
+    lines.push(headers.map((h) => escapeCsv(h)).join(','))
+
+    // 1. Summary Section
+    const addSummaryRow = (label: string, value: string | number) => {
+      lines.push(
+        [
+          'SUMMARY',
+          '',
+          label,
+          '',
+          '',
+          typeof value === 'number' ? value.toFixed(2) : value,
+          '',
+        ]
+          .map((v) => escapeCsv(v))
+          .join(',')
+      )
     }
 
-    lines.push('Summary')
-    lines.push(
-      [
-        'Report date',
-        'Avg daily spend',
-        'Savings rate',
-        'Total income',
-        'Total expenses',
-      ]
-        .map((header) => escapeCsv(header))
-        .join(',')
-    )
-    lines.push(
-      [
-        reportDateStamp,
-        avgDailySpend.toFixed(2),
-        `${savingsRate.toFixed(1)}%`,
-        totalIncome.toFixed(2),
-        totalExpenses.toFixed(2),
-      ]
-        .map((value) => escapeCsv(value))
-        .join(',')
-    )
-    lines.push('')
-    addSection(
-      'Transactions',
-      ['Date', 'Description', 'Category', 'Type', 'Amount'],
-      reportPayload.transactionRows.map((transaction) => [
-        transaction.date,
-        transaction.description,
-        transaction.category,
-        transaction.type,
-        transaction.amount.toFixed(2),
-      ])
-    )
-    addSection(
-      'Budgets',
-      ['Name', 'Category', 'Budgeted', 'Spent', 'Remaining', 'Utilization'],
-      reportPayload.budgetRows.map((budget) => [
-        budget.name,
-        budget.category,
-        budget.budgeted.toFixed(2),
-        budget.spent.toFixed(2),
-        budget.remaining.toFixed(2),
-        `${budget.utilization.toFixed(1)}%`,
-      ])
-    )
-    addSection(
-      'Goals',
-      ['Name', 'Target', 'Current', 'Remaining', 'Progress', 'Target date'],
-      reportPayload.goalRows.map((goal) => [
-        goal.name,
-        goal.target.toFixed(2),
-        goal.current.toFixed(2),
-        goal.remaining.toFixed(2),
-        `${goal.progress.toFixed(1)}%`,
-        goal.targetDate === '—' ? '' : goal.targetDate,
-      ])
-    )
+    addSummaryRow('Report Date', reportDateStamp)
+    addSummaryRow('Avg Daily Spend', avgDailySpend)
+    addSummaryRow('Savings Rate', `${savingsRate.toFixed(1)}%`)
+    addSummaryRow('Total Income', totalIncome)
+    addSummaryRow('Total Expenses', totalExpenses)
+
+    // Spacer
+    lines.push(',,,,,,')
+
+    // 2. Transactions Section
+    reportPayload.transactionRows.forEach((t) => {
+      lines.push(
+        [
+          'TRANSACTION',
+          t.date,
+          t.description,
+          t.category,
+          t.type,
+          t.amount.toFixed(2),
+          '',
+        ]
+          .map((v) => escapeCsv(v))
+          .join(',')
+      )
+    })
+
+    if (reportPayload.budgetRows.length > 0) {
+      lines.push(',,,,,,')
+      // 3. Budgets Section
+      reportPayload.budgetRows.forEach((b) => {
+        lines.push(
+          [
+            'BUDGET',
+            '',
+            b.name,
+            b.category,
+            'Budgeted',
+            b.budgeted.toFixed(2),
+            `${b.utilization.toFixed(1)}%`,
+          ]
+            .map((v) => escapeCsv(v))
+            .join(',')
+        )
+      })
+    }
+
+    if (reportPayload.goalRows.length > 0) {
+      lines.push(',,,,,,')
+      // 4. Goals Section
+      reportPayload.goalRows.forEach((g) => {
+        lines.push(
+          [
+            'GOAL',
+            g.targetDate === '—' ? '' : g.targetDate,
+            g.name,
+            'Target',
+            'Tracked',
+            g.target.toFixed(2),
+            `${g.progress.toFixed(1)}%`,
+          ]
+            .map((v) => escapeCsv(v))
+            .join(',')
+        )
+      })
+    }
 
     const blob = new Blob([lines.join('\n')], {
       type: 'text/csv;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
+    const link = document.body.appendChild(document.createElement('a'))
     link.href = url
-    link.download = `financial-report-${reportDateStamp}.csv`
-    document.body.appendChild(link)
+    link.download = `financeflow-report-${reportDateStamp}.csv`
     link.click()
     link.remove()
     URL.revokeObjectURL(url)
 
     toast({
       title: 'CSV exported',
-      description: 'Your analytics report is ready to download.',
+      description: 'Your unified data report is ready for Excel/Sheets.',
     })
   }
 
@@ -511,194 +528,245 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     const reportDateStamp =
       reportPayload.reportDate.toLocaleDateString(displayLocale)
 
-    const buildPdfTable = (headers: string[], rows: string[][]) => {
-      if (rows.length === 0) {
-        return '<div class="empty">No data available.</div>'
-      }
-      return `
-        <table>
-          <thead>
-            <tr>
-              ${headers
-                .map((header) => `<th>${escapeHtml(header)}</th>`)
-                .join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows
-              .map(
-                (row) => `
-                <tr>
-                  ${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}
-                </tr>
-              `
-              )
-              .join('')}
-          </tbody>
-        </table>
-      `
-    }
-
     const pdfHtml = `
       <!DOCTYPE html>
       <html lang="en">
         <head>
-                <meta charset="UTF-8" />
+          <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>Financial report</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
             * { box-sizing: border-box; }
             body {
-              margin: 32px;
-              font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-              color: #0f172a;
+              margin: 40px;
+              font-family: 'Inter', -apple-system, sans-serif;
+              color: #1e293b;
               background: #ffffff;
+              line-height: 1.5;
             }
             header {
               display: flex;
               justify-content: space-between;
-              align-items: flex-start;
-              margin-bottom: 24px;
+              align-items: center;
+              margin-bottom: 40px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #f1f5f9;
             }
-            h1 { font-size: 24px; margin: 0; }
-            h2 { font-size: 16px; margin: 24px 0 8px; }
-            .subtitle { color: #475569; font-size: 13px; }
-            .summary-grid {
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            .brand-dot {
+              height: 12px;
+              width: 12px;
+              border-radius: 50%;
+              background: #10b981;
+            }
+            .brand-name {
+              font-size: 18px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+            }
+            h1 { font-size: 28px; margin: 0; font-weight: 700; letter-spacing: -0.03em; }
+            h2 { font-size: 14px; margin: 32px 0 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; font-weight: 600; }
+            .subtitle { color: #64748b; font-size: 14px; margin-top: 4px; }
+            
+            .metrics-grid {
               display: grid;
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-              gap: 12px;
-              margin-top: 12px;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 16px;
+              margin-top: 16px;
             }
-            .summary-card {
+            .metric-card {
               border: 1px solid #e2e8f0;
               border-radius: 12px;
-              padding: 12px;
+              padding: 16px;
               background: #f8fafc;
             }
-            .summary-label {
-              font-size: 12px;
-              color: #64748b;
-              margin-bottom: 6px;
-            }
-            .summary-value {
-              font-size: 16px;
-              font-weight: 600;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 12px;
-              font-size: 12px;
-            }
-            th, td {
-              padding: 8px 10px;
-              border-bottom: 1px solid #e2e8f0;
-              text-align: left;
-              vertical-align: top;
-            }
-            th {
-              background: #f1f5f9;
+            .metric-label {
               font-size: 11px;
               text-transform: uppercase;
-              letter-spacing: 0.04em;
-              color: #475569;
-            }
-            .section {
-              margin-top: 18px;
-              padding-top: 12px;
-              border-top: 1px solid #e2e8f0;
-            }
-            .empty {
-              border: 1px dashed #cbd5f5;
-              border-radius: 12px;
-              padding: 12px;
+              letter-spacing: 0.05em;
               color: #64748b;
+              margin-bottom: 4px;
+              font-weight: 500;
+            }
+            .metric-value {
+              font-size: 18px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: separate;
+              border-spacing: 0;
+              margin-top: 8px;
+            }
+            th, td {
+              padding: 12px;
+              border-bottom: 1px solid #f1f5f9;
+              text-align: left;
               font-size: 12px;
             }
+            th {
+              background: #f8fafc;
+              font-weight: 600;
+              color: #475569;
+              border-top: 1px solid #f1f5f9;
+            }
+            tr:last-child td { border-bottom: none; }
+            
+            .amount { font-weight: 600; text-align: right; }
+            .negative { color: #e11d48; }
+            .positive { color: #059669; }
+            
+            .status-badge {
+              padding: 2px 8px;
+              border-radius: 99px;
+              font-size: 10px;
+              font-weight: 600;
+              background: #f1f5f9;
+              color: #475569;
+            }
+
             @media print {
-              body { margin: 18mm; }
+              body { margin: 20mm; }
               .section { break-inside: avoid; }
+              header { border-bottom-color: #cbd5e1; }
             }
           </style>
         </head>
         <body>
           <header>
             <div>
-              <h1>Financial report</h1>
-              <p class="subtitle">Generated ${escapeHtml(reportDateStamp)}</p>
+              <h1>Financial Report</h1>
+              <p class="subtitle">Generated on ${escapeHtml(reportDateStamp)}</p>
             </div>
-            <div class="subtitle">FinanceFlow</div>
+            <div class="brand">
+              <div class="brand-dot"></div>
+              <span class="brand-name">FinanceFlow</span>
+            </div>
           </header>
+
           <section>
-            <h2>Summary</h2>
-            <div class="summary-grid">
+            <h2>Snapshot</h2>
+            <div class="metrics-grid">
               ${reportPayload.summary
                 .map(
                   (item) => `
-                    <div class="summary-card">
-                      <div class="summary-label">${escapeHtml(item.label)}</div>
-                      <div class="summary-value">${escapeHtml(item.value)}</div>
+                    <div class="metric-card">
+                      <div class="metric-label">${escapeHtml(item.label)}</div>
+                      <div class="metric-value">${escapeHtml(item.value)}</div>
                     </div>
                   `
                 )
                 .join('')}
             </div>
           </section>
-          <section class="section">
-            <h2>Transactions</h2>
-            ${buildPdfTable(
-              ['Date', 'Description', 'Category', 'Type', 'Amount'],
-              reportPayload.transactionRows.map((transaction) => [
-                transaction.date,
-                transaction.description,
-                transaction.category,
-                transaction.type,
-                formatCurrency(transaction.amount),
-              ])
-            )}
+
+          <section>
+            <h2>Transaction Activity</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${reportPayload.transactionRows
+                  .map(
+                    (t) => `
+                  <tr>
+                    <td>${escapeHtml(t.date)}</td>
+                    <td>${escapeHtml(t.description)}</td>
+                    <td><span class="status-badge">${escapeHtml(t.category)}</span></td>
+                    <td class="amount ${t.amount < 0 ? 'negative' : 'positive'}">
+                      ${formatCurrency(t.amount)}
+                    </td>
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
           </section>
-          <section class="section">
-            <h2>Budgets</h2>
-            ${buildPdfTable(
-              [
-                'Name',
-                'Category',
-                'Budgeted',
-                'Spent',
-                'Remaining',
-                'Utilization',
-              ],
-              reportPayload.budgetRows.map((budget) => [
-                budget.name,
-                budget.category,
-                formatCurrency(budget.budgeted),
-                formatCurrency(budget.spent),
-                formatCurrency(budget.remaining),
-                `${budget.utilization.toFixed(1)}%`,
-              ])
-            )}
+
+          ${
+            reportPayload.budgetRows.length > 0
+              ? `
+          <section>
+            <h2>Budget Performance</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Budgeted</th>
+                  <th>Spent</th>
+                  <th style="text-align: right;">Utilization</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${reportPayload.budgetRows
+                  .map(
+                    (b) => `
+                  <tr>
+                    <td>${escapeHtml(b.name)}</td>
+                    <td>${escapeHtml(b.category)}</td>
+                    <td>${formatCurrency(b.budgeted)}</td>
+                    <td>${formatCurrency(b.spent)}</td>
+                    <td style="text-align: right; font-weight: 600;">${b.utilization.toFixed(1)}%</td>
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
           </section>
-          <section class="section">
-            <h2>Goals</h2>
-            ${buildPdfTable(
-              [
-                'Name',
-                'Target',
-                'Current',
-                'Remaining',
-                'Progress',
-                'Target date',
-              ],
-              reportPayload.goalRows.map((goal) => [
-                goal.name,
-                formatCurrency(goal.target),
-                formatCurrency(goal.current),
-                formatCurrency(goal.remaining),
-                `${goal.progress.toFixed(1)}%`,
-                goal.targetDate,
-              ])
-            )}
+          `
+              : ''
+          }
+
+          ${
+            reportPayload.goalRows.length > 0
+              ? `
+          <section>
+            <h2>Financial Goals</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Goal</th>
+                  <th>Target Date</th>
+                  <th>Target</th>
+                  <th style="text-align: right;">Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${reportPayload.goalRows
+                  .map(
+                    (g) => `
+                  <tr>
+                    <td>${escapeHtml(g.name)}</td>
+                    <td>${escapeHtml(g.targetDate)}</td>
+                    <td>${formatCurrency(g.target)}</td>
+                    <td style="text-align: right; font-weight: 600;">${g.progress.toFixed(1)}%</td>
+                  </tr>
+                `
+                  )
+                  .join('')}
+              </tbody>
+            </table>
           </section>
+          `
+              : ''
+          }
         </body>
       </html>
     `

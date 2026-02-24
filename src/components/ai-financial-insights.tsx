@@ -57,6 +57,8 @@ interface AIFinancialInsightsProps {
   budgets: SimpleBudget[]
   goals: SimpleGoal[]
   className?: string
+  compact?: boolean
+  maxVisibleInsights?: number
 }
 
 const AIFinancialInsights = memo(function AIFinancialInsights({
@@ -64,6 +66,8 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
   budgets,
   goals,
   className = '',
+  compact = false,
+  maxVisibleInsights = 5,
 }: AIFinancialInsightsProps) {
   const [insights, setInsights] = useState<FinancialInsight[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -291,14 +295,14 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
         })
       }
 
-      setInsights(newInsights.slice(0, 5)) // Show top 5 insights
+      setInsights(newInsights.slice(0, maxVisibleInsights))
       setLastAnalysis(new Date())
     } catch (error) {
       console.error('Error generating insights:', error)
     } finally {
       setIsAnalyzing(false)
     }
-  }, [budgets, goals, transactions])
+  }, [budgets, goals, maxVisibleInsights, transactions])
 
   useEffect(() => {
     if (transactions.length > 0) {
@@ -341,7 +345,7 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
           </p>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={compact ? 'space-y-3' : 'space-y-4'}>
         {isAnalyzing ? (
           <div className="text-center py-8">
             <div
@@ -355,13 +359,20 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
             </p>
           </div>
         ) : insights.length > 0 ? (
-          <div className="space-y-4">
+          <div
+            className={
+              compact
+                ? 'space-y-3 max-h-[34rem] overflow-y-auto pr-1'
+                : 'space-y-4'
+            }
+          >
             {insights.map((insight) => {
               return (
                 <div
                   key={insight.id}
                   className={
-                    'rounded-lg border border-border/60 bg-muted/30 p-4 ' +
+                    'rounded-lg border border-border/60 bg-muted/30 ' +
+                    (compact ? 'p-3 ' : 'p-4 ') +
                     'transition-shadow hover:shadow-sm'
                   }
                 >
@@ -444,7 +455,9 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
           </div>
         )}
 
-        <div className="pt-4 border-t border-border/60">
+        <div
+          className={(compact ? 'pt-3' : 'pt-4') + ' border-t border-border/60'}
+        >
           <Button
             variant="outline"
             size="sm"

@@ -1574,9 +1574,9 @@ export default function DashboardPage() {
 
         {/* Main Content Grid */}
         <FadeIn delay={0.15}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
             {/* Net Worth Card */}
-            <div data-demo-step="demo-net-worth" className="h-full">
+            <div data-demo-step="demo-net-worth">
               <NetWorthSummaryCard
                 netWorth={netWorth}
                 summaryItems={netWorthSummaryItems}
@@ -1599,7 +1599,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Reminders */}
-            <div className="h-full" data-demo-step="demo-reminders">
+            <div data-demo-step="demo-reminders">
               <RemindersCard
                 reminders={reminders}
                 action={
@@ -1634,28 +1634,26 @@ export default function DashboardPage() {
 
         {/* Second Row */}
         <FadeIn delay={0.2}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
             {/* Cash Flow Chart */}
-            <div
-              className="lg:col-span-2 h-full"
-              data-demo-step="demo-cashflow"
-            >
-              <CashFlowChart data={cashFlowData} className="h-full" />
+            <div className="lg:col-span-2" data-demo-step="demo-cashflow">
+              <CashFlowChart data={cashFlowData} />
             </div>
 
             {/* AI Insights */}
-            <div className="lg:col-span-1 h-full">
+            <div className="lg:col-span-1">
               {hasProTierAccess ? (
                 <div data-demo-step="demo-insights">
                   <AIFinancialInsights
                     transactions={transformedTransactions}
                     budgets={transformedBudgets}
                     goals={transformedGoals}
-                    className="h-full"
+                    compact
+                    maxVisibleInsights={3}
                   />
                 </div>
               ) : (
-                <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                <Card className="border-border/60 bg-card/80 shadow-sm">
                   <CardHeader>
                     <CardTitle>Advanced AI insights</CardTitle>
                     <CardDescription>
@@ -1681,26 +1679,23 @@ export default function DashboardPage() {
 
         {/* Third Row - Credit Utilization */}
         <FadeIn delay={0.25}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
             {/* Credit Utilization */}
-            <div data-demo-step="demo-credit-utilization" className="h-full">
-              <CreditUtilizationCard
-                creditCards={creditCards}
-                className="h-full"
-              />
+            <div data-demo-step="demo-credit-utilization">
+              <CreditUtilizationCard creditCards={creditCards} />
             </div>
 
             {/* Analytics Dashboard */}
-            <div data-demo-step="demo-analytics" className="h-full">
+            <div data-demo-step="demo-analytics">
               {hasProTierAccess ? (
                 <AnalyticsDashboard
                   transactions={transformedTransactions}
                   budgets={transformedBudgets}
                   goals={transformedGoals}
-                  className="h-full"
+                  compact
                 />
               ) : (
-                <Card className="border-border/60 bg-card/80 shadow-sm h-full">
+                <Card className="border-border/60 bg-card/80 shadow-sm">
                   <CardHeader>
                     <CardTitle>Pro analytics dashboard</CardTitle>
                     <CardDescription>
@@ -1724,10 +1719,10 @@ export default function DashboardPage() {
 
         {/* Fourth Row */}
         <FadeIn delay={0.3}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
             {/* Recent Transactions */}
             <Card
-              className="border-border/70 bg-card/90 shadow-sm lg:col-span-2 h-full"
+              className="border-border/70 bg-card/90 shadow-sm lg:col-span-2"
               data-demo-step="demo-recent-transactions"
             >
               <CardHeader className="border-b border-border/60 pb-3">
@@ -1819,10 +1814,10 @@ export default function DashboardPage() {
             </Card>
 
             {/* Budgets and Goals */}
-            <div className="grid gap-6 auto-rows-fr">
+            <div className="grid content-start gap-6">
               {/* Budget Progress */}
               <Card
-                className="border-border/70 bg-card/90 shadow-sm h-full"
+                className="border-border/70 bg-card/90 shadow-sm"
                 id="budget-progress"
                 data-demo-step="demo-budget-progress"
               >
@@ -1864,7 +1859,7 @@ export default function DashboardPage() {
 
               {/* Goals Progress */}
               <Card
-                className="border-border/70 bg-card/90 shadow-sm h-full"
+                className="border-border/70 bg-card/90 shadow-sm"
                 data-demo-step="demo-goals-progress"
               >
                 <CardHeader className="border-b border-border/60 pb-3">
@@ -1903,14 +1898,13 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <div data-demo-step="demo-donations" className="h-full">
+              <div data-demo-step="demo-donations">
                 <DonationsCard
                   entries={donationSummary.entries}
                   causes={donationSummary.causes}
                   recurring={donationSummary.recurring}
                   total={donationSummary.total}
                   hasData={donationSummary.hasData}
-                  className="h-full"
                 />
               </div>
             </div>

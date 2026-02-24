@@ -60,6 +60,7 @@ interface AnalyticsDashboardProps {
   budgets: SimpleBudget[]
   goals: SimpleGoal[]
   className?: string
+  compact?: boolean
 }
 
 type ReportFrequency = 'Weekly' | 'Monthly'
@@ -94,6 +95,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
   budgets,
   goals,
   className = '',
+  compact = false,
 }: AnalyticsDashboardProps) {
   const { addNotification, setShowNotificationCenter } = useNotifications()
   const { toast } = useToast()
@@ -810,7 +812,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent className={compact ? 'space-y-6' : 'space-y-8'}>
         {/* Key Metrics */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="p-4 rounded-xl border border-border/50 bg-muted/20 shadow-sm">
@@ -844,7 +846,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           </h4>
           {pieData.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
-              <div className="h-56">
+              <div className={compact ? 'h-44' : 'h-56'}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -939,7 +941,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           <h4 className="text-sm font-semibold text-foreground/90">
             Monthly Spending Trend
           </h4>
-          <div className="h-52">
+          <div className={compact ? 'h-40' : 'h-52'}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData}>
                 <CartesianGrid
@@ -986,7 +988,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
               Budget Performance
             </h4>
             <div className="space-y-2">
-              {budgetPerformance.slice(0, 3).map((budget) => (
+              {budgetPerformance.slice(0, compact ? 2 : 3).map((budget) => (
                 <div
                   key={budget.id}
                   className="p-4 rounded-xl border border-border/50 bg-card/60"
@@ -1037,192 +1039,256 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
         )}
 
         {/* Reporting & Export */}
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold text-foreground/90">
-                Reporting & Export
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                Clean CSV and PDF exports with scheduling built in.
-              </p>
+        {compact ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold text-foreground/90">
+                  Reporting & Export
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Quick export tools for your overview report.
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className="text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
+              >
+                Reports
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className="text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
-            >
-              Reports
-            </Badge>
-          </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Exports
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Summary, transactions, budgets, and goals in one report.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs font-semibold rounded-full"
-                    onClick={handleExportCsv}
-                    disabled={!hasReportData}
-                  >
-                    Export CSV
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs font-semibold rounded-full"
-                    onClick={handleExportPdf}
-                    disabled={!hasReportData}
-                  >
-                    Export PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs font-semibold rounded-full"
-                    onClick={handleSetAlerts}
-                  >
-                    Set Alerts
-                  </Button>
-                </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+              <div className="rounded-xl border border-border/50 bg-muted/20 px-4 py-3">
+                <p className="text-xs text-muted-foreground">
+                  Next scheduled report
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  {nextScheduledRunLabel}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {reportSchedule.enabled
+                    ? `${reportSchedule.frequency} at ${formatScheduleTime(reportSchedule.time)}`
+                    : 'Scheduling is currently paused'}
+                </p>
               </div>
-            </div>
-            <div className="rounded-xl border border-border/50 bg-card/70 p-4 space-y-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    Schedule reports
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Automate weekly or monthly exports.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className={
-                      reportSchedule.enabled
-                        ? 'text-emerald-600 dark:text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
-                        : 'text-muted-foreground border-border/60'
-                    }
-                  >
-                    {reportSchedule.enabled ? 'Active' : 'Paused'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 rounded-full px-3 text-xs"
-                    onClick={handleScheduleToggle}
-                    aria-pressed={reportSchedule.enabled}
-                  >
-                    {reportSchedule.enabled ? 'Pause' : 'Enable'}
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">
-                    Frequency
-                  </Label>
-                  <Select
-                    value={reportSchedule.frequency}
-                    onValueChange={(value) =>
-                      handleScheduleFrequencyChange(value as ReportFrequency)
-                    }
-                    disabled={!reportSchedule.enabled}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">
-                    {reportSchedule.frequency === 'Weekly'
-                      ? 'Day of week'
-                      : 'Day of month'}
-                  </Label>
-                  <Select
-                    value={reportSchedule.day}
-                    onValueChange={(value) =>
-                      setReportSchedule((prev) => ({ ...prev, day: value }))
-                    }
-                    disabled={!reportSchedule.enabled}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scheduleDayOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label
-                    htmlFor="report-time"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Time
-                  </Label>
-                  <Input
-                    id="report-time"
-                    type="time"
-                    value={reportSchedule.time}
-                    onChange={(event) =>
-                      setReportSchedule((prev) => ({
-                        ...prev,
-                        time: event.target.value,
-                      }))
-                    }
-                    disabled={!reportSchedule.enabled}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">
-                    Delivery
-                  </Label>
-                  <div className="flex h-10 items-center rounded-md border border-border/60 bg-muted/30 px-3 text-sm text-muted-foreground">
-                    Download
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Next scheduled report
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {nextScheduledRunLabel}
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                 <Button
+                  variant="outline"
                   size="sm"
-                  className="rounded-full text-xs"
-                  onClick={handleScheduleSave}
-                  disabled={!reportSchedule.enabled}
+                  className="rounded-full text-xs font-semibold"
+                  onClick={handleExportCsv}
+                  disabled={!hasReportData}
                 >
-                  Save schedule
+                  Export CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs font-semibold"
+                  onClick={handleExportPdf}
+                  disabled={!hasReportData}
+                >
+                  Export PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs font-semibold"
+                  onClick={handleSetAlerts}
+                >
+                  Alerts
                 </Button>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold text-foreground/90">
+                  Reporting & Export
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Clean CSV and PDF exports with scheduling built in.
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className="text-emerald-600 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
+              >
+                Reports
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-xl border border-border/50 bg-muted/20 p-4">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Exports
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Summary, transactions, budgets, and goals in one report.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-semibold rounded-full"
+                      onClick={handleExportCsv}
+                      disabled={!hasReportData}
+                    >
+                      Export CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-semibold rounded-full"
+                      onClick={handleExportPdf}
+                      disabled={!hasReportData}
+                    >
+                      Export PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-semibold rounded-full"
+                      onClick={handleSetAlerts}
+                    >
+                      Set Alerts
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-card/70 p-4 space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      Schedule reports
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Automate weekly or monthly exports.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        reportSchedule.enabled
+                          ? 'text-emerald-600 dark:text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
+                          : 'text-muted-foreground border-border/60'
+                      }
+                    >
+                      {reportSchedule.enabled ? 'Active' : 'Paused'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 rounded-full px-3 text-xs"
+                      onClick={handleScheduleToggle}
+                      aria-pressed={reportSchedule.enabled}
+                    >
+                      {reportSchedule.enabled ? 'Pause' : 'Enable'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">
+                      Frequency
+                    </Label>
+                    <Select
+                      value={reportSchedule.frequency}
+                      onValueChange={(value) =>
+                        handleScheduleFrequencyChange(value as ReportFrequency)
+                      }
+                      disabled={!reportSchedule.enabled}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Weekly">Weekly</SelectItem>
+                        <SelectItem value="Monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">
+                      {reportSchedule.frequency === 'Weekly'
+                        ? 'Day of week'
+                        : 'Day of month'}
+                    </Label>
+                    <Select
+                      value={reportSchedule.day}
+                      onValueChange={(value) =>
+                        setReportSchedule((prev) => ({ ...prev, day: value }))
+                      }
+                      disabled={!reportSchedule.enabled}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select day" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {scheduleDayOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label
+                      htmlFor="report-time"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Time
+                    </Label>
+                    <Input
+                      id="report-time"
+                      type="time"
+                      value={reportSchedule.time}
+                      onChange={(event) =>
+                        setReportSchedule((prev) => ({
+                          ...prev,
+                          time: event.target.value,
+                        }))
+                      }
+                      disabled={!reportSchedule.enabled}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">
+                      Delivery
+                    </Label>
+                    <div className="flex h-10 items-center rounded-md border border-border/60 bg-muted/30 px-3 text-sm text-muted-foreground">
+                      Download
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Next scheduled report
+                    </p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {nextScheduledRunLabel}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="rounded-full text-xs"
+                    onClick={handleScheduleSave}
+                    disabled={!reportSchedule.enabled}
+                  >
+                    Save schedule
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

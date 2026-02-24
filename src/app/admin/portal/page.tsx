@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { geoNaturalEarth1, geoPath } from 'd3-geo'
 import {
   AlertTriangle,
   BarChart3,
@@ -24,10 +25,86 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
+import { feature } from 'topojson-client'
+import worldAtlasCountries from 'world-atlas/countries-110m.json'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+
+const ADMIN_DEMOGRAPHICS_MAP_VIEWBOX = {
+  width: 960,
+  height: 420,
+} as const
+
+type TProjectedMapPosition = {
+  left: string
+  top: string
+}
+
+type TWorldAtlasTopology = {
+  type: 'Topology'
+  arcs: unknown[]
+  objects: {
+    countries: Parameters<typeof feature>[1]
+  }
+  bbox?: [number, number, number, number]
+  transform?: unknown
+}
+
+const adminDemographicsWorldMap = (() => {
+  const topology = worldAtlasCountries as unknown as TWorldAtlasTopology
+  const countriesFeatureCollection = feature(
+    topology as Parameters<typeof feature>[0],
+    topology.objects.countries
+  )
+  const projection = geoNaturalEarth1().fitExtent(
+    [
+      [16, 18],
+      [
+        ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.width - 16,
+        ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.height - 18,
+      ],
+    ],
+    countriesFeatureCollection
+  )
+  const pathGenerator = geoPath(projection)
+  const features =
+    countriesFeatureCollection.type === 'FeatureCollection'
+      ? countriesFeatureCollection.features
+      : [countriesFeatureCollection]
+
+  const countryPaths = features
+    .map((worldFeature, index) => ({
+      id: String(worldFeature.id ?? index),
+      d: pathGenerator(worldFeature),
+    }))
+    .filter(
+      (worldFeature): worldFeature is { id: string; d: string } =>
+        typeof worldFeature.d === 'string' && worldFeature.d.length > 0
+    )
+
+  const projectToPercent = (
+    longitude: number,
+    latitude: number
+  ): TProjectedMapPosition | null => {
+    const point = projection([longitude, latitude])
+    if (!point) {
+      return null
+    }
+
+    const [x, y] = point
+    return {
+      left: `${(x / ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.width) * 100}%`,
+      top: `${(y / ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.height) * 100}%`,
+    }
+  }
+
+  return {
+    countryPaths,
+    projectToPercent,
+  }
+})()
 
 interface IAdminSummary {
   usersCount: number
@@ -431,49 +508,46 @@ export default function AdminPortalPage() {
       { left: '70%', top: '46%' },
       { left: '84%', top: '58%' },
     ] as const
-    const demographicsCountryMapPositions: Record<
-      string,
-      { left: string; top: string }
-    > = {
-      US: { left: '20%', top: '39%' },
-      USA: { left: '20%', top: '39%' },
-      'UNITED STATES': { left: '20%', top: '39%' },
-      CA: { left: '18%', top: '31%' },
-      CANADA: { left: '18%', top: '31%' },
-      MX: { left: '17%', top: '49%' },
-      MEXICO: { left: '17%', top: '49%' },
-      BR: { left: '28%', top: '67%' },
-      BRAZIL: { left: '28%', top: '67%' },
-      GB: { left: '47%', top: '31%' },
-      UK: { left: '47%', top: '31%' },
-      'UNITED KINGDOM': { left: '47%', top: '31%' },
-      DE: { left: '50%', top: '33%' },
-      GERMANY: { left: '50%', top: '33%' },
-      FR: { left: '48%', top: '35%' },
-      FRANCE: { left: '48%', top: '35%' },
-      ES: { left: '47%', top: '38%' },
-      SPAIN: { left: '47%', top: '38%' },
-      IT: { left: '51%', top: '38%' },
-      ITALY: { left: '51%', top: '38%' },
-      IN: { left: '66%', top: '48%' },
-      INDIA: { left: '66%', top: '48%' },
-      CN: { left: '73%', top: '38%' },
-      CHINA: { left: '73%', top: '38%' },
-      JP: { left: '81%', top: '38%' },
-      JAPAN: { left: '81%', top: '38%' },
-      KR: { left: '78%', top: '38%' },
-      'SOUTH KOREA': { left: '78%', top: '38%' },
-      SG: { left: '71%', top: '56%' },
-      SINGAPORE: { left: '71%', top: '56%' },
-      AU: { left: '82%', top: '72%' },
-      AUSTRALIA: { left: '82%', top: '72%' },
-      ZA: { left: '55%', top: '72%' },
-      'SOUTH AFRICA': { left: '55%', top: '72%' },
-      NG: { left: '53%', top: '57%' },
-      NIGERIA: { left: '53%', top: '57%' },
-      AE: { left: '61%', top: '47%' },
-      UAE: { left: '61%', top: '47%' },
-      'UNITED ARAB EMIRATES': { left: '61%', top: '47%' },
+    const demographicsCountryCoordinates: Record<string, [number, number]> = {
+      US: [-98.5795, 39.8283],
+      USA: [-98.5795, 39.8283],
+      'UNITED STATES': [-98.5795, 39.8283],
+      CA: [-106.3468, 56.1304],
+      CANADA: [-106.3468, 56.1304],
+      MX: [-102.5528, 23.6345],
+      MEXICO: [-102.5528, 23.6345],
+      BR: [-51.9253, -14.235],
+      BRAZIL: [-51.9253, -14.235],
+      GB: [-3.436, 55.3781],
+      UK: [-3.436, 55.3781],
+      'UNITED KINGDOM': [-3.436, 55.3781],
+      DE: [10.4515, 51.1657],
+      GERMANY: [10.4515, 51.1657],
+      FR: [2.2137, 46.2276],
+      FRANCE: [2.2137, 46.2276],
+      ES: [-3.7492, 40.4637],
+      SPAIN: [-3.7492, 40.4637],
+      IT: [12.5674, 41.8719],
+      ITALY: [12.5674, 41.8719],
+      IN: [78.9629, 20.5937],
+      INDIA: [78.9629, 20.5937],
+      CN: [104.1954, 35.8617],
+      CHINA: [104.1954, 35.8617],
+      JP: [138.2529, 36.2048],
+      JAPAN: [138.2529, 36.2048],
+      KR: [127.7669, 35.9078],
+      'SOUTH KOREA': [127.7669, 35.9078],
+      SG: [103.8198, 1.3521],
+      SINGAPORE: [103.8198, 1.3521],
+      AU: [133.7751, -25.2744],
+      AUSTRALIA: [133.7751, -25.2744],
+      ZA: [22.9375, -30.5595],
+      'SOUTH AFRICA': [22.9375, -30.5595],
+      NG: [8.6753, 9.082],
+      NIGERIA: [8.6753, 9.082],
+      AE: [53.8478, 23.4241],
+      UAE: [53.8478, 23.4241],
+      'UNITED ARAB EMIRATES': [53.8478, 23.4241],
     }
     const topLoginLocations =
       analytics?.engagementMetrics.topLoginLocations ?? []
@@ -529,8 +603,16 @@ export default function AdminPortalPage() {
           ? (location.count / totalVisibleSessions) * 100
           : 0
       const accentStyle = accentStyles[index % accentStyles.length]
+      const projectedMapPosition = demographicsCountryCoordinates[
+        normalizedCountryKey
+      ]
+        ? adminDemographicsWorldMap.projectToPercent(
+            demographicsCountryCoordinates[normalizedCountryKey][0],
+            demographicsCountryCoordinates[normalizedCountryKey][1]
+          )
+        : null
       const mapPosition =
-        demographicsCountryMapPositions[normalizedCountryKey] ??
+        projectedMapPosition ??
         demographicsFallbackMarkerPositions[
           index % demographicsFallbackMarkerPositions.length
         ]
@@ -1062,13 +1144,13 @@ export default function AdminPortalPage() {
                             Session activity hotspots
                           </span>
                         </div>
-                        <div className="relative min-h-[260px] overflow-hidden rounded-lg border border-border/40 bg-card/50 p-2">
+                        <div className="relative aspect-[16/7] w-full overflow-hidden rounded-lg border border-border/40 bg-card/50 p-2">
                           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:28px_28px]" />
                           <svg
-                            viewBox="0 0 960 420"
-                            className="relative h-[260px] w-full rounded-md"
+                            viewBox={`0 0 ${ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.width} ${ADMIN_DEMOGRAPHICS_MAP_VIEWBOX.height}`}
+                            className="relative h-full w-full rounded-md"
                             aria-hidden="true"
-                            preserveAspectRatio="none"
+                            preserveAspectRatio="xMidYMid meet"
                           >
                             <defs>
                               <linearGradient
@@ -1143,40 +1225,31 @@ export default function AdminPortalPage() {
                               stroke="url(#demographicsMapStroke)"
                               strokeWidth="1.5"
                             >
-                              <path d="M62 133l26-18 22-2 18-17 24-18 34-7 25-4 20 4 25 3 18 9 6 16-17 9-20-1-15 6 5 13 22 6 18 19-3 17-24 14-26 8-14 14-13 15-19 6-22-2-25-11-31-4-14-15 4-18 20-13 24-5 16-10 10-27z" />
-                              <path d="M250 74l18-9 28 3 5 14-12 11-24 1-16-8 1-12z" />
-                              <path d="M282 201l22 8 17 22 9 27-9 18 8 18 1 21-11 16-9 15-10 22-12 18-18-14-5-24 5-22-14-22-7-27 4-27 12-22 17-9z" />
-                              <path d="M407 125l17-11 27-6 21-1 19 6 12 10-8 10-16 7-23 4-21 1-18-3-10-8v-9z" />
-                              <path d="M482 143l29-6 33 0 18-7 14 7 10 15-7 11-21 3-19 3-14 6-12 10-18 1-13-8-4-13 7-11-3-11z" />
-                              <path d="M528 192l23-13 24 6 15 16 7 21-7 17 10 18 13 20 11 24-8 18-20 22-22 9-19-10-9-20-7-25-8-20-8-18-15-20-2-27 12-15z" />
-                              <path d="M577 147l28-9 36-11 34 2 26-8 34 3 26 4 27 13 22 10 28 0 30 11 21 15 20 21-4 21-26 11-26 5-16 9-19 11-24 2-15 15-25 3-18-9-30 3-18 10-23 3-18 2-13 13-18 5-12-11 7-19 11-18-3-18-13-14-14-16-11-17-15-18z" />
-                              <path d="M789 279l34-13 46 3 35 12 21 17 19 22-12 16-21 13-36 6-42-2-31-9-18-16-7-15 12-14z" />
-                              <path d="M748 255l11-7 14 4 4 11-7 9-13-3-10-8 1-6z" />
-                              <path d="M734 223l8-4 8 3 3 7-5 8-8 1-6-5v-10z" />
-                              <path d="M167 181l9 1 6 7-4 8-8 1-6-6 3-11z" />
-                              <path d="M617 351l8-4 7 4 1 8-7 6-8-3-2-11z" />
+                              {adminDemographicsWorldMap.countryPaths.map(
+                                (countryPath) => (
+                                  <path
+                                    key={countryPath.id}
+                                    d={countryPath.d}
+                                    vectorEffect="non-scaling-stroke"
+                                  />
+                                )
+                              )}
                             </g>
                             <g fill="rgba(148,163,184,0.15)">
                               {[
-                                [112, 146],
-                                [148, 124],
-                                [192, 110],
-                                [226, 132],
-                                [272, 150],
-                                [446, 132],
-                                [498, 154],
-                                [548, 146],
-                                [602, 166],
-                                [660, 145],
-                                [726, 156],
-                                [790, 172],
-                                [852, 197],
-                                [548, 227],
-                                [570, 286],
-                                [612, 333],
-                                [300, 273],
-                                [286, 334],
-                                [844, 318],
+                                [116, 120],
+                                [172, 151],
+                                [260, 132],
+                                [420, 122],
+                                [496, 154],
+                                [568, 136],
+                                [642, 154],
+                                [728, 144],
+                                [812, 174],
+                                [568, 238],
+                                [324, 308],
+                                [624, 326],
+                                [844, 304],
                               ].map(([cx, cy], index) => (
                                 <circle
                                   key={`mesh-${index}`}

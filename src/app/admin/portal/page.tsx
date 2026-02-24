@@ -2,16 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  AlertTriangle,
   BarChart3,
+  BellRing,
+  BadgeCheck,
+  Clock3,
   CreditCard,
+  DollarSign,
+  Gem,
   LayoutDashboard,
   Loader2,
   LogOut,
   Mail,
+  MapPin,
   RefreshCcw,
   Shield,
+  Target,
   Trash2,
+  UserCheck,
+  UserPlus,
   Users,
+  XCircle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -365,21 +376,41 @@ export default function AdminPortalPage() {
             {
               label: 'Platform users',
               value: analytics.summary.usersCount.toLocaleString(),
+              helper: `${analytics.userMetrics.newUsersLast7Days.toLocaleString()} new in 7d`,
+              icon: Users,
+              iconClassName: 'text-cyan-300',
+              iconChipClassName:
+                'border-cyan-400/30 bg-cyan-500/10 text-cyan-300',
             },
             {
               label: 'Paying users',
               value: analytics.subscriptionMetrics.payingUsers.toLocaleString(),
+              helper: `${analytics.summary.activeSubscriptions.toLocaleString()} active subscriptions`,
+              icon: CreditCard,
+              iconClassName: 'text-violet-300',
+              iconChipClassName:
+                'border-violet-400/30 bg-violet-500/10 text-violet-300',
             },
             {
               label: 'Projected MRR',
               value: formatUsdFromCents(
                 analytics.subscriptionMetrics.projectedMonthlyRevenueInCents
               ),
+              helper: `${analytics.subscriptionMetrics.proSubscribers.toLocaleString()} Pro subscribers`,
+              icon: DollarSign,
+              iconClassName: 'text-emerald-300',
+              iconChipClassName:
+                'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
             },
             {
               label: 'Sessions (7d)',
               value:
                 analytics.engagementMetrics.sessionsLast7Days.toLocaleString(),
+              helper: `${analytics.engagementMetrics.sessionsLast24Hours.toLocaleString()} in last 24h`,
+              icon: Clock3,
+              iconClassName: 'text-amber-300',
+              iconChipClassName:
+                'border-amber-400/30 bg-amber-500/10 text-amber-300',
             },
           ]
         : [],
@@ -610,13 +641,29 @@ export default function AdminPortalPage() {
                     key={card.label}
                     className="border-border/70 bg-card/90"
                   >
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm text-muted-foreground">
-                        {card.label}
-                      </CardTitle>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <CardTitle className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                            {card.label}
+                          </CardTitle>
+                          <p className="text-2xl font-semibold tracking-tight text-foreground">
+                            {card.value}
+                          </p>
+                        </div>
+                        <div
+                          className={`rounded-xl border p-2 ${card.iconChipClassName}`}
+                        >
+                          <card.icon
+                            className={`h-4 w-4 ${card.iconClassName}`}
+                          />
+                        </div>
+                      </div>
                     </CardHeader>
-                    <CardContent className="text-2xl font-semibold">
-                      {card.value}
+                    <CardContent className="pt-0">
+                      <div className="rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-xs text-muted-foreground">
+                        {card.helper}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -625,76 +672,165 @@ export default function AdminPortalPage() {
               <div className="grid gap-4 xl:grid-cols-3">
                 <Card className="border-border/70 bg-card/90 xl:col-span-2">
                   <CardHeader>
-                    <CardTitle>User analytics</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-1.5">
+                        <Users className="h-4 w-4 text-cyan-300" />
+                      </div>
+                      User analytics
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        New users (7d / 30d)
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <UserPlus className="h-4 w-4 text-cyan-300" />
+                        <span>New users (7d / 30d)</span>
+                      </div>
                       <p className="mt-1 text-lg font-semibold">
                         {analytics?.userMetrics.newUsersLast7Days ?? 0} /{' '}
                         {analytics?.userMetrics.newUsersLast30Days ?? 0}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Verified / bank-connected / superusers
-                      </p>
-                      <p className="mt-1 text-lg font-semibold">
-                        {analytics?.userMetrics.verifiedUsers ?? 0} /{' '}
-                        {analytics?.userMetrics.connectedBankUsers ?? 0} /{' '}
-                        {analytics?.userMetrics.superUsers ?? 0}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <UserCheck className="h-4 w-4 text-emerald-300" />
+                        <span>Account quality & access</span>
+                      </div>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            Verified
+                          </span>
+                          <span className="font-semibold">
+                            {analytics?.userMetrics.verifiedUsers ?? 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            Bank-connected
+                          </span>
+                          <span className="font-semibold">
+                            {analytics?.userMetrics.connectedBankUsers ?? 0}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            Superusers
+                          </span>
+                          <span className="font-semibold">
+                            {analytics?.userMetrics.superUsers ?? 0}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Contacts (7d / 30d)
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Mail className="h-4 w-4 text-violet-300" />
+                        <span>Contacts (7d / 30d)</span>
+                      </div>
                       <p className="mt-1 text-lg font-semibold">
                         {analytics?.operationsMetrics.contactsLast7Days ?? 0} /{' '}
                         {analytics?.operationsMetrics.contactsLast30Days ?? 0}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border/60 bg-background/60 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        Goals / reminders
-                      </p>
-                      <p className="mt-1 text-lg font-semibold">
-                        {analytics?.operationsMetrics.totalGoals ?? 0} /{' '}
-                        {analytics?.operationsMetrics.totalReminders ?? 0}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Target className="h-4 w-4 text-amber-300" />
+                        <span>Planning objects</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="inline-flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2.5 py-1 text-xs">
+                          <Target className="h-3.5 w-3.5 text-amber-300" />
+                          <span className="text-muted-foreground">Goals</span>
+                          <span className="font-semibold">
+                            {analytics?.operationsMetrics.totalGoals ?? 0}
+                          </span>
+                        </div>
+                        <div className="inline-flex items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2.5 py-1 text-xs">
+                          <BellRing className="h-3.5 w-3.5 text-cyan-300" />
+                          <span className="text-muted-foreground">
+                            Reminders
+                          </span>
+                          <span className="font-semibold">
+                            {analytics?.operationsMetrics.totalReminders ?? 0}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-border/70 bg-card/90">
                   <CardHeader>
-                    <CardTitle>Plan health</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 p-1.5">
+                        <CreditCard className="h-4 w-4 text-emerald-300" />
+                      </div>
+                      Plan health
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg border border-border/60 bg-background/60 p-2">
+                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                          Active
+                        </p>
+                        <p className="mt-1 text-lg font-semibold">
+                          {analytics?.subscriptionMetrics.statusBreakdown
+                            .active ?? 0}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-border/60 bg-background/60 p-2">
+                        <p className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                          Trialing
+                        </p>
+                        <p className="mt-1 text-lg font-semibold">
+                          {analytics?.subscriptionMetrics.statusBreakdown
+                            .trialing ?? 0}
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
-                      <span className="text-muted-foreground">Basic</span>
-                      <span>
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md border border-cyan-400/30 bg-cyan-500/10 p-1">
+                          <BadgeCheck className="h-3.5 w-3.5 text-cyan-300" />
+                        </div>
+                        <span className="text-muted-foreground">Basic</span>
+                      </div>
+                      <span className="font-semibold">
                         {analytics?.subscriptionMetrics.basicSubscribers ?? 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
-                      <span className="text-muted-foreground">Pro</span>
-                      <span>
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md border border-violet-400/30 bg-violet-500/10 p-1">
+                          <Gem className="h-3.5 w-3.5 text-violet-300" />
+                        </div>
+                        <span className="text-muted-foreground">Pro</span>
+                      </div>
+                      <span className="font-semibold">
                         {analytics?.subscriptionMetrics.proSubscribers ?? 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
-                      <span className="text-muted-foreground">Past due</span>
-                      <span>
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md border border-amber-400/30 bg-amber-500/10 p-1">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-300" />
+                        </div>
+                        <span className="text-muted-foreground">Past due</span>
+                      </div>
+                      <span className="font-semibold">
                         {analytics?.subscriptionMetrics.statusBreakdown
                           .pastDue ?? 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm">
-                      <span className="text-muted-foreground">Canceled</span>
-                      <span>
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-md border border-rose-400/30 bg-rose-500/10 p-1">
+                          <XCircle className="h-3.5 w-3.5 text-rose-300" />
+                        </div>
+                        <span className="text-muted-foreground">Canceled</span>
+                      </div>
+                      <span className="font-semibold">
                         {analytics?.subscriptionMetrics.statusBreakdown
                           .canceled ?? 0}
                       </span>
@@ -705,22 +841,49 @@ export default function AdminPortalPage() {
 
               <Card className="border-border/70 bg-card/90">
                 <CardHeader>
-                  <CardTitle>Top login locations</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 p-1.5">
+                      <MapPin className="h-4 w-4 text-cyan-300" />
+                    </div>
+                    Top login locations
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   {analytics?.engagementMetrics.topLoginLocations.length ? (
                     analytics.engagementMetrics.topLoginLocations.map(
-                      (location) => (
-                        <div
-                          key={`${location.location}-${location.count}`}
-                          className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 p-2 text-sm"
-                        >
-                          <span className="truncate text-muted-foreground">
-                            {location.location}
-                          </span>
-                          <Badge variant="secondary">{location.count}</Badge>
-                        </div>
-                      )
+                      (location, index, allLocations) => {
+                        const total = allLocations.reduce(
+                          (sum, item) => sum + item.count,
+                          0
+                        )
+                        const percentage =
+                          total > 0
+                            ? ((location.count / total) * 100).toFixed(1)
+                            : '0.0'
+                        return (
+                          <div
+                            key={`${location.location}-${location.count}`}
+                            className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/60 p-2.5 text-sm"
+                          >
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/60 bg-card/80 text-xs font-semibold text-muted-foreground">
+                                {index + 1}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-foreground">
+                                  {location.location}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {percentage}% of visible sessions
+                                </p>
+                              </div>
+                            </div>
+                            <Badge variant="secondary" className="shrink-0">
+                              {location.count}
+                            </Badge>
+                          </div>
+                        )
+                      }
                     )
                   ) : (
                     <p className="text-sm text-muted-foreground">

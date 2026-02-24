@@ -28,6 +28,7 @@ const publicPlanCatalog = [
   {
     plan: 'BASIC',
     name: 'Basic',
+    compareAtMonthlyPriceLabel: '$10/mo',
     monthlyPriceLabel: '$4/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
@@ -41,6 +42,7 @@ const publicPlanCatalog = [
   {
     plan: 'PRO',
     name: 'Pro',
+    compareAtMonthlyPriceLabel: '$24/mo',
     monthlyPriceLabel: '$9/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
@@ -315,14 +317,22 @@ export default function BillingPage() {
                       ) : null}
                     </span>
                   </div>
-                  <span
-                    className={
-                      'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
-                      (isPopularPlan ? 'text-emerald-200' : 'text-foreground')
-                    }
-                  >
-                    {plan.monthlyPriceLabel}
-                  </span>
+                  <div className="space-y-1">
+                    {'compareAtMonthlyPriceLabel' in plan &&
+                    plan.compareAtMonthlyPriceLabel ? (
+                      <p className="text-sm font-medium text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
+                        {plan.compareAtMonthlyPriceLabel}
+                      </p>
+                    ) : null}
+                    <span
+                      className={
+                        'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
+                        (isPopularPlan ? 'text-emerald-200' : 'text-foreground')
+                      }
+                    >
+                      {plan.monthlyPriceLabel}
+                    </span>
+                  </div>
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {plan.description}

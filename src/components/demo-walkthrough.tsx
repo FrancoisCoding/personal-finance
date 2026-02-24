@@ -449,6 +449,7 @@ const DemoWalkthrough = ({
   onClose,
   onComplete,
 }: DemoWalkthroughProps) => {
+  const overlayRootAttribute = 'data-demo-walkthrough-overlay'
   const router = useRouter()
   const pathname = usePathname()
   const [activeTourId, setActiveTourId] = useState<string | null>(null)
@@ -456,6 +457,7 @@ const DemoWalkthrough = ({
   const [showAdvancedTours, setShowAdvancedTours] = useState(false)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   const pendingRouteRef = useRef<string | null>(null)
+  const lastHighlightRectKeyRef = useRef<string | null>(null)
   const activeTour = useMemo(
     () => walkthroughTours.find((tour) => tour.id === activeTourId) ?? null,
     [activeTourId]
@@ -577,6 +579,24 @@ const DemoWalkthrough = ({
     const maxFrames = 180
     let hasAppliedInitialScroll = false
 
+    const setHighlightRectIfChanged = (nextRect: DOMRect | null) => {
+      const nextKey = nextRect
+        ? [
+            Math.round(nextRect.top),
+            Math.round(nextRect.left),
+            Math.round(nextRect.width),
+            Math.round(nextRect.height),
+          ].join(':')
+        : null
+
+      if (lastHighlightRectKeyRef.current === nextKey) {
+        return
+      }
+
+      lastHighlightRectKeyRef.current = nextKey
+      setHighlightRect(nextRect)
+    }
+
     const applyTargetScroll = (target: HTMLElement) => {
       if (hasAppliedInitialScroll) {
         return
@@ -598,11 +618,11 @@ const DemoWalkthrough = ({
         `[data-demo-step="${activeStep.target}"]`
       ) as HTMLElement | null
       if (!target) {
-        setHighlightRect(null)
+        setHighlightRectIfChanged(null)
         return
       }
       applyTargetScroll(target)
-      setHighlightRect(target.getBoundingClientRect())
+      setHighlightRectIfChanged(target.getBoundingClientRect())
     }
 
     const target = document.querySelector(
@@ -629,7 +649,22 @@ const DemoWalkthrough = ({
       resizeObserver.observe(target)
     }
 
-    const mutationObserver = new MutationObserver(() => {
+    const mutationObserver = new MutationObserver((mutationList) => {
+      const containsNonOverlayMutation = mutationList.some((mutation) => {
+        const mutationTarget =
+          mutation.target instanceof Element ? mutation.target : null
+
+        if (!mutationTarget) {
+          return true
+        }
+
+        return !mutationTarget.closest(`[${overlayRootAttribute}="true"]`)
+      })
+
+      if (!containsNonOverlayMutation) {
+        return
+      }
+
       const refreshedTarget = document.querySelector(
         `[data-demo-step="${activeStep.target}"]`
       ) as HTMLElement | null
@@ -644,7 +679,6 @@ const DemoWalkthrough = ({
     })
     if (document.body) {
       mutationObserver.observe(document.body, {
-        attributes: true,
         childList: true,
         subtree: true,
       })
@@ -662,7 +696,7 @@ const DemoWalkthrough = ({
       window.removeEventListener('resize', updateHighlight)
       window.removeEventListener('scroll', updateHighlight, true)
     }
-  }, [activeStep, isOpen, pathname, router])
+  }, [activeStep, isOpen, overlayRootAttribute, pathname, router])
 
   const tooltipStyle = useMemo(() => {
     if (!activeStep || !highlightRect) {
@@ -743,7 +777,10 @@ const DemoWalkthrough = ({
 
   const overlay =
     activeTour && activeStep ? (
-      <div className="fixed inset-0 z-[80]">
+      <div
+        className="fixed inset-0 z-[80]"
+        {...{ [overlayRootAttribute]: 'true' }}
+      >
         <div className="absolute inset-0 bg-black/60" />
 
         {highlightRect ? (
@@ -826,7 +863,10 @@ const DemoWalkthrough = ({
         </div>
       </div>
     ) : (
-      <div className="fixed inset-0 z-[80]">
+      <div
+        className="fixed inset-0 z-[80]"
+        {...{ [overlayRootAttribute]: 'true' }}
+      >
         <div className="absolute inset-0 bg-black/70" />
         <div className="absolute inset-0 flex items-center justify-center p-4">
           <div

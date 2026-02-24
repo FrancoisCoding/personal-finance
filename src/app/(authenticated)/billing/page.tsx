@@ -28,7 +28,7 @@ const publicPlanCatalog = [
   {
     plan: 'BASIC',
     name: 'Basic',
-    compareAtMonthlyPriceLabel: '$10/mo',
+    compareAtMonthlyPriceLabel: '$5/mo',
     monthlyPriceLabel: '$4/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
@@ -42,7 +42,7 @@ const publicPlanCatalog = [
   {
     plan: 'PRO',
     name: 'Pro',
-    compareAtMonthlyPriceLabel: '$24/mo',
+    compareAtMonthlyPriceLabel: '$10/mo',
     monthlyPriceLabel: '$9/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
@@ -126,7 +126,17 @@ export default function BillingPage() {
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        throw new Error(payload?.error || 'Unable to start checkout.')
+        const debugMessage =
+          typeof payload?.debug?.message === 'string'
+            ? payload.debug.message
+            : ''
+        const debugParam =
+          typeof payload?.debug?.param === 'string'
+            ? ` (${payload.debug.param})`
+            : ''
+        const errorMessage =
+          (debugMessage ? `${debugMessage}${debugParam}` : '') || payload?.error
+        throw new Error(errorMessage || 'Unable to start checkout.')
       }
       if (!payload?.checkoutUrl) {
         throw new Error('Checkout session URL was not returned.')
@@ -193,13 +203,32 @@ export default function BillingPage() {
   const isStripeCheckoutConfigured = data?.isStripeCheckoutConfigured === true
   const isStripePortalConfigured = data?.isStripePortalConfigured === true
   const hasPaidSubscription = Boolean(data?.currentSubscription)
+  const compareAtLabelsByPlan = publicPlanCatalog.reduce<
+    Partial<Record<'FREE' | 'BASIC' | 'PRO', string>>
+  >((accumulator, plan) => {
+    if (
+      'compareAtMonthlyPriceLabel' in plan &&
+      plan.compareAtMonthlyPriceLabel
+    ) {
+      accumulator[plan.plan] = plan.compareAtMonthlyPriceLabel
+    }
+    return accumulator
+  }, {})
   const availablePlans =
-    data?.availablePlans.slice().sort((left, right) => {
-      return (
-        planOrder.indexOf(left.plan as (typeof planOrder)[number]) -
-        planOrder.indexOf(right.plan as (typeof planOrder)[number])
-      )
-    }) ?? publicPlanCatalog
+    data?.availablePlans
+      .slice()
+      .sort((left, right) => {
+        return (
+          planOrder.indexOf(left.plan as (typeof planOrder)[number]) -
+          planOrder.indexOf(right.plan as (typeof planOrder)[number])
+        )
+      })
+      .map((plan) => ({
+        ...plan,
+        compareAtMonthlyPriceLabel:
+          compareAtLabelsByPlan[plan.plan as 'FREE' | 'BASIC' | 'PRO'] ??
+          undefined,
+      })) ?? publicPlanCatalog
   const isLockedAccess = searchParams.get('locked') === '1'
 
   return (
@@ -317,12 +346,17 @@ export default function BillingPage() {
                       ) : null}
                     </span>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {'compareAtMonthlyPriceLabel' in plan &&
                     plan.compareAtMonthlyPriceLabel ? (
-                      <p className="text-sm font-medium text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
-                        {plan.compareAtMonthlyPriceLabel}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
+                          {plan.compareAtMonthlyPriceLabel}
+                        </span>
+                        <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                          Discount
+                        </span>
+                      </div>
                     ) : null}
                     <span
                       className={
@@ -332,6 +366,14 @@ export default function BillingPage() {
                     >
                       {plan.monthlyPriceLabel}
                     </span>
+                    {'compareAtMonthlyPriceLabel' in plan &&
+                    plan.compareAtMonthlyPriceLabel ? (
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {plan.compareAtMonthlyPriceLabel.replace('/mo', '')}
+                        {' -> '}
+                        {plan.monthlyPriceLabel.replace('/mo', '')} per month
+                      </p>
+                    ) : null}
                   </div>
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">

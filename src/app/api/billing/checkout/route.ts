@@ -62,6 +62,31 @@ const isMissingStripeCustomerError = (error: unknown) => {
   )
 }
 
+const isStripeTrialConflictError = (error: unknown) => {
+  const stripeError = error as
+    | {
+        param?: string
+        message?: string
+        raw?: { param?: string; message?: string }
+      }
+    | undefined
+
+  const param = stripeError?.param ?? stripeError?.raw?.param
+  if (param === 'subscription_data[trial_period_days]') {
+    return true
+  }
+
+  const message = (
+    stripeError?.message ??
+    stripeError?.raw?.message ??
+    ''
+  ).toLowerCase()
+  return (
+    message.includes('trial') &&
+    (message.includes('price') || message.includes('subscription_data'))
+  )
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!stripeClient) {
@@ -146,7 +171,10 @@ export async function POST(request: NextRequest) {
     const trialPeriodDays = isFirstTimeSubscriber ? 7 : 0
 
     const origin = resolveApplicationOrigin(request)
-    const createCheckoutSession = async (customerId: string) => {
+    const createCheckoutSession = async (
+      customerId: string,
+      includeTrialPeriod: boolean
+    ) => {
       return stripeClient.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
@@ -157,7 +185,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         subscription_data: {
-          ...(trialPeriodDays > 0 && { trial_period_days: trialPeriodDays }),
+          ...(includeTrialPeriod &&
+            trialPeriodDays > 0 && { trial_period_days: trialPeriodDays }),
           metadata: {
             userId,
             plan,
@@ -172,9 +201,25 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const createCheckoutSessionWithFallbacks = async (customerId: string) => {
+      try {
+        return await createCheckoutSession(customerId, true)
+      } catch (error) {
+        if (!isStripeTrialConflictError(error) || trialPeriodDays <= 0) {
+          throw error
+        }
+
+        console.warn(
+          'Stripe checkout trial configuration conflict detected. Retrying without trial_period_days.'
+        )
+        return createCheckoutSession(customerId, false)
+      }
+    }
+
     let checkoutSession
     try {
-      checkoutSession = await createCheckoutSession(stripeCustomerId)
+      checkoutSession =
+        await createCheckoutSessionWithFallbacks(stripeCustomerId)
     } catch (error) {
       if (!isMissingStripeCustomerError(error)) {
         throw error
@@ -188,7 +233,8 @@ export async function POST(request: NextRequest) {
         },
       })
       stripeCustomerId = customer.id
-      checkoutSession = await createCheckoutSession(stripeCustomerId)
+      checkoutSession =
+        await createCheckoutSessionWithFallbacks(stripeCustomerId)
     }
 
     return NextResponse.json({
@@ -211,9 +257,30 @@ export async function POST(request: NextRequest) {
       param: stripeError?.param ?? stripeError?.raw?.param,
       message: stripeError?.message ?? stripeError?.raw?.message,
       requestId: stripeError?.requestId,
+      priceIdPlanMode: {
+        isLiveSecretKey:
+          process.env.STRIPE_SECRET_KEY?.trim().startsWith('sk_live_'),
+        basicPriceConfigured: Boolean(
+          process.env.STRIPE_PRICE_BASIC_MONTHLY?.trim()
+        ),
+        proPriceConfigured: Boolean(
+          process.env.STRIPE_PRICE_PRO_MONTHLY?.trim()
+        ),
+      },
     })
+    const isDevelopment = process.env.NODE_ENV !== 'production'
     return NextResponse.json(
-      { error: 'Failed to create checkout session.' },
+      isDevelopment
+        ? {
+            error: 'Failed to create checkout session.',
+            debug: {
+              code: stripeError?.code,
+              param: stripeError?.param ?? stripeError?.raw?.param,
+              message: stripeError?.message ?? stripeError?.raw?.message,
+              requestId: stripeError?.requestId,
+            },
+          }
+        : { error: 'Failed to create checkout session.' },
       { status: 500 }
     )
   }

@@ -54,11 +54,27 @@ export const billingFeatureRequirements = {
 } as const
 
 export const getStripePriceIdForPlan = (plan: AppPlan) => {
-  if (plan === AppPlan.BASIC) {
-    return process.env.STRIPE_PRICE_BASIC_MONTHLY ?? ''
+  const normalizePriceId = (value: string | undefined) => {
+    const trimmedValue = value?.trim() ?? ''
+    if (!trimmedValue) {
+      return ''
+    }
+
+    if (
+      (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+      (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))
+    ) {
+      return trimmedValue.slice(1, -1).trim()
+    }
+
+    return trimmedValue
   }
 
-  return process.env.STRIPE_PRICE_PRO_MONTHLY ?? ''
+  if (plan === AppPlan.BASIC) {
+    return normalizePriceId(process.env.STRIPE_PRICE_BASIC_MONTHLY)
+  }
+
+  return normalizePriceId(process.env.STRIPE_PRICE_PRO_MONTHLY)
 }
 
 export const isActiveSubscriptionStatus = (status: AppSubscriptionStatus) => {

@@ -1,6 +1,22 @@
 import Stripe from 'stripe'
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+const normalizeStripeEnvValue = (value: string | undefined) => {
+  const trimmedValue = value?.trim() ?? ''
+  if (!trimmedValue) {
+    return ''
+  }
+
+  if (
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"))
+  ) {
+    return trimmedValue.slice(1, -1).trim()
+  }
+
+  return trimmedValue
+}
+
+const stripeSecretKey = normalizeStripeEnvValue(process.env.STRIPE_SECRET_KEY)
 
 export const stripeClient = stripeSecretKey
   ? new Stripe(stripeSecretKey, {

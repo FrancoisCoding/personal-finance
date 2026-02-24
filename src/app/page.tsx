@@ -290,7 +290,6 @@ export default function LandingPage() {
               title="Support"
               links={[
                 { label: 'Help Center', href: '/support' },
-                { label: 'Contact Us', href: '/support' },
                 { label: 'Status', href: '/status' },
               ]}
             />
@@ -306,26 +305,6 @@ export default function LandingPage() {
 
           <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
             <p>&copy; 2026 FinanceFlow Inc. All rights reserved.</p>
-            <div className="flex gap-8">
-              <Link
-                href="/privacy"
-                className="hover:text-foreground transition-colors"
-              >
-                Privacy
-              </Link>
-              <Link
-                href="/terms"
-                className="hover:text-foreground transition-colors"
-              >
-                Terms
-              </Link>
-              <Link
-                href="/cookies"
-                className="hover:text-foreground transition-colors"
-              >
-                Cookies
-              </Link>
-            </div>
           </div>
         </div>
       </footer>

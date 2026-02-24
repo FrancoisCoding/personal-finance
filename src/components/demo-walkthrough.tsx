@@ -574,24 +574,14 @@ const DemoWalkthrough = ({
 
     let rafId = 0
     let rafFrames = 0
-    const maxFrames = 24
+    const maxFrames = 180
+    let hasAppliedInitialScroll = false
 
-    const updateHighlight = () => {
-      const target = document.querySelector(
-        `[data-demo-step="${activeStep.target}"]`
-      ) as HTMLElement | null
-      if (!target) {
-        setHighlightRect(null)
+    const applyTargetScroll = (target: HTMLElement) => {
+      if (hasAppliedInitialScroll) {
         return
       }
-      setHighlightRect(target.getBoundingClientRect())
-    }
-
-    const target = document.querySelector(
-      `[data-demo-step="${activeStep.target}"]`
-    ) as HTMLElement | null
-
-    if (target) {
+      hasAppliedInitialScroll = true
       target.scrollIntoView({
         behavior: 'auto',
         block: activeStep.scroll ?? 'center',
@@ -601,6 +591,26 @@ const DemoWalkthrough = ({
           window.scrollBy({ top: activeStep.scrollOffsetY ?? 0, left: 0 })
         })
       }
+    }
+
+    const updateHighlight = () => {
+      const target = document.querySelector(
+        `[data-demo-step="${activeStep.target}"]`
+      ) as HTMLElement | null
+      if (!target) {
+        setHighlightRect(null)
+        return
+      }
+      applyTargetScroll(target)
+      setHighlightRect(target.getBoundingClientRect())
+    }
+
+    const target = document.querySelector(
+      `[data-demo-step="${activeStep.target}"]`
+    ) as HTMLElement | null
+
+    if (target) {
+      applyTargetScroll(target)
     }
 
     const loopUpdate = () => {
@@ -619,9 +629,21 @@ const DemoWalkthrough = ({
       resizeObserver.observe(target)
     }
 
-    const mutationObserver = new MutationObserver(updateHighlight)
-    if (target) {
-      mutationObserver.observe(target, {
+    const mutationObserver = new MutationObserver(() => {
+      const refreshedTarget = document.querySelector(
+        `[data-demo-step="${activeStep.target}"]`
+      ) as HTMLElement | null
+      if (refreshedTarget) {
+        try {
+          resizeObserver.observe(refreshedTarget)
+        } catch (error) {
+          void error
+        }
+      }
+      updateHighlight()
+    })
+    if (document.body) {
+      mutationObserver.observe(document.body, {
         attributes: true,
         childList: true,
         subtree: true,

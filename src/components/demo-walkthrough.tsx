@@ -18,7 +18,18 @@ type WalkthroughStep = {
   scrollOffsetY?: number
 }
 
-const walkthroughSteps: WalkthroughStep[] = [
+type WalkthroughTour = {
+  id: string
+  label: string
+  shortLabel: string
+  description: string
+  estimatedMinutes: number
+  steps: WalkthroughStep[]
+  group: 'core' | 'module' | 'advanced'
+  isRecommended?: boolean
+}
+
+const fullWalkthroughSteps: WalkthroughStep[] = [
   {
     id: 'welcome',
     target: 'demo-welcome',
@@ -313,6 +324,120 @@ const walkthroughSteps: WalkthroughStep[] = [
   },
 ]
 
+const stepLookup = new Map(fullWalkthroughSteps.map((step) => [step.id, step]))
+
+const getTourSteps = (stepIds: string[]) =>
+  stepIds
+    .map((stepId) => stepLookup.get(stepId))
+    .filter((step): step is WalkthroughStep => Boolean(step))
+
+const walkthroughTours: WalkthroughTour[] = [
+  {
+    id: 'quick-tour',
+    label: 'Quick tour',
+    shortLabel: 'Quick tour',
+    description:
+      'Best first-time overview of the product. Covers the main workflow and value in a short path.',
+    estimatedMinutes: 2,
+    group: 'core',
+    isRecommended: true,
+    steps: getTourSteps([
+      'welcome',
+      'navigation',
+      'search',
+      'overview',
+      'spending',
+      'recent-transactions',
+      'subscriptions-summary',
+      'assistant-header',
+    ]),
+  },
+  {
+    id: 'dashboard-tour',
+    label: 'Dashboard deep dive',
+    shortLabel: 'Dashboard tour',
+    description:
+      'Walk through the most useful dashboard widgets, trends, and planning signals.',
+    estimatedMinutes: 2,
+    group: 'module',
+    steps: getTourSteps([
+      'overview',
+      'net-worth',
+      'spending',
+      'budget-progress',
+      'goals-progress',
+      'recent-transactions',
+    ]),
+  },
+  {
+    id: 'transactions-tour',
+    label: 'Transactions tour',
+    shortLabel: 'Transactions',
+    description:
+      'Learn filtering, review flow, and how to scan transaction history quickly.',
+    estimatedMinutes: 1,
+    group: 'module',
+    steps: getTourSteps([
+      'transaction-filters',
+      'transactions',
+      'recent-transactions',
+    ]),
+  },
+  {
+    id: 'subscriptions-tour',
+    label: 'Subscriptions tour',
+    shortLabel: 'Subscriptions',
+    description:
+      'See recurring charges, renewals, and optimization opportunities in one flow.',
+    estimatedMinutes: 1,
+    group: 'module',
+    steps: getTourSteps([
+      'subscriptions-summary',
+      'subscriptions-active',
+      'subscriptions-optimizer',
+    ]),
+  },
+  {
+    id: 'assistant-tour',
+    label: 'Assistant tour',
+    shortLabel: 'Assistant',
+    description:
+      'Understand prompts, conversation flow, and how to ask better questions.',
+    estimatedMinutes: 1,
+    group: 'module',
+    steps: getTourSteps([
+      'assistant-header',
+      'assistant-prompts',
+      'assistant-composer',
+    ]),
+  },
+  {
+    id: 'pro-features-tour',
+    label: 'Pro features tour',
+    shortLabel: 'Pro features',
+    description:
+      'Preview premium tools like card perks tracking and the Credit Score Lab.',
+    estimatedMinutes: 2,
+    group: 'module',
+    steps: getTourSteps([
+      'card-perks-header',
+      'card-perks-list',
+      'credit-score-header',
+      'credit-score-factors',
+    ]),
+  },
+  {
+    id: 'full-tour',
+    label: 'Complete product tour',
+    shortLabel: 'Full tour',
+    description:
+      'Full walkthrough of every major surface. Best for evaluators and power users.',
+    estimatedMinutes: 7,
+    group: 'advanced',
+    steps: fullWalkthroughSteps,
+  },
+]
+
 interface DemoWalkthroughProps {
   isOpen: boolean
   onClose: () => void
@@ -326,24 +451,40 @@ const DemoWalkthrough = ({
 }: DemoWalkthroughProps) => {
   const router = useRouter()
   const pathname = usePathname()
+  const [activeTourId, setActiveTourId] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [showAdvancedTours, setShowAdvancedTours] = useState(false)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   const pendingRouteRef = useRef<string | null>(null)
+  const activeTour = useMemo(
+    () => walkthroughTours.find((tour) => tour.id === activeTourId) ?? null,
+    [activeTourId]
+  )
+  const activeSteps = activeTour?.steps ?? []
   const routesToPrefetch = useMemo(() => {
     return Array.from(
       new Set(
-        walkthroughSteps
+        walkthroughTours
+          .flatMap((tour) => tour.steps)
           .map((step) => step.route)
           .filter((route): route is string => Boolean(route))
       )
     )
   }, [])
-
-  const activeStep = walkthroughSteps[activeIndex]
+  const activeStep = activeSteps[activeIndex] ?? null
+  const coreTours = walkthroughTours.filter((tour) => tour.group === 'core')
+  const moduleTours = walkthroughTours.filter((tour) => tour.group === 'module')
+  const advancedTours = walkthroughTours.filter(
+    (tour) => tour.group === 'advanced'
+  )
 
   useEffect(() => {
     if (!isOpen) return
+    setActiveTourId(null)
     setActiveIndex(0)
+    setShowAdvancedTours(false)
+    setHighlightRect(null)
+    pendingRouteRef.current = null
   }, [isOpen])
 
   useEffect(() => {
@@ -353,14 +494,27 @@ const DemoWalkthrough = ({
     })
   }, [isOpen, router, routesToPrefetch])
 
+  const handleStartTour = useCallback((tourId: string) => {
+    setActiveTourId(tourId)
+    setActiveIndex(0)
+    setHighlightRect(null)
+  }, [])
+
+  const handleReturnToTourMenu = useCallback(() => {
+    setActiveTourId(null)
+    setActiveIndex(0)
+    setHighlightRect(null)
+  }, [])
+
   const handleNext = useCallback(() => {
-    const isLastStep = activeIndex === walkthroughSteps.length - 1
+    if (!activeTour) return
+    const isLastStep = activeIndex === activeSteps.length - 1
     if (isLastStep) {
       onComplete()
       return
     }
-    setActiveIndex((prev) => Math.min(prev + 1, walkthroughSteps.length - 1))
-  }, [activeIndex, onComplete])
+    setActiveIndex((prev) => Math.min(prev + 1, activeSteps.length - 1))
+  }, [activeIndex, activeSteps.length, activeTour, onComplete])
 
   const handleBack = useCallback(() => {
     setActiveIndex((prev) => Math.max(prev - 1, 0))
@@ -388,6 +542,9 @@ const DemoWalkthrough = ({
         onClose()
         return
       }
+      if (!activeStep) {
+        return
+      }
       if (event.key === 'ArrowRight' || event.key === 'Enter') {
         event.preventDefault()
         handleNext()
@@ -401,7 +558,7 @@ const DemoWalkthrough = ({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleBack, handleNext, isOpen, onClose])
+  }, [activeStep, handleBack, handleNext, isOpen, onClose])
 
   useEffect(() => {
     if (!isOpen || !activeStep) return
@@ -486,7 +643,7 @@ const DemoWalkthrough = ({
   }, [activeStep, isOpen, pathname, router])
 
   const tooltipStyle = useMemo(() => {
-    if (!highlightRect) {
+    if (!activeStep || !highlightRect) {
       return {
         top: '50%',
         left: '50%',
@@ -547,74 +704,274 @@ const DemoWalkthrough = ({
       top,
       left,
     }
-  }, [activeStep.offsetY, activeStep.placement, highlightRect])
+  }, [activeStep, highlightRect])
 
-  if (!isOpen || !activeStep) {
+  if (!isOpen) {
     return null
   }
 
-  const isLastStep = activeIndex === walkthroughSteps.length - 1
+  const isLastStep = activeStep ? activeIndex === activeSteps.length - 1 : false
 
   if (typeof document === 'undefined') {
     return null
   }
 
-  const overlay = (
-    <div className="fixed inset-0 z-[80]">
-      <div className="absolute inset-0 bg-black/60" />
+  const quickTour =
+    coreTours.find((tour) => tour.isRecommended) ?? coreTours[0] ?? null
 
-      {highlightRect ? (
+  const overlay =
+    activeTour && activeStep ? (
+      <div className="fixed inset-0 z-[80]">
+        <div className="absolute inset-0 bg-black/60" />
+
+        {highlightRect ? (
+          <div
+            className="absolute rounded-2xl ring-2 ring-white/70 transition-all duration-200 ease-out"
+            style={{
+              top: Math.max(highlightRect.top - 8, 8),
+              left: Math.max(highlightRect.left - 8, 8),
+              width: Math.max(highlightRect.width + 16, 24),
+              height: Math.max(highlightRect.height + 16, 24),
+              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+              transition:
+                'top 200ms ease-out, left 200ms ease-out, width 200ms ease-out, height 200ms ease-out',
+            }}
+          />
+        ) : null}
+
         <div
-          className="absolute rounded-2xl ring-2 ring-white/70 transition-all duration-200 ease-out"
-          style={{
-            top: Math.max(highlightRect.top - 8, 8),
-            left: Math.max(highlightRect.left - 8, 8),
-            width: Math.max(highlightRect.width + 16, 24),
-            height: Math.max(highlightRect.height + 16, 24),
-            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-            transition:
-              'top 200ms ease-out, left 200ms ease-out, width 200ms ease-out, height 200ms ease-out',
-          }}
-        />
-      ) : null}
-
-      <div
-        className={cn(
-          'absolute z-[90] w-[320px] rounded-2xl border border-border/60',
-          'bg-card/95 p-4 shadow-xl backdrop-blur transition-all duration-200 ease-out'
-        )}
-        style={tooltipStyle}
-      >
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Step {activeIndex + 1} of {walkthroughSteps.length}
-        </p>
-        <h3 className="mt-2 text-base font-semibold text-foreground">
-          {activeStep.title}
-        </h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {activeStep.description}
-        </p>
-        <div className="mt-4 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Skip
-          </Button>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              disabled={activeIndex === 0}
-            >
-              Back
+          className={cn(
+            'absolute z-[90] w-[320px] rounded-2xl border border-border/60',
+            'bg-card/95 p-4 shadow-xl backdrop-blur transition-all duration-200 ease-out'
+          )}
+          style={tooltipStyle}
+        >
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            {activeTour.shortLabel} • ~{activeTour.estimatedMinutes} min
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Step {activeIndex + 1} of {activeSteps.length}
+          </p>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted/50">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all duration-200"
+              style={{
+                width: `${((activeIndex + 1) / Math.max(activeSteps.length, 1)) * 100}%`,
+              }}
+            />
+          </div>
+          <h3 className="mt-3 text-base font-semibold text-foreground">
+            {activeStep.title}
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {activeStep.description}
+          </p>
+          <div className="mt-4 flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Skip
             </Button>
-            <Button size="sm" onClick={handleNext}>
-              {isLastStep ? 'Finish' : 'Next'}
-            </Button>
+            <div className="flex items-center gap-2">
+              {isLastStep ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReturnToTourMenu}
+                  >
+                    More tours
+                  </Button>
+                  <Button size="sm" onClick={onComplete}>
+                    Finish
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBack}
+                    disabled={activeIndex === 0}
+                  >
+                    Back
+                  </Button>
+                  <Button size="sm" onClick={handleNext}>
+                    Next
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    ) : (
+      <div className="fixed inset-0 z-[80]">
+        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <div
+            className={cn(
+              'w-full max-w-3xl rounded-3xl border border-border/60',
+              'bg-card/95 p-5 shadow-2xl backdrop-blur sm:p-6'
+            )}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Demo Tours
+                </p>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Pick a short walkthrough
+                </h2>
+                <p className="max-w-2xl text-sm text-muted-foreground">
+                  Start with the quick tour to learn the core workflow. You can
+                  also jump straight to a specific area.
+                </p>
+              </div>
+              {quickTour ? (
+                <Button
+                  onClick={() => handleStartTour(quickTour.id)}
+                  className="min-h-11 shrink-0"
+                >
+                  Start quick tour (Recommended)
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {coreTours.map((tour) => (
+                <button
+                  key={tour.id}
+                  type="button"
+                  onClick={() => handleStartTour(tour.id)}
+                  className={cn(
+                    'w-full rounded-2xl border px-4 py-4 text-left transition-colors',
+                    'border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50'
+                  )}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {tour.label}
+                    </p>
+                    {tour.isRecommended ? (
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.15em] text-emerald-500">
+                        Recommended
+                      </span>
+                    ) : null}
+                    <span className="text-xs text-muted-foreground">
+                      {tour.steps.length} steps • ~{tour.estimatedMinutes} min
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {tour.description}
+                  </p>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Skip to an area
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {moduleTours.map((tour) => (
+                  <button
+                    key={tour.id}
+                    type="button"
+                    onClick={() => handleStartTour(tour.id)}
+                    className={cn(
+                      'rounded-2xl border border-border/60 bg-muted/10 px-4 py-4 text-left',
+                      'transition-colors hover:bg-muted/20',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40'
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        {tour.label}
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {tour.steps.length} • ~{tour.estimatedMinutes}m
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      {tour.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {advancedTours.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-border/60 bg-muted/10 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Advanced tours
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Longer walkthroughs for evaluators and power users.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setShowAdvancedTours((previous) => !previous)
+                    }
+                    className="min-h-10"
+                  >
+                    {showAdvancedTours
+                      ? 'Hide advanced tours'
+                      : 'Show advanced tours'}
+                  </Button>
+                </div>
+
+                {showAdvancedTours ? (
+                  <div className="mt-4 grid gap-3">
+                    {advancedTours.map((tour) => (
+                      <button
+                        key={tour.id}
+                        type="button"
+                        onClick={() => handleStartTour(tour.id)}
+                        className={cn(
+                          'rounded-2xl border border-border/60 bg-background/60 px-4 py-4 text-left',
+                          'transition-colors hover:bg-background'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-semibold text-foreground">
+                            {tour.label}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {tour.steps.length} steps • ~{tour.estimatedMinutes}{' '}
+                            min
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {tour.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">
+                Tip: You can press{' '}
+                <kbd className="rounded border px-1.5 py-0.5">Esc</kbd> to skip
+                at any time.
+              </p>
+              <Button variant="ghost" onClick={onClose}>
+                Skip demo tours
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
 
   return createPortal(overlay, document.body)
 }

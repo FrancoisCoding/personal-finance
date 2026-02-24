@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import {
   notificationThresholds,
   useNotifications,
@@ -22,16 +22,31 @@ import { formatCurrency } from '@/lib/utils'
 const NotificationTriggers = () => {
   const { addNotification, isAlertRuleEnabled } = useNotifications()
   const { isDemoMode } = useDemoMode()
-  const { data: billingData } = useBillingStatus()
-  const { data: accounts = [] } = useAccounts()
-  const { data: transactions = [] } = useTransactions()
-  const { data: budgets = [] } = useBudgets()
-  const { data: goals = [] } = useGoals()
-  const { data: subscriptions = [] } = useSubscriptions()
+  const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
+  const { data: accounts = [], isLoading: isAccountsLoading } = useAccounts()
+  const { data: transactions = [], isLoading: isTransactionsLoading } =
+    useTransactions()
+  const { data: budgets = [], isLoading: isBudgetsLoading } = useBudgets()
+  const { data: goals = [], isLoading: isGoalsLoading } = useGoals()
+  const { data: subscriptions = [], isLoading: isSubscriptionsLoading } =
+    useSubscriptions()
   const { utilization: creditCardUtilization } = useCreditCardUtilization()
   const previousSubscriptionIds = useRef<string[]>([])
   const previousGoalIds = useRef<string[]>([])
+  const shouldSuppressInitialToastsRef = useRef(true)
   const hasProPerkAccess = isDemoMode || billingData?.currentPlan === 'PRO'
+
+  const addTriggeredNotification = useCallback(
+    (notification: Parameters<typeof addNotification>[0]) => {
+      addNotification({
+        ...notification,
+        showToast: shouldSuppressInitialToastsRef.current
+          ? false
+          : (notification.showToast ?? true),
+      })
+    },
+    [addNotification]
+  )
 
   useEffect(() => {
     if (accounts.length === 0) return
@@ -48,7 +63,7 @@ const NotificationTriggers = () => {
       liquidBalance > 0 &&
       liquidBalance <= notificationThresholds.lowBalance
     ) {
-      addNotification({
+      addTriggeredNotification({
         type: 'warning',
         title: 'Low cash balance',
         message: `Your cash balance is ${formatCurrency(
@@ -61,7 +76,7 @@ const NotificationTriggers = () => {
         throttleMinutes: 720,
       })
     }
-  }, [accounts, addNotification, isAlertRuleEnabled])
+  }, [accounts, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (!isAlertRuleEnabled('credit-utilization')) return
@@ -70,7 +85,7 @@ const NotificationTriggers = () => {
     }
 
     const monthKey = new Date().toISOString().slice(0, 7)
-    addNotification({
+    addTriggeredNotification({
       type: 'warning',
       title: 'Credit utilization elevated',
       message: `You are using ${creditCardUtilization.toFixed(
@@ -82,7 +97,7 @@ const NotificationTriggers = () => {
       dedupeKey: `utilization-${monthKey}`,
       throttleMinutes: 720,
     })
-  }, [creditCardUtilization, addNotification, isAlertRuleEnabled])
+  }, [creditCardUtilization, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (budgets.length === 0 || transactions.length === 0) return
@@ -127,7 +142,7 @@ const NotificationTriggers = () => {
         if (!budgetOverEnabled) {
           return
         }
-        addNotification({
+        addTriggeredNotification({
           type: 'error',
           title: 'Budget exceeded',
           message: `${budget.name} is over budget at ${formatCurrency(
@@ -146,7 +161,7 @@ const NotificationTriggers = () => {
         if (!budgetWarningEnabled) {
           return
         }
-        addNotification({
+        addTriggeredNotification({
           type: 'warning',
           title: 'Budget nearing limit',
           message: `${budget.name} is ${Math.round(percent * 100)}% used.`,
@@ -158,7 +173,7 @@ const NotificationTriggers = () => {
         })
       }
     })
-  }, [budgets, transactions, addNotification, isAlertRuleEnabled])
+  }, [budgets, transactions, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (transactions.length === 0) return
@@ -199,7 +214,7 @@ const NotificationTriggers = () => {
         previousTotal * (1 + notificationThresholds.spendingSpikeRatio) &&
       recentTotal - previousTotal >= notificationThresholds.spendingSpikeMinimum
     ) {
-      addNotification({
+      addTriggeredNotification({
         type: 'warning',
         title: 'Spending spike detected',
         message: `Last 7 days spending hit ${formatCurrency(
@@ -212,7 +227,7 @@ const NotificationTriggers = () => {
         throttleMinutes: 1440,
       })
     }
-  }, [transactions, addNotification, isAlertRuleEnabled])
+  }, [transactions, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (!hasProPerkAccess) return
@@ -228,7 +243,7 @@ const NotificationTriggers = () => {
       card.perks.forEach((perk) => {
         if (!perk.isExpiringSoon || perk.remainingAmount <= 0) return
         const monthKey = perk.cycleStartDate.toISOString().slice(0, 7)
-        addNotification({
+        addTriggeredNotification({
           type: 'info',
           title: 'Card perk expiring soon',
           message: `${perk.name} on ${
@@ -246,7 +261,7 @@ const NotificationTriggers = () => {
     })
   }, [
     accounts,
-    addNotification,
+    addTriggeredNotification,
     hasProPerkAccess,
     isAlertRuleEnabled,
     transactions,
@@ -294,7 +309,7 @@ const NotificationTriggers = () => {
     })
 
     largeTransactions.forEach((transaction) => {
-      addNotification({
+      addTriggeredNotification({
         type: 'info',
         title: 'Large transaction',
         message: `${transaction.description} for ${formatCurrency(
@@ -307,7 +322,7 @@ const NotificationTriggers = () => {
         throttleMinutes: 1440,
       })
     })
-  }, [transactions, addNotification, isAlertRuleEnabled])
+  }, [transactions, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (subscriptions.length === 0) return
@@ -325,7 +340,7 @@ const NotificationTriggers = () => {
         daysUntil >= 0 &&
         daysUntil <= notificationThresholds.subscriptionLookaheadDays
       ) {
-        addNotification({
+        addTriggeredNotification({
           type: 'info',
           title: 'Subscription due soon',
           message: `${subscription.name} renews in ${daysUntil} day${
@@ -341,7 +356,7 @@ const NotificationTriggers = () => {
         })
       }
     })
-  }, [subscriptions, addNotification, isAlertRuleEnabled])
+  }, [subscriptions, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (subscriptions.length === 0) return
@@ -360,7 +375,7 @@ const NotificationTriggers = () => {
     )
 
     newSubscriptions.forEach((subscription) => {
-      addNotification({
+      addTriggeredNotification({
         type: 'success',
         title: 'New subscription added',
         message: `${subscription.name} was added at ${formatCurrency(
@@ -377,7 +392,7 @@ const NotificationTriggers = () => {
     previousSubscriptionIds.current = subscriptions.map(
       (subscription) => subscription.id
     )
-  }, [subscriptions, addNotification, isAlertRuleEnabled])
+  }, [subscriptions, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (goals.length === 0) return
@@ -400,7 +415,7 @@ const NotificationTriggers = () => {
         daysUntil <= notificationThresholds.goalDeadlineDays &&
         progress < notificationThresholds.goalProgressWarning
       ) {
-        addNotification({
+        addTriggeredNotification({
           type: 'warning',
           title: 'Goal deadline approaching',
           message: `${goal.name} is ${Math.round(
@@ -417,7 +432,7 @@ const NotificationTriggers = () => {
       }
 
       if (completeEnabled && progress >= 1 && !goal.isCompleted) {
-        addNotification({
+        addTriggeredNotification({
           type: 'success',
           title: 'Goal achieved',
           message: `${goal.name} has reached ${formatCurrency(
@@ -431,7 +446,7 @@ const NotificationTriggers = () => {
         })
       }
     })
-  }, [goals, addNotification, isAlertRuleEnabled])
+  }, [goals, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (goals.length === 0) return
@@ -446,7 +461,7 @@ const NotificationTriggers = () => {
     const newGoals = goals.filter((goal) => !previousIds.has(goal.id))
 
     newGoals.forEach((goal) => {
-      addNotification({
+      addTriggeredNotification({
         type: 'success',
         title: 'New goal added',
         message: `${goal.name} is set for ${formatCurrency(
@@ -461,7 +476,7 @@ const NotificationTriggers = () => {
     })
 
     previousGoalIds.current = goals.map((goal) => goal.id)
-  }, [goals, addNotification, isAlertRuleEnabled])
+  }, [goals, addTriggeredNotification, isAlertRuleEnabled])
 
   useEffect(() => {
     if (transactions.length === 0) return
@@ -510,7 +525,7 @@ const NotificationTriggers = () => {
       previousIncome > 0 &&
       currentIncome < previousIncome * notificationThresholds.incomeDropRatio
     ) {
-      addNotification({
+      addTriggeredNotification({
         type: 'warning',
         title: 'Income trending down',
         message: `Income this month is ${formatCurrency(
@@ -523,7 +538,32 @@ const NotificationTriggers = () => {
         throttleMinutes: 1440,
       })
     }
-  }, [transactions, addNotification, isAlertRuleEnabled])
+  }, [transactions, addTriggeredNotification, isAlertRuleEnabled])
+
+  useEffect(() => {
+    if (!shouldSuppressInitialToastsRef.current) return
+
+    const isBillingStillLoading = !isDemoMode && isBillingLoading
+    const isAnyDataLoading =
+      isAccountsLoading ||
+      isTransactionsLoading ||
+      isBudgetsLoading ||
+      isGoalsLoading ||
+      isSubscriptionsLoading ||
+      isBillingStillLoading
+
+    if (isAnyDataLoading) return
+
+    shouldSuppressInitialToastsRef.current = false
+  }, [
+    isAccountsLoading,
+    isBillingLoading,
+    isBudgetsLoading,
+    isDemoMode,
+    isGoalsLoading,
+    isSubscriptionsLoading,
+    isTransactionsLoading,
+  ])
 
   return null
 }

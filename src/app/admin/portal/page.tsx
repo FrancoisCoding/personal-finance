@@ -484,6 +484,8 @@ export default function AdminPortalPage() {
         countryLabel,
         count: location.count,
         percentage,
+        pingDelayMs: index * 280,
+        pingDurationMs: 1800 + index * 180,
         ...accentStyle,
       }
     })
@@ -995,6 +997,20 @@ export default function AdminPortalPage() {
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(34,211,238,0.08),transparent_45%),radial-gradient(circle_at_65%_35%,rgba(99,102,241,0.10),transparent_45%),radial-gradient(circle_at_78%_66%,rgba(20,184,166,0.08),transparent_50%)]" />
                           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:22px_22px]" />
                         </div>
+                        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/50 bg-card/50 px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="relative inline-flex h-2.5 w-2.5">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-300" />
+                            </span>
+                            <span className="text-xs font-medium text-foreground">
+                              Live pings active
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            Session activity hotspots
+                          </span>
+                        </div>
                         <div className="relative grid min-h-[260px] grid-cols-10 grid-rows-6 gap-1 rounded-lg border border-border/40 bg-card/50 p-2">
                           {Array.from({ length: 60 }).map((_, index) => (
                             <div
@@ -1018,6 +1034,20 @@ export default function AdminPortalPage() {
                               >
                                 <div className="relative flex h-3.5 w-3.5 items-center justify-center">
                                   <span
+                                    className={`absolute h-5 w-5 rounded-full opacity-70 animate-ping ${location.dotClassName}`}
+                                    style={{
+                                      animationDelay: `${location.pingDelayMs}ms`,
+                                      animationDuration: `${location.pingDurationMs}ms`,
+                                    }}
+                                  />
+                                  <span
+                                    className={`absolute h-8 w-8 rounded-full opacity-25 animate-ping ${location.glowClassName}`}
+                                    style={{
+                                      animationDelay: `${location.pingDelayMs + 220}ms`,
+                                      animationDuration: `${location.pingDurationMs + 520}ms`,
+                                    }}
+                                  />
+                                  <span
                                     className={`absolute h-6 w-6 rounded-full blur-md ${location.glowClassName}`}
                                   />
                                   <span
@@ -1026,6 +1056,44 @@ export default function AdminPortalPage() {
                                 </div>
                               </div>
                             )
+                          })}
+                          {demographics.rows.map((location, index) => {
+                            const position =
+                              demographicsMarkerPositions[
+                                index % demographicsMarkerPositions.length
+                              ]
+                            const ambientOffsets = [
+                              { x: -14, y: -10 },
+                              { x: 12, y: -14 },
+                              { x: 18, y: 10 },
+                            ]
+                            const ambientCount = Math.min(
+                              ambientOffsets.length,
+                              Math.max(1, Math.round(location.percentage / 15))
+                            )
+                            return ambientOffsets
+                              .slice(0, ambientCount)
+                              .map((offset, offsetIndex) => (
+                                <div
+                                  key={`${location.id}-ambient-${offsetIndex}`}
+                                  className="absolute"
+                                  style={{
+                                    left: `calc(${position.left} + ${offset.x}px)`,
+                                    top: `calc(${position.top} + ${offset.y}px)`,
+                                  }}
+                                >
+                                  <span
+                                    className={`absolute -inset-1.5 rounded-full opacity-40 animate-ping ${location.glowClassName}`}
+                                    style={{
+                                      animationDelay: `${location.pingDelayMs + offsetIndex * 180}ms`,
+                                      animationDuration: `${1100 + offsetIndex * 120}ms`,
+                                    }}
+                                  />
+                                  <span
+                                    className={`relative block h-1.5 w-1.5 rounded-full ${location.dotClassName}`}
+                                  />
+                                </div>
+                              ))
                           })}
                           <div className="pointer-events-none absolute inset-0">
                             <div className="absolute left-[10%] top-[28%] h-[32%] w-[26%] rounded-[40%] border border-border/20 bg-background/25 blur-[1px]" />

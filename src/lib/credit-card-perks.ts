@@ -104,6 +104,64 @@ const creditCardPerkPrograms: ICardPerkProgram[] = [
       },
     ],
   },
+  {
+    id: 'amex-platinum',
+    name: 'American Express Platinum',
+    cardNameMatchers: [
+      'amex platinum',
+      'american express platinum',
+      'platinum card',
+    ],
+    perks: [
+      {
+        id: 'uber-cash',
+        name: 'Uber Cash',
+        monthlyValue: 15,
+        merchantMatchers: ['uber eats', 'uber'],
+      },
+      {
+        id: 'digital-entertainment-credit',
+        name: 'Digital Entertainment Credit',
+        monthlyValue: 20,
+        merchantMatchers: [
+          'audible',
+          'disney+',
+          'disney plus',
+          'espn+',
+          'hulu',
+          'new york times',
+          'nytimes',
+          'peacock',
+          'wall street journal',
+          'wsj',
+        ],
+      },
+      {
+        id: 'walmart-plus-credit',
+        name: 'Walmart+ Credit',
+        monthlyValue: 13,
+        merchantMatchers: ['walmart+', 'walmart plus'],
+      },
+    ],
+  },
+  {
+    id: 'amex-blue-cash-everyday',
+    name: 'American Express Blue Cash Everyday',
+    cardNameMatchers: [
+      'amex blue cash everyday',
+      'american express blue cash everyday',
+      'blue cash everyday',
+      'bce',
+    ],
+    perks: [
+      {
+        id: 'disney-bundle-credit',
+        name: 'Disney Bundle Credit',
+        monthlyValue: 7,
+        merchantMatchers: ['disney+', 'disney plus', 'hulu', 'espn+'],
+      },
+    ],
+  },
 ]
 
 const normalize = (value: string) => value.trim().toLowerCase()

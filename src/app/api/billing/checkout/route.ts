@@ -46,6 +46,22 @@ const parsePlan = (value: unknown): AppPlan | null => {
   return null
 }
 
+const isMissingStripeCustomerError = (error: unknown) => {
+  const stripeError = error as
+    | {
+        code?: string
+        param?: string
+        raw?: { param?: string }
+      }
+    | undefined
+
+  return (
+    stripeError?.code === 'resource_missing' &&
+    (stripeError?.param === 'customer' ||
+      stripeError?.raw?.param === 'customer')
+  )
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!stripeClient) {
@@ -130,29 +146,50 @@ export async function POST(request: NextRequest) {
     const trialPeriodDays = isFirstTimeSubscriber ? 7 : 0
 
     const origin = resolveApplicationOrigin(request)
-    const checkoutSession = await stripeClient.checkout.sessions.create({
-      mode: 'subscription',
-      customer: stripeCustomerId,
-      line_items: [
-        {
-          price: stripePriceId,
-          quantity: 1,
+    const createCheckoutSession = async (customerId: string) => {
+      return stripeClient.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        line_items: [
+          {
+            price: stripePriceId,
+            quantity: 1,
+          },
+        ],
+        subscription_data: {
+          ...(trialPeriodDays > 0 && { trial_period_days: trialPeriodDays }),
+          metadata: {
+            userId,
+            plan,
+          },
         },
-      ],
-      subscription_data: {
-        ...(trialPeriodDays > 0 && { trial_period_days: trialPeriodDays }),
         metadata: {
           userId,
           plan,
         },
-      },
-      metadata: {
-        userId,
-        plan,
-      },
-      success_url: `${origin}/billing?checkout=success`,
-      cancel_url: `${origin}/billing?checkout=cancelled`,
-    })
+        success_url: `${origin}/billing?checkout=success`,
+        cancel_url: `${origin}/billing?checkout=cancelled`,
+      })
+    }
+
+    let checkoutSession
+    try {
+      checkoutSession = await createCheckoutSession(stripeCustomerId)
+    } catch (error) {
+      if (!isMissingStripeCustomerError(error)) {
+        throw error
+      }
+
+      const customer = await stripeClient.customers.create({
+        email: userEmail,
+        metadata: {
+          userId,
+          recreatedFor: 'checkout_missing_customer',
+        },
+      })
+      stripeCustomerId = customer.id
+      checkoutSession = await createCheckoutSession(stripeCustomerId)
+    }
 
     return NextResponse.json({
       checkoutUrl: checkoutSession.url,
@@ -162,14 +199,16 @@ export async function POST(request: NextRequest) {
       | {
           type?: string
           code?: string
+          param?: string
           message?: string
           requestId?: string
-          raw?: { message?: string }
+          raw?: { message?: string; param?: string }
         }
       | undefined
     console.error('Error creating checkout session:', {
       type: stripeError?.type,
       code: stripeError?.code,
+      param: stripeError?.param ?? stripeError?.raw?.param,
       message: stripeError?.message ?? stripeError?.raw?.message,
       requestId: stripeError?.requestId,
     })

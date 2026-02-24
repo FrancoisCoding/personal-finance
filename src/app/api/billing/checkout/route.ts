@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       )
     }
+    const stripe = stripeClient
 
     const session = await getServerSession(authOptions)
     if (session?.user?.id) {
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
         ?.stripeCustomerId ?? null
 
     if (!stripeCustomerId) {
-      const customer = await stripeClient.customers.create({
+      const customer = await stripe.customers.create({
         email: userEmail,
         metadata: {
           userId,
@@ -175,7 +176,7 @@ export async function POST(request: NextRequest) {
       customerId: string,
       includeTrialPeriod: boolean
     ) => {
-      return stripeClient.checkout.sessions.create({
+      return stripe.checkout.sessions.create({
         mode: 'subscription',
         customer: customerId,
         line_items: [
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest) {
         throw error
       }
 
-      const customer = await stripeClient.customers.create({
+      const customer = await stripe.customers.create({
         email: userEmail,
         metadata: {
           userId,

@@ -326,19 +326,21 @@ export default function BillingPage() {
                     Best value for active users
                   </p>
                 ) : null}
-                <CardTitle className="flex items-center justify-between text-xl">
-                  <span className="flex items-center gap-2">
-                    <span>{plan.name}</span>
-                    {isCurrentPlan ? (
-                      <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-                        Current
-                      </span>
-                    ) : null}
-                  </span>
+                <CardTitle className="space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2 text-lg">
+                      <span>{plan.name}</span>
+                      {isCurrentPlan ? (
+                        <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                          Current
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
                   <span
                     className={
-                      'text-base ' +
-                      (isPopularPlan ? 'text-emerald-300' : 'text-emerald-400')
+                      'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
+                      (isPopularPlan ? 'text-emerald-200' : 'text-foreground')
                     }
                   >
                     {plan.monthlyPriceLabel}

@@ -283,26 +283,23 @@ export default function LandingPage() {
               links={[
                 { label: 'Dashboard', href: '/dashboard' },
                 { label: 'Pricing', href: '/plans' },
-                { label: 'Demo Mode', href: '/dashboard?demo=1' },
                 { label: 'Security', href: '/security' },
               ]}
             />
             <FooterColumn
-              title="Company"
+              title="Support"
               links={[
-                { label: 'Support', href: '/support' },
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Terms of Service', href: '/terms' },
-                { label: 'Cookie Policy', href: '/cookies' },
+                { label: 'Help Center', href: '/support' },
+                { label: 'Contact Us', href: '/support' },
+                { label: 'Status', href: '/status' },
               ]}
             />
             <FooterColumn
-              title="Resources"
+              title="Legal"
               links={[
-                { label: 'Help Center', href: '/support' },
-                { label: 'API Reference', href: '/api-docs' },
-                { label: 'Status', href: '/status' },
-                { label: 'Contact Us', href: '/support' },
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Cookie Policy', href: '/cookies' },
               ]}
             />
           </div>

@@ -1,7 +1,14 @@
 'use client'
 
+import { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Spotlight } from '@/components/ui/spotlight'
 import { TextGenerateEffect } from '@/components/ui/text-generate-effect'
@@ -203,34 +210,323 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-20 px-4">
-          <div className="container mx-auto">
-            <FadeIn className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-500 p-12 text-white shadow-2xl">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)]" />
-              <div className="relative text-center">
-                <h2 className="font-display text-4xl md:text-5xl font-semibold mb-4">
-                  Ready for a clearer financial story?
-                </h2>
-                <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                  Join thousands of teams using FinanceFlow to plan with
-                  confidence and move faster every month.
-                </p>
-                <Link href="/auth/register">
-                  <Button
-                    size="lg"
-                    className="text-base sm:text-lg !bg-[hsl(0_0%_100%)] !text-slate-900 hover:!bg-[hsl(0_0%_96%)]"
-                  >
-                    Get started free
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            </FadeIn>
-          </div>
-        </section>
+        <LandingClosingCta onEnterDemo={handleEnterDemo} />
       </main>
 
       <LandingFooter />
     </div>
+  )
+}
+
+function LandingClosingCta({ onEnterDemo }: { onEnterDemo: () => void }) {
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const prefersReducedMotion = useReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+  const sceneY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReducedMotion ? [0, 0] : [26, -18]
+  )
+  const sceneRotate = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReducedMotion ? [0, 0] : [1.4, -1.2]
+  )
+  const cardOneY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReducedMotion ? [0, 0] : [20, -22]
+  )
+  const cardTwoY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    prefersReducedMotion ? [0, 0] : [30, -30]
+  )
+  const signalScale = useTransform(
+    scrollYProgress,
+    [0, 0.6, 1],
+    prefersReducedMotion ? [1, 1, 1] : [0.96, 1, 1.02]
+  )
+
+  return (
+    <section ref={sectionRef} className="relative px-4 py-24">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-12 h-48 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.12),transparent_70%)]" />
+        <div className="absolute left-1/2 top-24 h-80 w-[min(72rem,92vw)] -translate-x-1/2 rounded-[40px] border border-emerald-300/10 bg-[linear-gradient(180deg,rgba(6,10,18,0.85),rgba(4,8,14,0.6))] shadow-[0_50px_140px_-70px_rgba(6,182,212,0.45)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.04)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      <div className="container relative mx-auto">
+        <FadeIn className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 p-5 shadow-[0_35px_90px_-55px_rgba(8,145,178,0.35)] backdrop-blur-xl sm:p-7 lg:p-10">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(16,185,129,0.10),transparent_40%),radial-gradient(circle_at_90%_22%,rgba(6,182,212,0.10),transparent_45%),radial-gradient(circle_at_55%_115%,rgba(99,102,241,0.10),transparent_52%)]"
+          />
+
+          <div className="relative grid items-start gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                FinanceFlow command center
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+                  Replace cluttered spreadsheets with a living financial
+                  workspace.
+                </h2>
+                <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+                  Built for people who want calm visibility, faster decisions,
+                  and a product that feels premium every time they open it.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                  <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/10 text-emerald-300">
+                    <Brain className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    AI guidance with context
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ask better questions and get actionable next steps, not
+                    generic advice.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                  <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 text-cyan-300">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Fast to navigate
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Clear modules, consistent actions, and quick exports when
+                    you need them.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/auth/register">
+                  <Button size="lg" className="min-h-11 text-base sm:text-lg">
+                    Start free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="min-h-11 text-base sm:text-lg"
+                  onClick={onEnterDemo}
+                >
+                  Explore live demo
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1.5">
+                  <Shield className="h-3.5 w-3.5 text-emerald-400" />
+                  Bank-grade security controls
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-3 py-1.5">
+                  <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+                  Excel & PDF exports
+                </div>
+              </div>
+            </div>
+
+            <motion.div
+              style={{ y: sceneY, rotate: sceneRotate }}
+              className="relative mx-auto w-full max-w-2xl"
+            >
+              <div className="relative overflow-hidden rounded-[1.6rem] border border-border/60 bg-[#071019]/90 p-4 shadow-[0_35px_100px_-60px_rgba(16,185,129,0.45)] sm:p-5">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(6,182,212,0.12),transparent_36%),radial-gradient(circle_at_80%_18%,rgba(16,185,129,0.10),transparent_42%),radial-gradient(circle_at_45%_100%,rgba(99,102,241,0.10),transparent_52%)]" />
+                <div className="relative space-y-4">
+                  <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200/80">
+                        Live financial signal
+                      </p>
+                      <p className="text-sm font-medium text-white">
+                        Monthly burn risk dropped after budget adjustment
+                      </p>
+                    </div>
+                    <div className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                      Stable
+                    </div>
+                  </div>
+
+                  <motion.div
+                    style={{ scale: signalScale }}
+                    className="rounded-2xl border border-white/10 bg-[#050b13]/80 p-4"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/80">
+                          Cashflow runway
+                        </p>
+                        <p className="mt-1 text-2xl font-semibold tracking-tight text-white">
+                          4.2 months
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-slate-300/80">
+                          Net
+                        </p>
+                        <p className="mt-1 text-base font-semibold text-emerald-200">
+                          +$1,552
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="relative h-36 overflow-hidden rounded-xl border border-white/10 bg-slate-950/70 p-3">
+                      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                      <svg
+                        className="relative h-full w-full"
+                        viewBox="0 0 320 110"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="ctaLineA"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="rgba(34,211,238,0.65)"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="rgba(16,185,129,0.9)"
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id="ctaFillA"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="rgba(16,185,129,0.18)"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="rgba(16,185,129,0)"
+                            />
+                          </linearGradient>
+                        </defs>
+                        <motion.path
+                          d="M0 85 C35 82, 54 58, 84 60 C118 62, 140 89, 176 72 C208 57, 232 38, 264 46 C289 52, 301 36, 320 28"
+                          fill="none"
+                          stroke="url(#ctaLineA)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          viewport={{ once: true, amount: 0.4 }}
+                          transition={{ duration: 1.2, ease: 'easeInOut' }}
+                        />
+                        <motion.path
+                          d="M0 95 C36 92, 54 69, 84 70 C117 72, 140 97, 176 81 C208 67, 232 49, 264 55 C289 60, 301 44, 320 36 L320 110 L0 110 Z"
+                          fill="url(#ctaFillA)"
+                          initial={{ opacity: 0 }}
+                          whileInView={{ opacity: 1 }}
+                          viewport={{ once: true, amount: 0.4 }}
+                          transition={{ duration: 0.9, delay: 0.15 }}
+                        />
+                        {[84, 176, 264, 320].map((x, index) => (
+                          <motion.circle
+                            key={x}
+                            cx={x}
+                            cy={[60, 72, 46, 28][index]}
+                            r="3.5"
+                            fill={index > 1 ? '#34d399' : '#22d3ee'}
+                            initial={{ scale: 0, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            viewport={{ once: true, amount: 0.4 }}
+                            transition={{
+                              delay: 0.35 + index * 0.08,
+                              duration: 0.25,
+                            }}
+                          />
+                        ))}
+                      </svg>
+                    </div>
+
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-slate-300/80">
+                          Savings rate
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-white">
+                          26.4%
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-slate-300/80">
+                          Top risk
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-amber-200">
+                          Housing spend
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-slate-300/80">
+                          Next action
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-cyan-100">
+                          Trim recurring bills
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    style={{ y: cardOneY }}
+                    className="pointer-events-none absolute -right-2 top-10 hidden w-52 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 p-3 shadow-lg shadow-cyan-900/20 backdrop-blur md:block"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100/80">
+                      Assistant
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-cyan-50">
+                      {
+                        'Show where I can cut $300 this month without touching investments.'
+                      }
+                    </p>
+                  </motion.div>
+
+                  <motion.div
+                    style={{ y: cardTwoY }}
+                    className="pointer-events-none absolute -left-4 bottom-7 hidden w-48 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-3 shadow-lg shadow-emerald-900/20 backdrop-blur md:block"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100/80">
+                      Smart alert
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-emerald-50">
+                      Subscription renewal in 2 days • optimizer found a cheaper
+                      annual plan.
+                    </p>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
   )
 }

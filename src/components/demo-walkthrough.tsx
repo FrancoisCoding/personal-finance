@@ -377,11 +377,7 @@ const walkthroughTours: WalkthroughTour[] = [
       'Learn filtering, review flow, and how to scan transaction history quickly.',
     estimatedMinutes: 1,
     group: 'module',
-    steps: getTourSteps([
-      'transaction-filters',
-      'transactions',
-      'recent-transactions',
-    ]),
+    steps: getTourSteps(['transaction-filters', 'transactions']),
   },
   {
     id: 'subscriptions-tour',
@@ -457,6 +453,10 @@ const DemoWalkthrough = ({
   const [showAdvancedTours, setShowAdvancedTours] = useState(false)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   const lastHighlightRectKeyRef = useRef<string | null>(null)
+  const routeNavigationRef = useRef<{
+    key: string
+    requestedAt: number
+  } | null>(null)
   const activeTour = useMemo(
     () => walkthroughTours.find((tour) => tour.id === activeTourId) ?? null,
     [activeTourId]
@@ -485,6 +485,7 @@ const DemoWalkthrough = ({
     setActiveIndex(0)
     setShowAdvancedTours(false)
     setHighlightRect(null)
+    routeNavigationRef.current = null
   }, [isOpen])
 
   useEffect(() => {
@@ -563,10 +564,24 @@ const DemoWalkthrough = ({
   useEffect(() => {
     if (!isOpen || !activeStep) return
     if (activeStep.route && pathname !== activeStep.route) {
-      router.push(activeStep.route)
+      const routeRequestKey = `${activeStep.id}:${activeStep.route}`
+      const now = Date.now()
+      const shouldNavigate =
+        !routeNavigationRef.current ||
+        routeNavigationRef.current.key !== routeRequestKey ||
+        now - routeNavigationRef.current.requestedAt > 1200
+
+      if (shouldNavigate) {
+        routeNavigationRef.current = {
+          key: routeRequestKey,
+          requestedAt: now,
+        }
+        router.push(activeStep.route)
+      }
       setHighlightRect(null)
       return
     }
+    routeNavigationRef.current = null
 
     let rafId = 0
     let rafFrames = 0
@@ -761,6 +776,8 @@ const DemoWalkthrough = ({
   }
 
   const isLastStep = activeStep ? activeIndex === activeSteps.length - 1 : false
+  const isTransitioningToStepRoute =
+    Boolean(activeStep?.route) && pathname !== activeStep?.route
 
   if (typeof document === 'undefined') {
     return null
@@ -819,6 +836,15 @@ const DemoWalkthrough = ({
           <p className="mt-2 text-sm text-muted-foreground">
             {activeStep.description}
           </p>
+          {isTransitioningToStepRoute ? (
+            <p className="mt-2 text-xs text-emerald-400">
+              Opening {activeStep.route?.replace('/', '') || 'module'}...
+            </p>
+          ) : !highlightRect ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Loading highlight...
+            </p>
+          ) : null}
           <div className="mt-4 flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={onClose}>
               Skip

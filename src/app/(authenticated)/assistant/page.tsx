@@ -193,6 +193,7 @@ export default function FinancialAssistantPage() {
     useSubscriptions()
   const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
   const { data: userPreferences } = useUserPreferences()
+  const isDemoAssistantMode = isDemoMode && !billingData?.currentPlan
   const assistantLocale = userPreferences?.locale ?? 'en-US'
   const assistantCurrency = userPreferences?.currency ?? 'USD'
   const quickPrompts = getQuickPromptsByLocale(assistantLocale)
@@ -247,6 +248,15 @@ export default function FinancialAssistantPage() {
     async (overrideMessage?: string) => {
       const trimmed = (overrideMessage ?? input).trim()
       if (!trimmed || isLoading) return
+      if (isDemoAssistantMode) {
+        toast({
+          title: 'Assistant unavailable in demo mode',
+          description:
+            'This page is visible for preview, but chat is disabled in demo mode.',
+          variant: 'destructive',
+        })
+        return
+      }
 
       const userMessage: Message = {
         id: Date.now().toString(),
@@ -352,6 +362,7 @@ export default function FinancialAssistantPage() {
       subscriptions,
       toast,
       transactions,
+      isDemoAssistantMode,
     ]
   )
 
@@ -397,7 +408,9 @@ export default function FinancialAssistantPage() {
     isBillingLoading
 
   const hasAssistantAccess =
-    billingData?.currentPlan === 'BASIC' || billingData?.currentPlan === 'PRO'
+    isDemoMode ||
+    billingData?.currentPlan === 'BASIC' ||
+    billingData?.currentPlan === 'PRO'
 
   if (status === 'loading' || isDataLoading) {
     return (
@@ -555,6 +568,12 @@ export default function FinancialAssistantPage() {
           <p className="text-xs text-muted-foreground">
             Using the last 90 days of activity. {dataSummary}
           </p>
+          {isDemoAssistantMode ? (
+            <p className="text-xs text-amber-400">
+              Demo preview: AI chat is visible here, but sending messages is
+              disabled in demo mode.
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleNewThread}>
@@ -706,7 +725,7 @@ export default function FinancialAssistantPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about spending, cash flow, or subscriptions..."
                   className="min-h-[64px] resize-none border-border/60"
-                  disabled={isLoading}
+                  disabled={isLoading || isDemoAssistantMode}
                 />
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-xs text-muted-foreground">
@@ -714,7 +733,7 @@ export default function FinancialAssistantPage() {
                   </p>
                   <Button
                     onClick={() => handleSendMessage()}
-                    disabled={isLoading || !input.trim()}
+                    disabled={isLoading || isDemoAssistantMode || !input.trim()}
                     className="gap-2"
                   >
                     Send
@@ -744,6 +763,7 @@ export default function FinancialAssistantPage() {
                   variant="outline"
                   className="h-auto items-start px-3 py-2 text-left"
                   onClick={() => handleQuickPrompt(prompt.prompt)}
+                  disabled={isDemoAssistantMode}
                 >
                   <span className="text-xs font-medium text-foreground">
                     {prompt.title}

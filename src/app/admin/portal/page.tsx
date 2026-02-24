@@ -423,6 +423,58 @@ export default function AdminPortalPage() {
       (analytics?.subscriptionMetrics.proSubscribers ?? 0)
   )
   const demographics = useMemo(() => {
+    const demographicsFallbackMarkerPositions = [
+      { left: '16%', top: '42%' },
+      { left: '23%', top: '56%' },
+      { left: '46%', top: '44%' },
+      { left: '58%', top: '36%' },
+      { left: '70%', top: '46%' },
+      { left: '84%', top: '58%' },
+    ] as const
+    const demographicsCountryMapPositions: Record<
+      string,
+      { left: string; top: string }
+    > = {
+      US: { left: '20%', top: '39%' },
+      USA: { left: '20%', top: '39%' },
+      'UNITED STATES': { left: '20%', top: '39%' },
+      CA: { left: '18%', top: '31%' },
+      CANADA: { left: '18%', top: '31%' },
+      MX: { left: '17%', top: '49%' },
+      MEXICO: { left: '17%', top: '49%' },
+      BR: { left: '28%', top: '67%' },
+      BRAZIL: { left: '28%', top: '67%' },
+      GB: { left: '47%', top: '31%' },
+      UK: { left: '47%', top: '31%' },
+      'UNITED KINGDOM': { left: '47%', top: '31%' },
+      DE: { left: '50%', top: '33%' },
+      GERMANY: { left: '50%', top: '33%' },
+      FR: { left: '48%', top: '35%' },
+      FRANCE: { left: '48%', top: '35%' },
+      ES: { left: '47%', top: '38%' },
+      SPAIN: { left: '47%', top: '38%' },
+      IT: { left: '51%', top: '38%' },
+      ITALY: { left: '51%', top: '38%' },
+      IN: { left: '66%', top: '48%' },
+      INDIA: { left: '66%', top: '48%' },
+      CN: { left: '73%', top: '38%' },
+      CHINA: { left: '73%', top: '38%' },
+      JP: { left: '81%', top: '38%' },
+      JAPAN: { left: '81%', top: '38%' },
+      KR: { left: '78%', top: '38%' },
+      'SOUTH KOREA': { left: '78%', top: '38%' },
+      SG: { left: '71%', top: '56%' },
+      SINGAPORE: { left: '71%', top: '56%' },
+      AU: { left: '82%', top: '72%' },
+      AUSTRALIA: { left: '82%', top: '72%' },
+      ZA: { left: '55%', top: '72%' },
+      'SOUTH AFRICA': { left: '55%', top: '72%' },
+      NG: { left: '53%', top: '57%' },
+      NIGERIA: { left: '53%', top: '57%' },
+      AE: { left: '61%', top: '47%' },
+      UAE: { left: '61%', top: '47%' },
+      'UNITED ARAB EMIRATES': { left: '61%', top: '47%' },
+    }
     const topLoginLocations =
       analytics?.engagementMetrics.topLoginLocations ?? []
     const totalVisibleSessions = topLoginLocations.reduce(
@@ -471,11 +523,17 @@ export default function AdminPortalPage() {
         .filter(Boolean)
       const countryLabel =
         locationSegments[locationSegments.length - 1] ?? locationLabel
+      const normalizedCountryKey = countryLabel.trim().toUpperCase()
       const percentage =
         totalVisibleSessions > 0
           ? (location.count / totalVisibleSessions) * 100
           : 0
       const accentStyle = accentStyles[index % accentStyles.length]
+      const mapPosition =
+        demographicsCountryMapPositions[normalizedCountryKey] ??
+        demographicsFallbackMarkerPositions[
+          index % demographicsFallbackMarkerPositions.length
+        ]
 
       return {
         id: `${locationLabel}-${location.count}`,
@@ -484,6 +542,7 @@ export default function AdminPortalPage() {
         countryLabel,
         count: location.count,
         percentage,
+        mapPosition,
         pingDelayMs: index * 280,
         pingDurationMs: 1800 + index * 180,
         ...accentStyle,
@@ -495,14 +554,6 @@ export default function AdminPortalPage() {
       totalVisibleSessions,
     }
   }, [analytics])
-  const demographicsMarkerPositions = [
-    { left: '16%', top: '42%' },
-    { left: '23%', top: '56%' },
-    { left: '46%', top: '44%' },
-    { left: '58%', top: '36%' },
-    { left: '70%', top: '46%' },
-    { left: '84%', top: '58%' },
-  ] as const
 
   useEffect(() => {
     const initialize = async () => {
@@ -1011,18 +1062,128 @@ export default function AdminPortalPage() {
                             Session activity hotspots
                           </span>
                         </div>
-                        <div className="relative grid min-h-[260px] grid-cols-10 grid-rows-6 gap-1 rounded-lg border border-border/40 bg-card/50 p-2">
-                          {Array.from({ length: 60 }).map((_, index) => (
-                            <div
-                              key={index}
-                              className="rounded-full border border-border/30 bg-background/40"
+                        <div className="relative min-h-[260px] overflow-hidden rounded-lg border border-border/40 bg-card/50 p-2">
+                          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:28px_28px]" />
+                          <svg
+                            viewBox="0 0 960 420"
+                            className="relative h-[260px] w-full rounded-md"
+                            aria-hidden="true"
+                            preserveAspectRatio="none"
+                          >
+                            <defs>
+                              <linearGradient
+                                id="demographicsMapFill"
+                                x1="0"
+                                y1="0"
+                                x2="1"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="0%"
+                                  stopColor="rgba(15,23,42,0.95)"
+                                />
+                                <stop
+                                  offset="100%"
+                                  stopColor="rgba(2,6,23,0.88)"
+                                />
+                              </linearGradient>
+                              <linearGradient
+                                id="demographicsMapStroke"
+                                x1="0"
+                                y1="0"
+                                x2="1"
+                                y2="0"
+                              >
+                                <stop
+                                  offset="0%"
+                                  stopColor="rgba(34,211,238,0.14)"
+                                />
+                                <stop
+                                  offset="50%"
+                                  stopColor="rgba(148,163,184,0.18)"
+                                />
+                                <stop
+                                  offset="100%"
+                                  stopColor="rgba(16,185,129,0.14)"
+                                />
+                              </linearGradient>
+                            </defs>
+                            <rect
+                              x="0"
+                              y="0"
+                              width="960"
+                              height="420"
+                              rx="14"
+                              fill="url(#demographicsMapFill)"
                             />
-                          ))}
-                          {demographics.rows.map((location, index) => {
-                            const position =
-                              demographicsMarkerPositions[
-                                index % demographicsMarkerPositions.length
-                              ]
+                            {[70, 140, 210, 280, 350].map((y) => (
+                              <line
+                                key={`lat-${y}`}
+                                x1="20"
+                                x2="940"
+                                y1={y}
+                                y2={y}
+                                stroke="rgba(148,163,184,0.07)"
+                                strokeWidth="1"
+                              />
+                            ))}
+                            {[120, 240, 360, 480, 600, 720, 840].map((x) => (
+                              <line
+                                key={`lon-${x}`}
+                                x1={x}
+                                x2={x}
+                                y1="18"
+                                y2="402"
+                                stroke="rgba(148,163,184,0.06)"
+                                strokeWidth="1"
+                              />
+                            ))}
+                            <g
+                              fill="rgba(15,23,42,0.88)"
+                              stroke="url(#demographicsMapStroke)"
+                              strokeWidth="1.5"
+                            >
+                              <path d="M76 110l34-28 82-18 70 8 42 22 10 26-18 16-30 9-14 20-30 14-18 2-22 20-27-3-17-16-26-4-20-17 4-19 22-11 22-8 8-13 8-20z" />
+                              <path d="M236 224l20 5 18 20 14 32-6 24 14 24 2 35-12 24-20-18-12-37-17-26-12-39 3-24 8-20z" />
+                              <path d="M398 106l22-15 38-8 23 6 16 14-8 12-22 7-20 1-21-4-15 5-13-7z" />
+                              <path d="M458 118l36-10 86 5 41-13 60 6 50 17 59-3 45 14 24 27-6 24-44 14-26 16-24 5-7 17-25 2-20-13-30 4-26 16-25 4-10 24-24 16-28-6-11-27 18-26 10-23-7-26 18-20-4-22-18-13-15-17-9-20z" />
+                              <path d="M501 208l28 10 29 35 3 40 17 31-18 35-25 16-26-17-10-34-9-25-18-22-3-28 11-24 21-17z" />
+                              <path d="M780 292l30-16 42 4 34 19 23 26-18 22-40 9-47-8-23-22-9-21 8-13z" />
+                              <path d="M225 64l28-15 24 6 4 17-17 12-28-2-15-11z" />
+                            </g>
+                            <g fill="rgba(148,163,184,0.15)">
+                              {[
+                                [120, 135],
+                                [145, 118],
+                                [180, 126],
+                                [220, 142],
+                                [270, 158],
+                                [420, 118],
+                                [470, 136],
+                                [520, 124],
+                                [570, 146],
+                                [625, 132],
+                                [700, 142],
+                                [760, 166],
+                                [818, 178],
+                                [520, 235],
+                                [545, 274],
+                                [575, 298],
+                                [245, 282],
+                                [257, 322],
+                                [822, 318],
+                              ].map(([cx, cy], index) => (
+                                <circle
+                                  key={`mesh-${index}`}
+                                  cx={cx}
+                                  cy={cy}
+                                  r="2"
+                                />
+                              ))}
+                            </g>
+                          </svg>
+                          {demographics.rows.map((location) => {
+                            const position = location.mapPosition
                             return (
                               <div
                                 key={`${location.id}-marker`}
@@ -1057,11 +1218,8 @@ export default function AdminPortalPage() {
                               </div>
                             )
                           })}
-                          {demographics.rows.map((location, index) => {
-                            const position =
-                              demographicsMarkerPositions[
-                                index % demographicsMarkerPositions.length
-                              ]
+                          {demographics.rows.map((location) => {
+                            const position = location.mapPosition
                             const ambientOffsets = [
                               { x: -14, y: -10 },
                               { x: 12, y: -14 },
@@ -1095,12 +1253,6 @@ export default function AdminPortalPage() {
                                 </div>
                               ))
                           })}
-                          <div className="pointer-events-none absolute inset-0">
-                            <div className="absolute left-[10%] top-[28%] h-[32%] w-[26%] rounded-[40%] border border-border/20 bg-background/25 blur-[1px]" />
-                            <div className="absolute left-[39%] top-[26%] h-[34%] w-[22%] rounded-[42%] border border-border/20 bg-background/20 blur-[1px]" />
-                            <div className="absolute left-[62%] top-[22%] h-[30%] w-[26%] rounded-[40%] border border-border/20 bg-background/20 blur-[1px]" />
-                            <div className="absolute left-[72%] top-[54%] h-[16%] w-[10%] rounded-[40%] border border-border/20 bg-background/20 blur-[1px]" />
-                          </div>
                         </div>
                         <div className="mt-3 rounded-lg border border-border/50 bg-card/60 px-3 py-2">
                           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">

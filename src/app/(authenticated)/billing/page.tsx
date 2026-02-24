@@ -274,7 +274,7 @@ export default function BillingPage() {
             >
               {isPopularPlan ? (
                 <div className="absolute inset-x-4 -top-3 flex justify-center">
-                  <span className="inline-flex items-center rounded-full border border-emerald-300/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">
+                  <span className="inline-flex min-h-7 items-center rounded-full border border-emerald-300/35 bg-emerald-400 px-3.5 py-1 text-xs font-semibold tracking-[0.08em] text-slate-950 shadow-sm shadow-emerald-950/20">
                     Most popular
                   </span>
                 </div>

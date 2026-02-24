@@ -35,7 +35,7 @@ const metadataBase = (() => {
       )
     }
   }
-  return new URL('https://financeflow.dev')
+  return new URL('https://www.financeflow.dev')
 })()
 
 export const metadata: Metadata = {
@@ -63,6 +63,14 @@ export const metadata: Metadata = {
       'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
     url: '/',
     siteName: 'FinanceFlow',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow personal finance dashboard preview',
+      },
+    ],
     type: 'website',
     locale: 'en_US',
   },
@@ -71,6 +79,7 @@ export const metadata: Metadata = {
     title: 'FinanceFlow | AI-Powered Personal Finance Management',
     description:
       'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
+    images: ['/twitter-image'],
   },
   other: {
     'google-adsense-account': adsensePublisherId,

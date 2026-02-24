@@ -150,7 +150,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
         ? [
             {
               name: 'Security & Privacy',
-              href: '/security',
+              href: '/security-settings',
               icon: ShieldCheck,
               description:
                 'Audit activity, access sessions, and data controls.',
@@ -205,7 +205,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       transactions: 'Transactions',
       subscriptions: 'Subscriptions',
       billing: 'Billing',
-      security: 'Security & Privacy',
+      'security-settings': 'Security & Privacy',
       assistant: 'Financial Assistant',
       budgets: 'Budgets',
       'credit-score': 'Credit Score',
@@ -219,7 +219,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       transactions: Receipt,
       subscriptions: CreditCard,
       billing: CreditCard,
-      security: ShieldCheck,
+      'security-settings': ShieldCheck,
       assistant: Sparkles,
       budgets: Wallet,
       'credit-score': Gauge,

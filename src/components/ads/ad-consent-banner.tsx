@@ -21,6 +21,7 @@ const hiddenPathPrefixes = [
   '/dashboard',
   '/profile',
   '/security',
+  '/security-settings',
   '/subscriptions',
   '/transactions',
 ]

@@ -21,7 +21,7 @@ const publicPlanCatalog = [
       'Accounts and transactions',
       'Budgets and reminders',
       'Subscription tracking',
-      'AI Assistant access with guarded limits (30 req/min, 150 messages every 4 hours, auto reset).',
+      'AI Assistant access for everyday questions and planning.',
       '7-day free trial',
     ],
   },
@@ -33,7 +33,7 @@ const publicPlanCatalog = [
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
       'Everything in Basic',
-      'High-throughput AI Assistant access with fair-use safeguards (200 req/min, 5,000 messages every 4 hours).',
+      'More AI Assistant access for frequent conversations and deeper planning.',
       'Advanced AI insights',
       'Subscription optimizer',
       'Credit score lab & report',

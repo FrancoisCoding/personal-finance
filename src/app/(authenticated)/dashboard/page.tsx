@@ -26,9 +26,7 @@ import { GoalProgressItem } from '@/components/goal-progress-item'
 import { NetWorthSummaryCard } from '@/components/net-worth-summary-card'
 import { RemindersCard } from '@/components/reminders-card'
 import { FinancialOverviewCards } from '@/components/financial-overview-cards'
-import { CreditUtilizationCard } from '@/components/credit-utilization-card'
 import { AddReminderModal } from '@/components/add-reminder-modal'
-import DonationsCard from '@/components/donations-card'
 import { FadeIn } from '@/components/motion/fade-in'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -1685,7 +1683,7 @@ export default function DashboardPage() {
           </div>
         </FadeIn>
 
-        {/* Third Row - Credit Utilization */}
+        {/* Third Row - Analytics + Preview Rail */}
         <FadeIn delay={0.25}>
           <div
             className={
@@ -1693,14 +1691,6 @@ export default function DashboardPage() {
               'xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,1fr)]'
             }
           >
-            {/* Credit Utilization */}
-            <div
-              data-demo-step="demo-credit-utilization"
-              className="xl:order-2"
-            >
-              <CreditUtilizationCard creditCards={creditCards} compact />
-            </div>
-
             {/* Analytics Dashboard */}
             <div data-demo-step="demo-analytics" className="xl:order-1">
               {hasProTierAccess ? (
@@ -1729,6 +1719,176 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
               )}
+            </div>
+
+            {/* Overview Preview Rail */}
+            <div className="grid content-start gap-4 xl:order-2">
+              <Card
+                className="border-border/70 bg-card/90 shadow-sm"
+                data-demo-step="demo-credit-utilization"
+              >
+                <CardHeader className="border-b border-border/60 pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base">Credit Health</CardTitle>
+                      <CardDescription>
+                        Overview signal only. Open the module for full details.
+                      </CardDescription>
+                    </div>
+                    <span
+                      className={
+                        'rounded-full border px-2.5 py-1 text-xs font-semibold ' +
+                        (creditCardUtilization < 30
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                          : creditCardUtilization < 50
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300'
+                            : 'border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-300')
+                      }
+                    >
+                      {creditCardUtilization.toFixed(1)}%
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Cards tracked
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {creditCards.length}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {creditCardUtilization < 30
+                          ? 'Healthy'
+                          : creditCardUtilization < 50
+                            ? 'Watch closely'
+                            : 'Needs attention'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" className="h-8">
+                      <Link href="/credit-score">Open Credit Score Lab</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="h-8">
+                      <Link href="/card-perks">Card Perks</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card
+                className="border-border/70 bg-card/90 shadow-sm"
+                data-demo-step="demo-donations"
+              >
+                <CardHeader className="border-b border-border/60 pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base">
+                        Giving Summary
+                      </CardTitle>
+                      <CardDescription>
+                        Donation activity preview from recent transactions.
+                      </CardDescription>
+                    </div>
+                    <span className="rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                      Preview
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Total giving
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {formatCurrency(donationSummary.total)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">Recurring</p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {donationSummary.recurring.length}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {donationSummary.hasData
+                      ? `${donationSummary.entries.length} donation transaction${
+                          donationSummary.entries.length === 1 ? '' : 's'
+                        } detected.`
+                      : 'No donation-related transactions detected yet.'}
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="h-8">
+                    <Link href="/transactions">Review transactions</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/70 bg-card/90 shadow-sm">
+                <CardHeader className="border-b border-border/60 pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base">System Health</CardTitle>
+                      <CardDescription>
+                        Security and data quality summary for quick review.
+                      </CardDescription>
+                    </div>
+                    <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-600 dark:text-sky-300">
+                      Ops
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Review items
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {securitySnapshot.reviewItems}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Uncategorized
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {dataQualitySnapshot.uncategorizedCount}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Duplicates
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {dataQualitySnapshot.possibleDuplicates}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        Stale accounts
+                      </p>
+                      <p className="mt-1 text-lg font-semibold text-foreground">
+                        {dataQualitySnapshot.staleAccounts}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" variant="outline" className="h-8">
+                      <Link href="/security-settings">Security</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="h-8">
+                      <Link href="/transactions">Data review</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </FadeIn>
@@ -1926,147 +2086,7 @@ export default function DashboardPage() {
                   )}
                 </CardContent>
               </Card>
-
-              <div data-demo-step="demo-donations">
-                <DonationsCard
-                  entries={donationSummary.entries}
-                  causes={donationSummary.causes}
-                  recurring={donationSummary.recurring}
-                  total={donationSummary.total}
-                  hasData={donationSummary.hasData}
-                />
-              </div>
             </div>
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={0.35}>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="border-border/70 bg-card/90 shadow-sm">
-              <CardHeader className="border-b border-border/60 pb-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <CardTitle>Security &amp; Privacy</CardTitle>
-                    <CardDescription>
-                      Audit activity, access sessions, and data controls.
-                    </CardDescription>
-                  </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link href="/security">Open security center</Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Review items
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {securitySnapshot.reviewItems}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    High-value expenses in the last 14 days.
-                  </p>
-                </div>
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Connected accounts
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {securitySnapshot.connectedAccounts}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Account connections monitored in one place.
-                  </p>
-                </div>
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Credit cards tracked
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {securitySnapshot.creditCardsTracked}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Cards included in utilization and alert checks.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/70 bg-card/90 shadow-sm">
-              <CardHeader className="border-b border-border/60 pb-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <CardTitle>Data Quality Center</CardTitle>
-                    <CardDescription>
-                      Keep transactions accurate before insights and forecasts.
-                    </CardDescription>
-                  </div>
-                  <Button asChild size="sm">
-                    <Link href="/transactions">Review data</Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Uncategorized
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {dataQualitySnapshot.uncategorizedCount}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Transactions ready for category review.
-                  </p>
-                </div>
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Possible duplicates
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {dataQualitySnapshot.possibleDuplicates}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Similar entries on the same day and amount.
-                  </p>
-                </div>
-                <div
-                  className={
-                    'rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm'
-                  }
-                >
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    Stale accounts
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-foreground">
-                    {dataQualitySnapshot.staleAccounts}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Accounts not refreshed in the last 7 days.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </FadeIn>
       </div>

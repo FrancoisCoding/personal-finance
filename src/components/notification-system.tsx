@@ -1334,56 +1334,81 @@ export function ToastNotification({
   const getIcon = () => {
     switch (notification.type) {
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-500" />
+        return (
+          <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+        )
       case 'error':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />
+        return (
+          <AlertTriangle className="h-5 w-5 text-rose-600 dark:text-rose-300" />
+        )
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />
+        return (
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+        )
       case 'info':
-        return <Info className="h-5 w-5 text-blue-500" />
+        return <Info className="h-5 w-5 text-sky-600 dark:text-sky-300" />
       default:
-        return <Info className="h-5 w-5 text-gray-500" />
+        return <Info className="h-5 w-5 text-muted-foreground" />
     }
   }
 
-  const getBackgroundColor = () => {
+  const getToastChromeClasses = () => {
     switch (notification.type) {
       case 'success':
-        return 'bg-green-50/50 border-green-200/60'
+        return (
+          'border-emerald-500/35 border-l-4 bg-card/95 ' +
+          'shadow-[0_18px_40px_-22px_rgba(16,185,129,0.45)]'
+        )
       case 'error':
-        return 'bg-red-50/50 border-red-200/60'
+        return (
+          'border-rose-500/35 border-l-4 bg-card/95 ' +
+          'shadow-[0_18px_40px_-22px_rgba(244,63,94,0.4)]'
+        )
       case 'warning':
-        return 'bg-yellow-50/50 border-yellow-200/60'
+        return (
+          'border-amber-500/35 border-l-4 bg-card/95 ' +
+          'shadow-[0_18px_40px_-22px_rgba(245,158,11,0.4)]'
+        )
       case 'info':
-        return 'bg-blue-50/50 border-blue-200/60'
+        return (
+          'border-sky-500/35 border-l-4 bg-card/95 ' +
+          'shadow-[0_18px_40px_-22px_rgba(14,165,233,0.4)]'
+        )
       default:
-        return 'bg-muted/30 border-border/60'
+        return 'border-border/70 border-l-4 bg-card/95 shadow-xl'
     }
   }
 
   return (
     <div
       className={cn(
-        'w-80 transform transition-all duration-300',
+        'w-[22rem] max-w-[calc(100vw-2rem)] transform transition-all duration-300',
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
     >
-      <Card className={cn('shadow-lg border', getBackgroundColor())}>
+      <Card
+        className={cn(
+          'border backdrop-blur-xl supports-[backdrop-filter]:bg-card/90',
+          getToastChromeClasses()
+        )}
+      >
         <CardContent className="p-4">
           <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+            <div className="mt-0.5 flex-shrink-0 rounded-full bg-muted/30 p-1.5">
+              {getIcon()}
+            </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold text-foreground mb-1">
                 {notification.title}
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm leading-5 text-foreground/80">
                 {notification.message}
               </p>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 p-0 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
               onClick={() => removeNotification(notification.id)}
               aria-label="Dismiss notification"
             >
@@ -1405,7 +1430,7 @@ export function ToastContainer() {
 
   return (
     <div
-      className="fixed top-4 right-4 z-50 space-y-2"
+      className="fixed top-4 right-4 z-[120] space-y-2"
       role="status"
       aria-live="polite"
       aria-atomic="true"

@@ -169,9 +169,8 @@ export default function BillingPage() {
 
       {!isSuperUser && !isStripeCheckoutConfigured ? (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          Stripe billing is not configured for this environment. Add
-          `STRIPE_SECRET_KEY`, `STRIPE_PRICE_BASIC_MONTHLY`, and
-          `STRIPE_PRICE_PRO_MONTHLY` to enable paid plan checkout.
+          Paid plan checkout is temporarily unavailable right now. You can
+          continue using demo mode and try again later.
         </div>
       ) : null}
 

@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
   try {
     if (!stripeClient) {
       return NextResponse.json(
-        { error: 'Stripe is not configured.' },
-        { status: 500 }
+        { error: 'Billing portal is temporarily unavailable.' },
+        { status: 503 }
       )
     }
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const stripeCustomerId = subscription?.stripeCustomerId
     if (!stripeCustomerId) {
       return NextResponse.json(
-        { error: 'No Stripe customer found for this account.' },
+        { error: 'No billing account found for this profile.' },
         { status: 400 }
       )
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating customer portal session:', error)
     return NextResponse.json(
-      { error: 'Failed to open Stripe customer portal.' },
+      { error: 'Failed to open billing portal.' },
       { status: 500 }
     )
   }

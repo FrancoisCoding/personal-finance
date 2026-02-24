@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
   try {
     if (!stripeClient) {
       return NextResponse.json(
-        { error: 'Stripe is not configured.' },
-        { status: 500 }
+        { error: 'Billing is temporarily unavailable.' },
+        { status: 503 }
       )
     }
 
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
     const stripePriceId = getStripePriceIdForPlan(plan)
     if (!stripePriceId) {
       return NextResponse.json(
-        { error: 'Missing Stripe price configuration.' },
-        { status: 500 }
+        { error: 'Billing is temporarily unavailable.' },
+        { status: 503 }
       )
     }
 

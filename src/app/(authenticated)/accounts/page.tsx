@@ -671,9 +671,6 @@ export default function AccountsPage() {
                           <h4 className="text-sm font-semibold text-foreground">
                             Recent transactions
                           </h4>
-                          <span className="text-xs text-muted-foreground">
-                            Showing {recentTransactions.length}
-                          </span>
                         </div>
                         <div className="mt-3 space-y-3">
                           {recentTransactions.map((transaction) => (

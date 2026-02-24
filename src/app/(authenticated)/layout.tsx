@@ -15,6 +15,15 @@ import { useBillingStatus } from '@/hooks/use-billing-status'
 import { demoWalkthroughOpenAtom } from '@/store/ui-atoms'
 import { registerAccessSessionHeartbeat } from '@/lib/access-session-client'
 
+const isFreeTierAllowedRoute = (pathname: string) => {
+  return (
+    pathname === '/dashboard' ||
+    pathname === '/billing' ||
+    pathname === '/accounts' ||
+    pathname.startsWith('/accounts/')
+  )
+}
+
 export default function AuthenticatedLayout({
   children,
 }: {
@@ -32,6 +41,12 @@ export default function AuthenticatedLayout({
   )
   const isDemoReady = isClientReady && isDemoMode
   const isBillingRoute = pathname === '/billing'
+  const isFreeTierRouteRestricted =
+    Boolean(session?.user?.id) &&
+    !isDemoReady &&
+    !isBillingLoading &&
+    billingData?.currentPlan === 'FREE' &&
+    !isFreeTierAllowedRoute(pathname)
   const requiresSubscriptionCheck =
     Boolean(session?.user?.id) && !isDemoReady && !isBillingRoute
   const isSubscriptionLocked =
@@ -62,6 +77,13 @@ export default function AuthenticatedLayout({
     if (isBillingLoading) return
     if (billingData?.currentPlan === null && !isBillingRoute) {
       router.replace('/billing?locked=1')
+      return
+    }
+    if (
+      billingData?.currentPlan === 'FREE' &&
+      !isFreeTierAllowedRoute(pathname)
+    ) {
+      router.replace('/billing?locked=1')
     }
   }, [
     billingData?.currentPlan,
@@ -69,6 +91,7 @@ export default function AuthenticatedLayout({
     isBillingRoute,
     isClientReady,
     isDemoReady,
+    pathname,
     router,
     session?.user?.id,
     status,
@@ -136,6 +159,10 @@ export default function AuthenticatedLayout({
   }
 
   if (isSubscriptionLocked) {
+    return null // Will redirect to billing
+  }
+
+  if (isFreeTierRouteRestricted) {
     return null // Will redirect to billing
   }
 

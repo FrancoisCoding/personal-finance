@@ -29,7 +29,7 @@ const publicPlanCatalog = [
     plan: 'BASIC',
     name: 'Basic',
     compareAtMonthlyPriceLabel: '$5/mo',
-    monthlyPriceLabel: '$4/mo',
+    monthlyPriceLabel: '$5/mo',
     description: 'Core finance tracking with structured monthly planning.',
     featureList: [
       'Accounts and transactions',
@@ -43,7 +43,7 @@ const publicPlanCatalog = [
     plan: 'PRO',
     name: 'Pro',
     compareAtMonthlyPriceLabel: '$10/mo',
-    monthlyPriceLabel: '$8/mo',
+    monthlyPriceLabel: '$10/mo',
     description:
       'Everything in Basic plus premium AI guidance and power-user features.',
     featureList: [
@@ -99,6 +99,48 @@ const planCapabilitiesByPlan = {
   },
 } as const
 
+type TBillingInterval = 'monthly' | 'annual'
+
+const annualPricingByPlan = {
+  BASIC: {
+    effectiveMonthlyPriceLabel: '$4/mo',
+    billedYearlyLabel: '$48/year',
+    savingsLabel: 'Save $12/year',
+  },
+  PRO: {
+    effectiveMonthlyPriceLabel: '$6/mo',
+    billedYearlyLabel: '$72/year',
+    savingsLabel: 'Save $48/year',
+  },
+} as const
+
+const getDisplayedPlanPricing = (
+  plan: { plan: string; monthlyPriceLabel: string },
+  billingInterval: TBillingInterval
+) => {
+  if (billingInterval === 'monthly' || !(plan.plan in annualPricingByPlan)) {
+    return {
+      compareAtMonthlyPriceLabel: undefined,
+      displayedPriceLabel: plan.monthlyPriceLabel,
+      detailLabel: undefined,
+      savingsLabel: undefined,
+    }
+  }
+
+  const annualPricing =
+    annualPricingByPlan[plan.plan as keyof typeof annualPricingByPlan]
+  const compareAtMonthlyPriceLabel = plan.monthlyPriceLabel
+  const displayedPriceLabel = annualPricing.effectiveMonthlyPriceLabel
+  const detailLabel = `${compareAtMonthlyPriceLabel.replace('/mo', '')} -> ${displayedPriceLabel.replace('/mo', '')} effective monthly • billed ${annualPricing.billedYearlyLabel}`
+
+  return {
+    compareAtMonthlyPriceLabel,
+    displayedPriceLabel,
+    detailLabel,
+    savingsLabel: annualPricing.savingsLabel,
+  }
+}
+
 export default function BillingPage() {
   const router = useRouter()
   const { data: session } = useSession()
@@ -108,6 +150,8 @@ export default function BillingPage() {
   const { data, isLoading } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
+  const [billingInterval, setBillingInterval] =
+    useState<TBillingInterval>('monthly')
 
   const handleStartCheckout = async (plan: 'BASIC' | 'PRO') => {
     if (!session?.user?.id) {
@@ -239,6 +283,41 @@ export default function BillingPage() {
           Start on Free, or upgrade to Basic or Pro. Paid plans include a 7-day
           free trial.
         </p>
+        <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="inline-flex w-fit rounded-xl border border-border/70 bg-card/70 p-1">
+            <button
+              type="button"
+              className={
+                'min-h-10 rounded-lg px-3 text-sm font-medium transition-colors ' +
+                (billingInterval === 'monthly'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground')
+              }
+              onClick={() => setBillingInterval('monthly')}
+              aria-pressed={billingInterval === 'monthly'}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              className={
+                'min-h-10 rounded-lg px-3 text-sm font-medium transition-colors ' +
+                (billingInterval === 'annual'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground')
+              }
+              onClick={() => setBillingInterval('annual')}
+              aria-pressed={billingInterval === 'annual'}
+            >
+              Annual
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {billingInterval === 'annual'
+              ? 'Annual pricing shows effective monthly cost with yearly billing.'
+              : 'Switch to annual billing to view discounted effective monthly rates.'}
+          </p>
+        </div>
       </div>
 
       {isLockedAccess ? (
@@ -304,6 +383,10 @@ export default function BillingPage() {
           const isPopularPlan = plan.plan === 'PRO'
           const isCurrentPlan = activeLivePlan === plan.plan
           const isSubmitting = isSubmittingPlan === plan.plan
+          const displayedPricing = getDisplayedPlanPricing(
+            plan,
+            billingInterval
+          )
           const isDowngradeViaPortal = isFreePlan && hasPaidSubscription
           const isDisabled =
             isSuperUser ||
@@ -347,14 +430,13 @@ export default function BillingPage() {
                     </span>
                   </div>
                   <div className="space-y-1.5">
-                    {'compareAtMonthlyPriceLabel' in plan &&
-                    plan.compareAtMonthlyPriceLabel ? (
+                    {displayedPricing.compareAtMonthlyPriceLabel ? (
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         <span className="text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
-                          {plan.compareAtMonthlyPriceLabel}
+                          {displayedPricing.compareAtMonthlyPriceLabel}
                         </span>
                         <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-                          Discount
+                          {displayedPricing.savingsLabel ?? 'Discount'}
                         </span>
                       </div>
                     ) : null}
@@ -364,14 +446,11 @@ export default function BillingPage() {
                         (isPopularPlan ? 'text-emerald-200' : 'text-foreground')
                       }
                     >
-                      {plan.monthlyPriceLabel}
+                      {displayedPricing.displayedPriceLabel}
                     </span>
-                    {'compareAtMonthlyPriceLabel' in plan &&
-                    plan.compareAtMonthlyPriceLabel ? (
+                    {displayedPricing.detailLabel ? (
                       <p className="text-xs font-medium text-muted-foreground">
-                        {plan.compareAtMonthlyPriceLabel.replace('/mo', '')}
-                        {' -> '}
-                        {plan.monthlyPriceLabel.replace('/mo', '')} per month
+                        {displayedPricing.detailLabel}
                       </p>
                     ) : null}
                   </div>

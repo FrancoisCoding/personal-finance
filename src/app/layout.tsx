@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     template: '%s | FinanceFlow',
   },
   description:
-    'Modern personal finance app with AI-powered insights, smart categorization, budgeting, and progress tracking.',
+    'Modern personal finance app with AI-powered insights, smart categorization, budgeting, subscription tracking, and clear dashboards to help you make better money decisions.',
   keywords: [
     'finance',
     'budgeting',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FinanceFlow | AI-Powered Personal Finance Management',
     description:
-      'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
+      'Track spending, optimize budgets, manage subscriptions, and act on AI insights with a modern personal finance workspace built for clarity and everyday decision-making.',
     url: '/',
     siteName: 'FinanceFlow',
     images: [
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FinanceFlow | AI-Powered Personal Finance Management',
     description:
-      'Track spending, optimize budgets, and act on AI insights with a modern personal finance workspace.',
+      'Track spending, optimize budgets, manage subscriptions, and act on AI insights with a modern personal finance workspace built for clarity and everyday decision-making.',
     images: ['/twitter-image'],
   },
   other: {

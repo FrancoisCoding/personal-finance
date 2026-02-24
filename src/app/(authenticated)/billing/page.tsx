@@ -17,12 +17,12 @@ const publicPlanCatalog = [
     name: 'Free',
     monthlyPriceLabel: '$0/mo',
     description:
-      'A lightweight live plan for basic tracking, limited interactions, and starter insights.',
+      'A limited live plan with access to Overview and Accounts only.',
     featureList: [
-      'Core dashboard, accounts, transactions, and budgets',
-      'Starter insights and recommendations',
-      'Limited daily interactions',
-      'Upgrade anytime to unlock more automation and AI usage',
+      'Live Overview and Accounts pages',
+      'Basic balance and recent transaction visibility',
+      'Use Billing anytime to upgrade',
+      'Other features require Basic or Pro',
     ],
   },
   {
@@ -59,16 +59,16 @@ const publicPlanCatalog = [
 const planCapabilitiesByPlan = {
   FREE: {
     included: [
-      'Core dashboard, accounts, transactions, and budgets',
-      'Starter insights and recommendations',
-      'Manual subscription tracking',
-      'Limited daily interactions',
+      'Overview page access',
+      'Accounts page access',
+      'View balances and recent transactions',
+      'Billing page access for upgrades',
     ],
     limited: [
-      'AI Assistant chat is not included',
-      'Advanced AI insights and optimizer',
+      'Transactions, budgets, subscriptions, and assistant pages',
+      'AI Assistant chat and advanced AI insights',
       'Credit score lab, card perks, investments, and invoices',
-      'Priority support',
+      'Most premium features require Basic or Pro',
     ],
   },
   BASIC: {

@@ -49,12 +49,12 @@ export async function GET() {
           monthlyPriceInCents: 0,
           monthlyPriceLabel: '$0/mo',
           description:
-            'Use the core app with limited access and a smaller daily allowance.',
+            'A limited live plan with access to Overview and Accounts only.',
           featureList: [
-            'Core dashboard, accounts, transactions, and budgets',
-            'A smaller set of insights and recommendations',
-            'Limited daily interactions to explore the app',
-            'Upgrade anytime to unlock more automation and AI usage',
+            'Live Overview and Accounts pages',
+            'Basic balance and recent transaction visibility',
+            'Use Billing anytime to upgrade',
+            'Other features require Basic or Pro',
           ],
         },
         ...[AppPlan.BASIC, AppPlan.PRO].map((plan) => ({

@@ -53,7 +53,7 @@ import {
 // utils
 import { highlightText } from '@/lib/table'
 import { cn } from '@/lib/utils'
-import { sidebarOpenAtom } from '@/store/ui-atoms'
+import { demoWalkthroughOpenAtom, sidebarOpenAtom } from '@/store/ui-atoms'
 import { useDemoMode } from '@/hooks/use-demo-mode'
 
 const securityNavigationStorageKey = 'financeflow.show-security-nav'
@@ -72,6 +72,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   const queryClient = useQueryClient()
   const [isMounted, setIsMounted] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useAtom(sidebarOpenAtom)
+  const [, setIsDemoWalkthroughOpen] = useAtom(demoWalkthroughOpenAtom)
   const [searchValue, setSearchValue] = useState('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [shouldShowSecurityNavigation, setShouldShowSecurityNavigation] =
@@ -251,6 +252,11 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       console.warn('Failed to clear demo data', error)
     }
     router.push('/auth/login')
+  }
+
+  const handleOpenDemoTours = () => {
+    setIsDemoWalkthroughOpen(true)
+    closeSidebar()
   }
 
   useEffect(() => {
@@ -782,13 +788,22 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
 
             <div className="mt-6">
               {isDemoReady ? (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start rounded-xl"
-                  onClick={handleExitDemo}
-                >
-                  Exit demo
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    variant="secondary"
+                    className="w-full justify-start rounded-xl"
+                    onClick={handleOpenDemoTours}
+                  >
+                    Open tours
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start rounded-xl"
+                    onClick={handleExitDemo}
+                  >
+                    Exit demo
+                  </Button>
+                </div>
               ) : (
                 <Button
                   variant="outline"

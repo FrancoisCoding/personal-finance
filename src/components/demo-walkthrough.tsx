@@ -456,7 +456,6 @@ const DemoWalkthrough = ({
   const [activeIndex, setActiveIndex] = useState(0)
   const [showAdvancedTours, setShowAdvancedTours] = useState(false)
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
-  const pendingRouteRef = useRef<string | null>(null)
   const lastHighlightRectKeyRef = useRef<string | null>(null)
   const activeTour = useMemo(
     () => walkthroughTours.find((tour) => tour.id === activeTourId) ?? null,
@@ -486,7 +485,6 @@ const DemoWalkthrough = ({
     setActiveIndex(0)
     setShowAdvancedTours(false)
     setHighlightRect(null)
-    pendingRouteRef.current = null
   }, [isOpen])
 
   useEffect(() => {
@@ -565,14 +563,10 @@ const DemoWalkthrough = ({
   useEffect(() => {
     if (!isOpen || !activeStep) return
     if (activeStep.route && pathname !== activeStep.route) {
-      if (pendingRouteRef.current !== activeStep.route) {
-        pendingRouteRef.current = activeStep.route
-        router.push(activeStep.route)
-      }
+      router.push(activeStep.route)
       setHighlightRect(null)
       return
     }
-    pendingRouteRef.current = null
 
     let rafId = 0
     let rafFrames = 0

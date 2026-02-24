@@ -233,11 +233,11 @@ const getNextInvoiceNumber = (invoices: IInvoiceRecord[]) => {
 
 const escapeHtml = (value: string) =>
   value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 
 const buildInvoiceHtmlDocument = (invoice: IInvoiceRecord) => {
   const total = getInvoiceTotal(invoice)
@@ -245,7 +245,7 @@ const buildInvoiceHtmlDocument = (invoice: IInvoiceRecord) => {
   const notesHtml = invoice.notes
     ? `<div class="section">
         <h3>Notes</h3>
-        <p>${escapeHtml(invoice.notes).replaceAll('\n', '<br />')}</p>
+        <p>${escapeHtml(invoice.notes).replace(/\r?\n/g, '<br />')}</p>
       </div>`
     : ''
 

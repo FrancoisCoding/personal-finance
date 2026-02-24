@@ -2,7 +2,14 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, FileText, Plus, Send, Trash2 } from 'lucide-react'
+import {
+  CheckCircle2,
+  Download,
+  FileText,
+  Plus,
+  Send,
+  Trash2,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -224,6 +231,232 @@ const getNextInvoiceNumber = (invoices: IInvoiceRecord[]) => {
   return `INV-${maxSequence + 1}`
 }
 
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+
+const buildInvoiceHtmlDocument = (invoice: IInvoiceRecord) => {
+  const total = getInvoiceTotal(invoice)
+  const displayStatus = getDisplayInvoiceStatus(invoice)
+  const notesHtml = invoice.notes
+    ? `<div class="section">
+        <h3>Notes</h3>
+        <p>${escapeHtml(invoice.notes).replaceAll('\n', '<br />')}</p>
+      </div>`
+    : ''
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(invoice.invoiceNumber)} - Invoice</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        padding: 24px;
+      }
+      .invoice {
+        max-width: 880px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 24px;
+        border-bottom: 1px solid #e2e8f0;
+        background: linear-gradient(180deg, #f8fafc, #ffffff);
+      }
+      .brand {
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+      h1 {
+        margin: 6px 0 0;
+        font-size: 28px;
+        line-height: 1.1;
+      }
+      .muted {
+        color: #64748b;
+        font-size: 13px;
+      }
+      .status {
+        align-self: flex-start;
+        border-radius: 999px;
+        border: 1px solid #cbd5e1;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        padding: 24px;
+      }
+      .panel {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px;
+        background: #fff;
+      }
+      .panel h3 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .panel p {
+        margin: 0;
+        line-height: 1.45;
+      }
+      .line-items {
+        padding: 0 24px 24px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      th, td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+        text-align: left;
+      }
+      th {
+        color: #64748b;
+        font-weight: 600;
+        background: #f8fafc;
+      }
+      td.number, th.number {
+        text-align: right;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .total-row td {
+        font-weight: 700;
+        background: #fcfcfd;
+      }
+      .section {
+        padding: 0 24px 24px;
+      }
+      .section h3 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .section p {
+        margin: 0;
+        line-height: 1.55;
+        white-space: normal;
+      }
+      .footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 16px 24px 20px;
+        color: #64748b;
+        font-size: 12px;
+      }
+      @media print {
+        body { background: #fff; padding: 0; }
+        .invoice { border: none; box-shadow: none; border-radius: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <article class="invoice">
+      <header class="header">
+        <div>
+          <div class="brand">FinanceFlow Invoice</div>
+          <h1>${escapeHtml(invoice.invoiceNumber)}</h1>
+          <p class="muted">Created ${escapeHtml(formatDate(invoice.createdAt))}</p>
+        </div>
+        <div class="status">${escapeHtml(displayStatus)}</div>
+      </header>
+
+      <section class="grid">
+        <div class="panel">
+          <h3>Billed To</h3>
+          <p>${escapeHtml(invoice.clientName)}</p>
+          ${
+            invoice.clientEmail
+              ? `<p class="muted">${escapeHtml(invoice.clientEmail)}</p>`
+              : ''
+          }
+        </div>
+        <div class="panel">
+          <h3>Invoice Dates</h3>
+          <p><strong>Issue date:</strong> ${escapeHtml(
+            formatDate(invoice.issueDate)
+          )}</p>
+          <p><strong>Due date:</strong> ${escapeHtml(formatDate(invoice.dueDate))}</p>
+        </div>
+      </section>
+
+      <section class="line-items">
+        <table>
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="number">Qty</th>
+              <th class="number">Unit Price</th>
+              <th class="number">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${escapeHtml(invoice.itemDescription)}</td>
+              <td class="number">${invoice.quantity}</td>
+              <td class="number">${escapeHtml(
+                formatCurrency(invoice.unitPrice)
+              )}</td>
+              <td class="number">${escapeHtml(formatCurrency(total))}</td>
+            </tr>
+            <tr class="total-row">
+              <td colspan="3">Total</td>
+              <td class="number">${escapeHtml(formatCurrency(total))}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      ${notesHtml}
+
+      <footer class="footer">
+        Exported from FinanceFlow. This is a basic invoice export for review and recordkeeping.
+      </footer>
+    </article>
+  </body>
+</html>`
+}
+
 export default function InvoicesPage() {
   const { isDemoMode } = useDemoMode()
   const { data: billingData, isLoading: isBillingLoading } = useBillingStatus()
@@ -382,6 +615,21 @@ export default function InvoicesPage() {
     setInvoices((previousInvoices) =>
       previousInvoices.filter((invoice) => invoice.id !== id)
     )
+  }
+
+  const handleDownloadInvoice = (invoice: IInvoiceRecord) => {
+    const htmlDocument = buildInvoiceHtmlDocument(invoice)
+    const blob = new Blob([htmlDocument], {
+      type: 'text/html;charset=utf-8',
+    })
+    const objectUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = objectUrl
+    anchor.download = `${invoice.invoiceNumber}.html`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(objectUrl)
   }
 
   if (isBillingLoading && !isDemoMode) {
@@ -663,6 +911,15 @@ export default function InvoicesPage() {
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1"
+                        onClick={() => handleDownloadInvoice(invoice)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1"
                         onClick={() =>
                           handleUpdateInvoiceStatus(invoice.id, 'SENT')
                         }
@@ -769,6 +1026,16 @@ export default function InvoicesPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 px-2"
+                              onClick={() => handleDownloadInvoice(invoice)}
+                              aria-label={`Download ${invoice.invoiceNumber}`}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
                             <Button
                               type="button"
                               size="sm"

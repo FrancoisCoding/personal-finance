@@ -362,7 +362,7 @@ const AIFinancialInsights = memo(function AIFinancialInsights({
           <div
             className={
               compact
-                ? 'space-y-3 max-h-[34rem] overflow-y-auto pr-1'
+                ? 'space-y-3 max-h-[26rem] overflow-y-auto pr-1'
                 : 'space-y-4'
             }
           >

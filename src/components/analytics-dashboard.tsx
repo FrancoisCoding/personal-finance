@@ -839,102 +839,103 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
           </div>
         </div>
 
-        {/* Spending by Category */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-foreground/90">
-            Spending by Category
-          </h4>
-          {pieData.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
-              <div className={compact ? 'h-44' : 'h-56'}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={46}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={CHART_COLORS[index % CHART_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => formatCurrency(value as number)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        borderColor: 'hsl(var(--border))',
-                        borderRadius: 12,
-                        boxShadow: '0 18px 32px -20px rgba(0, 0, 0, 0.45)',
-                        padding: '10px 12px',
-                      }}
-                      labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2">
-                {pieData.map((item, index) => {
-                  const percent =
-                    pieTotal > 0 ? (item.value / pieTotal) * 100 : 0
-                  return (
-                    <div
-                      key={`${item.name}-${index}`}
-                      className={
-                        'flex items-center justify-between rounded-xl border ' +
-                        'border-border/40 bg-card/70 px-3.5 py-2.5 shadow-sm ' +
-                        'transition-colors hover:bg-muted/30'
-                      }
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{
-                            backgroundColor:
-                              CHART_COLORS[index % CHART_COLORS.length],
-                          }}
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {item.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {percent.toFixed(1)}% of total
-                          </p>
+        {!compact ? (
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-foreground/90">
+              Spending by Category
+            </h4>
+            {pieData.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_1fr]">
+                <div className={compact ? 'h-44' : 'h-56'}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={46}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => formatCurrency(value as number)}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          borderColor: 'hsl(var(--border))',
+                          borderRadius: 12,
+                          boxShadow: '0 18px 32px -20px rgba(0, 0, 0, 0.45)',
+                          padding: '10px 12px',
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        itemStyle={{ color: 'hsl(var(--foreground))' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-2">
+                  {pieData.map((item, index) => {
+                    const percent =
+                      pieTotal > 0 ? (item.value / pieTotal) * 100 : 0
+                    return (
+                      <div
+                        key={`${item.name}-${index}`}
+                        className={
+                          'flex items-center justify-between rounded-xl border ' +
+                          'border-border/40 bg-card/70 px-3.5 py-2.5 shadow-sm ' +
+                          'transition-colors hover:bg-muted/30'
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{
+                              backgroundColor:
+                                CHART_COLORS[index % CHART_COLORS.length],
+                            }}
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {item.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {percent.toFixed(1)}% of total
+                            </p>
+                          </div>
                         </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {formatCurrency(item.value)}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {formatCurrency(item.value)}
-                      </span>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div
-              className={
-                'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
-                'px-4 py-6 text-center'
-              }
-            >
-              <p className="text-sm font-medium text-foreground">
-                No spending data
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Add expenses to see category breakdowns.
-              </p>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div
+                className={
+                  'rounded-xl border border-dashed border-border/60 bg-muted/10 ' +
+                  'px-4 py-6 text-center'
+                }
+              >
+                <p className="text-sm font-medium text-foreground">
+                  No spending data
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add expenses to see category breakdowns.
+                </p>
+              </div>
+            )}
+          </div>
+        ) : null}
 
         {/* Monthly Trend */}
         <div className="space-y-3">

@@ -23,11 +23,13 @@ interface CreditCard {
 interface CreditUtilizationCardProps {
   creditCards: CreditCard[]
   className?: string
+  compact?: boolean
 }
 
 export function CreditUtilizationCard({
   creditCards,
   className = '',
+  compact = false,
 }: CreditUtilizationCardProps) {
   // Calculate total utilization
   const totalBalance = creditCards.reduce((sum, card) => sum + card.balance, 0)
@@ -154,7 +156,7 @@ export function CreditUtilizationCard({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-7">
+      <CardContent className={compact ? 'space-y-5' : 'space-y-7'}>
         {creditCards.length === 0 ? (
           <div
             className={
@@ -232,86 +234,124 @@ export function CreditUtilizationCard({
               </div>
             </div>
 
-            {/* Monthly Interest Cost */}
-            <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
-                    Monthly Interest Cost
+            {!compact ? (
+              <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-rose-600 dark:text-rose-300">
+                      Monthly Interest Cost
+                    </div>
+                    <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
+                      Based on {averageAPR.toFixed(1)}% average APR
+                    </div>
                   </div>
-                  <div className="text-xs text-rose-600/80 dark:text-rose-300/80">
-                    Based on {averageAPR.toFixed(1)}% average APR
+                  <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
+                    {formatCurrency(monthlyInterestCost)}
                   </div>
-                </div>
-                <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
-                  {formatCurrency(monthlyInterestCost)}
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="rounded-xl border border-border/50 bg-card/70 px-3 py-2.5 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Est. monthly interest
+                    </p>
+                    <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">
+                      {formatCurrency(monthlyInterestCost)}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Avg APR {averageAPR.toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Individual Cards */}
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground/90">
                 Individual Cards
               </h4>
-              {creditCards.map((card) => {
-                const cardUtilization = (card.balance / card.limit) * 100
-                const cardStatus = getUtilizationStatus(cardUtilization)
+              {creditCards
+                .slice(0, compact ? 3 : creditCards.length)
+                .map((card) => {
+                  const cardUtilization = (card.balance / card.limit) * 100
+                  const cardStatus = getUtilizationStatus(cardUtilization)
 
-                return (
-                  <div
-                    key={card.id}
-                    className="p-3 rounded-xl border border-border/50 bg-card/70 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground">
-                        {card.name}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${cardStatus.color} ${cardStatus.bgColor} border-current`}
-                      >
-                        {cardUtilization.toFixed(1)}%
-                      </Badge>
+                  return (
+                    <div
+                      key={card.id}
+                      className={
+                        (compact ? 'p-2.5 ' : 'p-3 ') +
+                        'rounded-xl border border-border/50 bg-card/70 shadow-sm'
+                      }
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-foreground">
+                          {card.name}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${cardStatus.color} ${cardStatus.bgColor} border-current`}
+                        >
+                          {cardUtilization.toFixed(1)}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {formatCurrency(card.balance)} /{' '}
+                          {formatCurrency(card.limit)}
+                        </span>
+                        <span>{card.apr.toFixed(1)}% APR</span>
+                      </div>
+                      <Progress
+                        value={Math.min(cardUtilization, 100)}
+                        className="h-2 mt-2"
+                      />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {formatCurrency(card.balance)} /{' '}
-                        {formatCurrency(card.limit)}
-                      </span>
-                      <span>{card.apr.toFixed(1)}% APR</span>
-                    </div>
-                    <Progress
-                      value={Math.min(cardUtilization, 100)}
-                      className="h-2 mt-2"
-                    />
-                  </div>
-                )
-              })}
+                  )
+                })}
+              {compact && creditCards.length > 3 ? (
+                <p className="text-xs text-muted-foreground">
+                  +{creditCards.length - 3} more card
+                  {creditCards.length - 3 === 1 ? '' : 's'} tracked
+                </p>
+              ) : null}
             </div>
 
-            {/* Recommendations */}
-            <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
-              <div className="mb-3">
-                <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
+            {!compact ? (
+              <div className="rounded-xl border border-border/50 bg-card/70 p-4 shadow-sm">
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium text-sky-700 dark:text-sky-200">
+                    {recommendations.title}
+                  </h4>
+                  <p className="text-xs text-sky-600/90 dark:text-sky-200/80 mt-1">
+                    {recommendations.description}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {recommendations.actions.map((action, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 text-xs text-sky-700 dark:text-sky-100"
+                    >
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                      <span>{action}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border/50 bg-card/70 p-3 shadow-sm">
+                <p className="text-xs font-medium text-foreground">
                   {recommendations.title}
-                </h4>
-                <p className="text-xs text-sky-600/90 dark:text-sky-200/80 mt-1">
-                  {recommendations.description}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {recommendations.actions[0]}
                 </p>
               </div>
-              <div className="space-y-2">
-                {recommendations.actions.map((action, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-2 text-xs text-sky-700 dark:text-sky-100"
-                  >
-                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                    <span>{action}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1">

@@ -896,7 +896,7 @@ export default function DashboardPage() {
         .sort(
           (a, b) => b.transactionDate.getTime() - a.transactionDate.getTime()
         )
-        .slice(0, 5)
+        .slice(0, 4)
         .map(({ transaction }) => transaction),
     [transactionDateEntries]
   )
@@ -1634,9 +1634,17 @@ export default function DashboardPage() {
 
         {/* Second Row */}
         <FadeIn delay={0.2}>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <div
+            className={
+              'grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start ' +
+              'xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]'
+            }
+          >
             {/* Cash Flow Chart */}
-            <div className="lg:col-span-2" data-demo-step="demo-cashflow">
+            <div
+              className="lg:col-span-2 xl:col-span-1"
+              data-demo-step="demo-cashflow"
+            >
               <CashFlowChart data={cashFlowData} />
             </div>
 
@@ -1679,14 +1687,22 @@ export default function DashboardPage() {
 
         {/* Third Row - Credit Utilization */}
         <FadeIn delay={0.25}>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+          <div
+            className={
+              'grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start ' +
+              'xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,1fr)]'
+            }
+          >
             {/* Credit Utilization */}
-            <div data-demo-step="demo-credit-utilization">
-              <CreditUtilizationCard creditCards={creditCards} />
+            <div
+              data-demo-step="demo-credit-utilization"
+              className="xl:order-2"
+            >
+              <CreditUtilizationCard creditCards={creditCards} compact />
             </div>
 
             {/* Analytics Dashboard */}
-            <div data-demo-step="demo-analytics">
+            <div data-demo-step="demo-analytics" className="xl:order-1">
               {hasProTierAccess ? (
                 <AnalyticsDashboard
                   transactions={transformedTransactions}
@@ -1719,10 +1735,15 @@ export default function DashboardPage() {
 
         {/* Fourth Row */}
         <FadeIn delay={0.3}>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+          <div
+            className={
+              'grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start ' +
+              'xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)]'
+            }
+          >
             {/* Recent Transactions */}
             <Card
-              className="border-border/70 bg-card/90 shadow-sm lg:col-span-2"
+              className="border-border/70 bg-card/90 shadow-sm lg:col-span-2 xl:col-span-1"
               data-demo-step="demo-recent-transactions"
             >
               <CardHeader className="border-b border-border/60 pb-3">
@@ -1733,6 +1754,14 @@ export default function DashboardPage() {
                       Your latest financial activity
                     </CardDescription>
                   </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3"
+                  >
+                    <Link href="/transactions">View all</Link>
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-4">

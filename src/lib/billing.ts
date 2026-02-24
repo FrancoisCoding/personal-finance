@@ -13,6 +13,8 @@ export interface IPlanDefinition {
   featureList: string[]
 }
 
+export type TBillingInterval = 'monthly' | 'annual'
+
 export const planDefinitions: Record<AppPlan, IPlanDefinition> = {
   [AppPlan.BASIC]: {
     plan: AppPlan.BASIC,
@@ -53,7 +55,10 @@ export const billingFeatureRequirements = {
   creditScoreLab: AppPlan.PRO,
 } as const
 
-export const getStripePriceIdForPlan = (plan: AppPlan) => {
+export const getStripePriceIdForPlan = (
+  plan: AppPlan,
+  billingInterval: TBillingInterval = 'monthly'
+) => {
   const normalizePriceId = (value: string | undefined) => {
     const trimmedValue = value?.trim() ?? ''
     if (!trimmedValue) {
@@ -71,10 +76,14 @@ export const getStripePriceIdForPlan = (plan: AppPlan) => {
   }
 
   if (plan === AppPlan.BASIC) {
-    return normalizePriceId(process.env.STRIPE_PRICE_BASIC_MONTHLY)
+    return billingInterval === 'annual'
+      ? normalizePriceId(process.env.STRIPE_PRICE_BASIC_YEARLY)
+      : normalizePriceId(process.env.STRIPE_PRICE_BASIC_MONTHLY)
   }
 
-  return normalizePriceId(process.env.STRIPE_PRICE_PRO_MONTHLY)
+  return billingInterval === 'annual'
+    ? normalizePriceId(process.env.STRIPE_PRICE_PRO_YEARLY)
+    : normalizePriceId(process.env.STRIPE_PRICE_PRO_MONTHLY)
 }
 
 export const isActiveSubscriptionStatus = (status: AppSubscriptionStatus) => {

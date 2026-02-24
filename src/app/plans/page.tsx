@@ -170,7 +170,7 @@ export default function PlansPage() {
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, billingInterval }),
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {

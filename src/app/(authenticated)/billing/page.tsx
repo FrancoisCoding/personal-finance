@@ -166,7 +166,7 @@ export default function BillingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, billingInterval }),
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {

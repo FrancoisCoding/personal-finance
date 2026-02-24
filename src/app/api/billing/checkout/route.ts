@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { AppPlan } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
-import { getStripePriceIdForPlan } from '@/lib/billing'
+import { getStripePriceIdForPlan, type TBillingInterval } from '@/lib/billing'
 import { stripeClient } from '@/lib/stripe'
 import { getUserEntitlements } from '@/lib/user-entitlements'
 import {
@@ -44,6 +44,10 @@ const parsePlan = (value: unknown): AppPlan | null => {
     return AppPlan.PRO
   }
   return null
+}
+
+const parseBillingInterval = (value: unknown): TBillingInterval => {
+  return value === 'annual' ? 'annual' : 'monthly'
 }
 
 const isMissingStripeCustomerError = (error: unknown) => {
@@ -123,8 +127,9 @@ export async function POST(request: NextRequest) {
     if (!plan) {
       return NextResponse.json({ error: 'Invalid plan.' }, { status: 400 })
     }
+    const billingInterval = parseBillingInterval(body?.billingInterval)
 
-    const stripePriceId = getStripePriceIdForPlan(plan)
+    const stripePriceId = getStripePriceIdForPlan(plan, billingInterval)
     if (!stripePriceId) {
       return NextResponse.json(
         { error: 'Billing is temporarily unavailable.' },
@@ -191,11 +196,13 @@ export async function POST(request: NextRequest) {
           metadata: {
             userId,
             plan,
+            billingInterval,
           },
         },
         metadata: {
           userId,
           plan,
+          billingInterval,
         },
         success_url: `${origin}/billing?checkout=success`,
         cancel_url: `${origin}/billing?checkout=cancelled`,
@@ -264,8 +271,14 @@ export async function POST(request: NextRequest) {
         basicPriceConfigured: Boolean(
           process.env.STRIPE_PRICE_BASIC_MONTHLY?.trim()
         ),
+        basicAnnualPriceConfigured: Boolean(
+          process.env.STRIPE_PRICE_BASIC_YEARLY?.trim()
+        ),
         proPriceConfigured: Boolean(
           process.env.STRIPE_PRICE_PRO_MONTHLY?.trim()
+        ),
+        proAnnualPriceConfigured: Boolean(
+          process.env.STRIPE_PRICE_PRO_YEARLY?.trim()
         ),
       },
     })

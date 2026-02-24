@@ -171,7 +171,15 @@ export default function RegisterPage() {
         title: 'Success',
         description: 'Account created successfully!',
       })
-      router.push('/dashboard')
+      try {
+        localStorage.removeItem('finance-demo-walkthrough')
+        localStorage.removeItem('finance-demo-loading')
+        localStorage.setItem('finance-demo-loading', '1')
+      } catch (error) {
+        void error
+      }
+      startDemoMode()
+      router.push('/dashboard?demo=1')
     } catch (error) {
       toast({
         title: 'Error',

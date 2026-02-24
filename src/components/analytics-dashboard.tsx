@@ -401,141 +401,105 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
     const exportCurrency = getDisplayPreferences().currency
     const lines: string[] = []
-    const csvHeaders = [
-      'section',
-      'item',
-      'date',
-      'name',
-      'category',
-      'status',
-      'amount',
-      'target',
-      'progress_pct',
-      'currency',
-      'notes',
-    ] as const
+    const pushRow = (cells: Array<string | number | undefined>) => {
+      lines.push(cells.map((cell) => escapeCsv(cell)).join(','))
+    }
+    const pushBlankRow = () => {
+      lines.push('')
+    }
 
-    type TCsvHeader = (typeof csvHeaders)[number]
-    type TCsvRow = Record<TCsvHeader, string | number | undefined>
+    pushRow(['FinanceFlow Analytics Report'])
+    pushRow(['Generated', reportDateStamp])
+    pushRow(['Currency', exportCurrency])
+    pushBlankRow()
 
-    const csvRows: TCsvRow[] = [
-      {
-        section: 'summary',
-        item: 'report_date',
-        date: reportDateStamp,
-        name: 'Report Date',
-        category: '',
-        status: 'generated',
-        amount: '',
-        target: '',
-        progress_pct: '',
-        currency: '',
-        notes: 'FinanceFlow analytics export',
-      },
-      {
-        section: 'summary',
-        item: 'avg_daily_spend',
-        date: '',
-        name: 'Average Daily Spend',
-        category: '',
-        status: 'calculated',
-        amount: avgDailySpend.toFixed(2),
-        target: '',
-        progress_pct: '',
-        currency: exportCurrency,
-        notes: 'Calculated from the last 30 days of expense activity.',
-      },
-      {
-        section: 'summary',
-        item: 'savings_rate',
-        date: '',
-        name: 'Savings Rate',
-        category: '',
-        status: 'calculated',
-        amount: '',
-        target: '',
-        progress_pct: savingsRate.toFixed(1),
-        currency: '',
-        notes: 'Percent of income retained after expenses.',
-      },
-      {
-        section: 'summary',
-        item: 'total_income',
-        date: '',
-        name: 'Total Income',
-        category: '',
-        status: 'calculated',
-        amount: totalIncome.toFixed(2),
-        target: '',
-        progress_pct: '',
-        currency: exportCurrency,
-        notes: 'Current reporting window total.',
-      },
-      {
-        section: 'summary',
-        item: 'total_expenses',
-        date: '',
-        name: 'Total Expenses',
-        category: '',
-        status: 'calculated',
-        amount: totalExpenses.toFixed(2),
-        target: '',
-        progress_pct: '',
-        currency: exportCurrency,
-        notes: 'Current reporting window total.',
-      },
-      ...reportPayload.transactionRows.map((transaction) => ({
-        section: 'transaction',
-        item: transaction.type.toLowerCase(),
-        date: transaction.date,
-        name: transaction.description,
-        category: transaction.category,
-        status: transaction.type,
-        amount: transaction.amount.toFixed(2),
-        target: '',
-        progress_pct: '',
-        currency: exportCurrency,
-        notes: '',
-      })),
-      ...reportPayload.budgetRows.map((budget) => ({
-        section: 'budget',
-        item: 'budget_status',
-        date: '',
-        name: budget.name,
-        category: budget.category,
-        status:
+    pushRow(['Summary'])
+    pushRow(['Metric', 'Value'])
+    pushRow(['Report Date', reportDateStamp])
+    pushRow(['Avg Daily Spend', formatCurrency(avgDailySpend)])
+    pushRow([
+      'Savings Rate',
+      `${Number.isFinite(savingsRate) ? savingsRate.toFixed(1) : '0.0'}%`,
+    ])
+    pushRow(['Total Income', formatCurrency(totalIncome)])
+    pushRow(['Total Expenses', formatCurrency(totalExpenses)])
+    pushBlankRow()
+
+    pushRow(['Transactions'])
+    pushRow(['Date', 'Description', 'Category', 'Type', 'Amount'])
+    if (reportPayload.transactionRows.length === 0) {
+      pushRow(['', 'No transactions available', '', '', ''])
+    } else {
+      reportPayload.transactionRows.forEach((transaction) => {
+        pushRow([
+          transaction.date,
+          transaction.description,
+          transaction.category,
+          transaction.type,
+          transaction.amount.toFixed(2),
+        ])
+      })
+    }
+
+    pushBlankRow()
+    pushRow(['Budgets'])
+    pushRow([
+      'Name',
+      'Category',
+      'Status',
+      'Spent',
+      'Budgeted',
+      'Remaining',
+      'Utilization %',
+    ])
+    if (reportPayload.budgetRows.length === 0) {
+      pushRow(['', 'No budgets available', '', '', '', '', ''])
+    } else {
+      reportPayload.budgetRows.forEach((budget) => {
+        const budgetStatus =
           budget.utilization > 100
             ? 'Over Budget'
             : budget.utilization > 80
               ? 'Warning'
-              : 'On Track',
-        amount: budget.spent.toFixed(2),
-        target: budget.budgeted.toFixed(2),
-        progress_pct: budget.utilization.toFixed(1),
-        currency: exportCurrency,
-        notes: `Remaining ${budget.remaining.toFixed(2)}`,
-      })),
-      ...reportPayload.goalRows.map((goal) => ({
-        section: 'goal',
-        item: 'goal_progress',
-        date: goal.targetDate === '—' ? '' : goal.targetDate,
-        name: goal.name,
-        category: '',
-        status: goal.progress >= 100 ? 'Completed' : 'In Progress',
-        amount: goal.current.toFixed(2),
-        target: goal.target.toFixed(2),
-        progress_pct: goal.progress.toFixed(1),
-        currency: exportCurrency,
-        notes: `Remaining ${goal.remaining.toFixed(2)}`,
-      })),
-    ]
+              : 'On Track'
+        pushRow([
+          budget.name,
+          budget.category,
+          budgetStatus,
+          budget.spent.toFixed(2),
+          budget.budgeted.toFixed(2),
+          budget.remaining.toFixed(2),
+          budget.utilization.toFixed(1),
+        ])
+      })
+    }
 
-    lines.push(csvHeaders.map((header) => escapeCsv(header)).join(','))
-    csvRows.forEach((row) => {
-      lines.push(
-        csvHeaders.map((header) => escapeCsv(row[header] ?? '')).join(',')
-      )
-    })
+    pushBlankRow()
+    pushRow(['Goals'])
+    pushRow([
+      'Name',
+      'Target Date',
+      'Status',
+      'Current',
+      'Target',
+      'Remaining',
+      'Progress %',
+    ])
+    if (reportPayload.goalRows.length === 0) {
+      pushRow(['', 'No goals available', '', '', '', '', ''])
+    } else {
+      reportPayload.goalRows.forEach((goal) => {
+        pushRow([
+          goal.name,
+          goal.targetDate === '—' ? '' : goal.targetDate,
+          goal.progress >= 100 ? 'Completed' : 'In Progress',
+          goal.current.toFixed(2),
+          goal.target.toFixed(2),
+          goal.remaining.toFixed(2),
+          goal.progress.toFixed(1),
+        ])
+      })
+    }
 
     const blob = new Blob([lines.join('\n')], {
       type: 'text/csv;charset=utf-8;',
@@ -551,7 +515,7 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     toast({
       title: 'CSV exported',
       description:
-        'Your CSV now uses concise columns for better spreadsheet readability.',
+        'Your CSV now uses spreadsheet-friendly sections and shorter headers.',
     })
   }
 

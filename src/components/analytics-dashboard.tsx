@@ -519,6 +519,184 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
     })
   }
 
+  const handleExportExcel = async () => {
+    if (!hasReportData) {
+      toast({
+        title: 'No data to export',
+        description:
+          'Add transactions, budgets, or goals to generate a report.',
+      })
+      return
+    }
+
+    const xlsx = await import('xlsx')
+    const reportPayload = buildReportPayload()
+    const reportDateStamp = reportPayload.reportDate.toISOString().slice(0, 10)
+    const exportCurrency = getDisplayPreferences().currency
+
+    const workbook = xlsx.utils.book_new()
+    workbook.Props = {
+      Title: 'FinanceFlow Analytics Report',
+      Subject: 'Financial analytics export',
+      Author: 'FinanceFlow',
+      CreatedDate: reportPayload.reportDate,
+    }
+
+    const summarySheetRows = [
+      ['FinanceFlow Analytics Report'],
+      ['Generated', reportDateStamp],
+      ['Currency', exportCurrency],
+      [],
+      ['Summary'],
+      ['Metric', 'Value'],
+      ['Report Date', reportDateStamp],
+      ['Avg Daily Spend', avgDailySpend],
+      ['Savings Rate %', Number.isFinite(savingsRate) ? savingsRate : 0],
+      ['Total Income', totalIncome],
+      ['Total Expenses', totalExpenses],
+    ]
+    const summarySheet = xlsx.utils.aoa_to_sheet(summarySheetRows)
+    summarySheet['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }]
+    summarySheet['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 16 }, { wch: 16 }]
+    summarySheet['!autofilter'] = { ref: 'A6:B11' }
+    if (summarySheet.B8) summarySheet.B8.z = '$#,##0.00'
+    if (summarySheet.B9) summarySheet.B9.z = '0.0'
+    if (summarySheet.B10) summarySheet.B10.z = '$#,##0.00'
+    if (summarySheet.B11) summarySheet.B11.z = '$#,##0.00'
+    xlsx.utils.book_append_sheet(workbook, summarySheet, 'Summary')
+
+    const transactionRows = reportPayload.transactionRows.map(
+      (transaction) => ({
+        Date: transaction.date,
+        Description: transaction.description,
+        Category: transaction.category,
+        Type: transaction.type,
+        Amount: transaction.amount,
+        Currency: exportCurrency,
+      })
+    )
+    const transactionSheet = xlsx.utils.json_to_sheet(
+      transactionRows.length > 0
+        ? transactionRows
+        : [
+            {
+              Date: '',
+              Description: 'No transactions available',
+              Category: '',
+              Type: '',
+              Amount: '',
+              Currency: exportCurrency,
+            },
+          ]
+    )
+    transactionSheet['!cols'] = [
+      { wch: 14 },
+      { wch: 34 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 14 },
+      { wch: 10 },
+    ]
+    transactionSheet['!autofilter'] = { ref: 'A1:F1' }
+    xlsx.utils.book_append_sheet(workbook, transactionSheet, 'Transactions')
+
+    const budgetRows = reportPayload.budgetRows.map((budget) => {
+      const utilization = budget.utilization
+      const status =
+        utilization > 100
+          ? 'Over Budget'
+          : utilization > 80
+            ? 'Warning'
+            : 'On Track'
+
+      return {
+        Name: budget.name,
+        Category: budget.category,
+        Status: status,
+        Spent: budget.spent,
+        Budgeted: budget.budgeted,
+        Remaining: budget.remaining,
+        'Utilization %': utilization,
+        Currency: exportCurrency,
+      }
+    })
+    const budgetSheet = xlsx.utils.json_to_sheet(
+      budgetRows.length > 0
+        ? budgetRows
+        : [
+            {
+              Name: 'No budgets available',
+              Category: '',
+              Status: '',
+              Spent: '',
+              Budgeted: '',
+              Remaining: '',
+              'Utilization %': '',
+              Currency: exportCurrency,
+            },
+          ]
+    )
+    budgetSheet['!cols'] = [
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 10 },
+    ]
+    budgetSheet['!autofilter'] = { ref: 'A1:H1' }
+    xlsx.utils.book_append_sheet(workbook, budgetSheet, 'Budgets')
+
+    const goalRows = reportPayload.goalRows.map((goal) => ({
+      Name: goal.name,
+      'Target Date': goal.targetDate === '—' ? '' : goal.targetDate,
+      Status: goal.progress >= 100 ? 'Completed' : 'In Progress',
+      Current: goal.current,
+      Target: goal.target,
+      Remaining: goal.remaining,
+      'Progress %': goal.progress,
+      Currency: exportCurrency,
+    }))
+    const goalSheet = xlsx.utils.json_to_sheet(
+      goalRows.length > 0
+        ? goalRows
+        : [
+            {
+              Name: 'No goals available',
+              'Target Date': '',
+              Status: '',
+              Current: '',
+              Target: '',
+              Remaining: '',
+              'Progress %': '',
+              Currency: exportCurrency,
+            },
+          ]
+    )
+    goalSheet['!cols'] = [
+      { wch: 26 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 10 },
+    ]
+    goalSheet['!autofilter'] = { ref: 'A1:H1' }
+    xlsx.utils.book_append_sheet(workbook, goalSheet, 'Goals')
+
+    xlsx.writeFile(workbook, `financeflow-report-${reportDateStamp}.xlsx`)
+
+    toast({
+      title: 'Excel workbook exported',
+      description:
+        'Your report was exported as a formatted .xlsx workbook with separate sheets.',
+    })
+  }
+
   const handleExportPdf = () => {
     if (!hasReportData) {
       toast({
@@ -1173,6 +1351,15 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                   variant="outline"
                   size="sm"
                   className="rounded-full text-xs font-semibold"
+                  onClick={handleExportExcel}
+                  disabled={!hasReportData}
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs font-semibold"
                   onClick={handleExportCsv}
                   disabled={!hasReportData}
                 >
@@ -1228,6 +1415,15 @@ const AnalyticsDashboard = memo(function AnalyticsDashboard({
                     </p>
                   </div>
                   <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs font-semibold rounded-full"
+                      onClick={handleExportExcel}
+                      disabled={!hasReportData}
+                    >
+                      Export Excel
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

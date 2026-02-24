@@ -101,7 +101,7 @@ export default function BillingPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const searchParams = useSearchParams()
-  const { startDemoMode, isDemoMode } = useDemoMode()
+  const { startDemoMode } = useDemoMode()
   const { toast } = useToast()
   const { data, isLoading } = useBillingStatus()
   const [isSubmittingPlan, setIsSubmittingPlan] = useState<string | null>(null)
@@ -230,69 +230,6 @@ export default function BillingPage() {
           continue using demo mode and try again later.
         </div>
       ) : null}
-
-      <Card className="border-border/70 bg-card/90">
-        <CardHeader>
-          <CardTitle className="text-lg">Current access</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          <p>
-            Active plan:{' '}
-            <span className="font-medium text-foreground">
-              {isDemoMode
-                ? 'DEMO'
-                : isSuperUser
-                  ? 'PRO (Superuser)'
-                  : activeLivePlan}
-            </span>
-          </p>
-          {data?.currentSubscription ? (
-            <>
-              <p>Status: {data.currentSubscription.status}</p>
-              {data.currentSubscription.trialEndsAt ? (
-                <p>
-                  Trial ends:{' '}
-                  {new Date(
-                    data.currentSubscription.trialEndsAt
-                  ).toLocaleDateString()}
-                </p>
-              ) : null}
-            </>
-          ) : !isDemoMode ? (
-            <p>
-              {activeLivePlan === 'FREE'
-                ? 'You can continue using the Free plan and upgrade anytime.'
-                : 'No active paid subscription found.'}
-            </p>
-          ) : (
-            <p>
-              Demo mode uses sample data and does not create a live
-              subscription.
-            </p>
-          )}
-          {data?.currentSubscription ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                className="min-h-11"
-                onClick={handleOpenCustomerPortal}
-                disabled={isOpeningPortal || !isStripePortalConfigured}
-              >
-                {isOpeningPortal ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Opening portal...
-                  </>
-                ) : !isStripePortalConfigured ? (
-                  'Portal unavailable'
-                ) : (
-                  'Manage subscription'
-                )}
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="border-border/70 bg-card/90">

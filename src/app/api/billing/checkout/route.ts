@@ -10,6 +10,32 @@ import {
   enforceRateLimit,
 } from '@/lib/request-rate-limit'
 
+const resolveApplicationOrigin = (request: NextRequest) => {
+  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (publicAppUrl) {
+    try {
+      return new URL(publicAppUrl).origin
+    } catch {
+      console.warn(
+        'NEXT_PUBLIC_APP_URL is invalid for billing checkout. Falling back to request origin.'
+      )
+    }
+  }
+
+  const nextAuthUrl = process.env.NEXTAUTH_URL?.trim()
+  if (nextAuthUrl) {
+    try {
+      return new URL(nextAuthUrl).origin
+    } catch {
+      console.warn(
+        'NEXTAUTH_URL is invalid for billing checkout. Falling back to request origin.'
+      )
+    }
+  }
+
+  return request.nextUrl.origin
+}
+
 const parsePlan = (value: unknown): AppPlan | null => {
   if (value === 'BASIC' || value === AppPlan.BASIC) {
     return AppPlan.BASIC
@@ -103,7 +129,7 @@ export async function POST(request: NextRequest) {
     const isFirstTimeSubscriber = subscriptions.length === 0
     const trialPeriodDays = isFirstTimeSubscriber ? 7 : 0
 
-    const origin = request.nextUrl.origin
+    const origin = resolveApplicationOrigin(request)
     const checkoutSession = await stripeClient.checkout.sessions.create({
       mode: 'subscription',
       customer: stripeCustomerId,
@@ -132,7 +158,21 @@ export async function POST(request: NextRequest) {
       checkoutUrl: checkoutSession.url,
     })
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    const stripeError = error as
+      | {
+          type?: string
+          code?: string
+          message?: string
+          requestId?: string
+          raw?: { message?: string }
+        }
+      | undefined
+    console.error('Error creating checkout session:', {
+      type: stripeError?.type,
+      code: stripeError?.code,
+      message: stripeError?.message ?? stripeError?.raw?.message,
+      requestId: stripeError?.requestId,
+    })
     return NextResponse.json(
       { error: 'Failed to create checkout session.' },
       { status: 500 }

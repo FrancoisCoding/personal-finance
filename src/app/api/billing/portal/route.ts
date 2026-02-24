@@ -6,6 +6,32 @@ import { stripeClient } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
+const resolveApplicationOrigin = (request: NextRequest) => {
+  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (publicAppUrl) {
+    try {
+      return new URL(publicAppUrl).origin
+    } catch {
+      console.warn(
+        'NEXT_PUBLIC_APP_URL is invalid for billing portal. Falling back to request origin.'
+      )
+    }
+  }
+
+  const nextAuthUrl = process.env.NEXTAUTH_URL?.trim()
+  if (nextAuthUrl) {
+    try {
+      return new URL(nextAuthUrl).origin
+    } catch {
+      console.warn(
+        'NEXTAUTH_URL is invalid for billing portal. Falling back to request origin.'
+      )
+    }
+  }
+
+  return request.nextUrl.origin
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!stripeClient) {
@@ -36,7 +62,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const origin = request.nextUrl.origin
+    const origin = resolveApplicationOrigin(request)
     const portalSession = await stripeClient.billingPortal.sessions.create({
       customer: stripeCustomerId,
       return_url: `${origin}/billing`,
@@ -44,7 +70,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: portalSession.url })
   } catch (error) {
-    console.error('Error creating customer portal session:', error)
+    const stripeError = error as
+      | {
+          type?: string
+          code?: string
+          message?: string
+          requestId?: string
+          raw?: { message?: string }
+        }
+      | undefined
+    console.error('Error creating customer portal session:', {
+      type: stripeError?.type,
+      code: stripeError?.code,
+      message: stripeError?.message ?? stripeError?.raw?.message,
+      requestId: stripeError?.requestId,
+    })
     return NextResponse.json(
       { error: 'Failed to open billing portal.' },
       { status: 500 }

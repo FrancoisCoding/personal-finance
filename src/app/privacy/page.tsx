@@ -5,7 +5,7 @@ import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy and Data Practices',
+  title: 'FinanceFlow Privacy Policy',
   description:
     'Read the FinanceFlow Privacy Policy to understand how we collect, use, protect, and retain account, transaction, and usage data.',
   alternates: {
@@ -78,6 +78,11 @@ export default function PrivacyPage() {
             processes, how the platform uses information to deliver features,
             and how to request help with privacy questions or account data.
           </p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            This overview is written to be readable first. For legal requests or
+            account-specific questions, contact support so the team can verify
+            ownership and guide you through the correct request process.
+          </p>
           <div className="grid gap-6">
             <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
               <CardHeader>
@@ -85,8 +90,8 @@ export default function PrivacyPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
-                  We collect information you provide directly, including account
-                  details, profile information, and financial data you choose to
+                  We collect details you provide directly, including account
+                  records, profile details, and financial activity you choose to
                   connect.
                 </p>
                 <ul className="list-disc pl-5 space-y-2">
@@ -103,8 +108,8 @@ export default function PrivacyPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
-                  We use your information to provide, improve, and secure the
-                  FinanceFlow experience.
+                  We use account records and usage details to provide, improve,
+                  and secure the FinanceFlow experience.
                 </p>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>Deliver personalized insights and dashboards.</li>
@@ -120,7 +125,7 @@ export default function PrivacyPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
-                  We do not sell your personal data. We share information only
+                  We do not sell personal details. We share account records only
                   with trusted service providers needed to operate the platform
                   or when required by law.
                 </p>
@@ -147,7 +152,7 @@ export default function PrivacyPage() {
               <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
                   You can update your profile, disconnect accounts, or request
-                  data deletion by contacting support.
+                  account record deletion by contacting support.
                 </p>
                 <p>
                   If you contact support for a privacy request, include the

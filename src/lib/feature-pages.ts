@@ -26,8 +26,7 @@ export const featurePages: IFeaturePageContent[] = [
       'Plan monthly spending, track category limits, and forecast cash flow with a clearer view of what is safe to spend.',
     description:
       'FinanceFlow helps you manage monthly budgets and forecast short-term cash flow in one workspace. Instead of tracking categories in a spreadsheet and checking balances in a separate app, you can see spending progress, expected bills, and projected runway together. This makes it easier to avoid overdrafts, adjust categories early, and plan upcoming weeks with more confidence.',
-    metaTitle:
-      'Budgeting and Cash Flow Forecasting Software | FinanceFlow Features',
+    metaTitle: 'Budgeting and Cash Flow Forecasting',
     metaDescription:
       'Explore FinanceFlow budgeting and cash flow forecasting tools to track spending, monitor category limits, and plan bills with clearer monthly visibility.',
     keyBenefits: [
@@ -62,26 +61,25 @@ export const featurePages: IFeaturePageContent[] = [
   },
   {
     slug: 'subscription-tracking-and-renewal-alerts',
-    title: 'Subscription Tracking and Renewal Alerts',
+    title: 'Recurring Charge Tracking and Renewal Alerts',
     categoryLabel: 'Subscriptions',
     summary:
-      'Monitor recurring charges, spot duplicate services, and get renewal reminders before charges hit your account.',
+      'Monitor recurring charges, spot duplicate services, and get renewal reminders before bills hit your account.',
     description:
-      'FinanceFlow makes subscription management easier by identifying recurring charges and showing them in one place. You can review upcoming renewals, compare monthly recurring costs, and find opportunities to downgrade or cancel unused services. This is especially useful when subscriptions are spread across multiple cards or bank accounts.',
-    metaTitle:
-      'Subscription Tracking and Renewal Alerts | FinanceFlow Features',
+      'FinanceFlow makes recurring bill management easier by identifying repeating charges and showing them in one place. You can review upcoming renewals, compare monthly recurring costs, and find opportunities to downgrade or cancel unused services. This is especially useful when memberships and recurring bills are spread across multiple cards or bank accounts.',
+    metaTitle: 'Recurring Charge Tracking and Renewal Alerts',
     metaDescription:
-      'Track recurring charges, monitor subscription spending, and get renewal alerts with FinanceFlow subscription management tools for personal finances.',
+      'Track recurring charges, monitor membership spending, and get renewal alerts with FinanceFlow tools for personal finances.',
     keyBenefits: [
-      'Centralize recurring subscriptions across multiple accounts',
-      'See monthly subscription totals and renewal timing',
+      'Centralize recurring bills and memberships across multiple accounts',
+      'See monthly recurring totals and renewal timing',
       'Catch duplicate or forgotten services faster',
       'Get reminders before recurring charges renew',
     ],
     useCases: [
       'Reducing monthly recurring spending',
       'Reviewing annual renewals before they bill',
-      'Tracking streaming, software, and utility subscriptions',
+      'Tracking streaming, software, and utility memberships',
       'Preparing for price increases on recurring services',
     ],
     longTailKeywords: [
@@ -110,8 +108,7 @@ export const featurePages: IFeaturePageContent[] = [
       'Ask better finance questions, get context-aware insights, and identify spending trends without manually building reports.',
     description:
       'FinanceFlow includes AI-assisted financial insights designed for everyday decision-making. Instead of only showing charts, the app highlights what changed, why it matters, and what to do next. You can review spending patterns, ask follow-up questions, and get guidance that is grounded in your actual account activity and budgets.',
-    metaTitle:
-      'AI Financial Insights and Budget Assistant | FinanceFlow Features',
+    metaTitle: 'AI Financial Insights and Budget Assistant',
     metaDescription:
       'Use FinanceFlow AI financial insights and assistant tools to understand spending trends, ask finance questions, and get clear next-step guidance.',
     keyBenefits: [
@@ -152,8 +149,7 @@ export const featurePages: IFeaturePageContent[] = [
       'Export finance data to Excel and PDF, review summaries, and share readable reports without messy spreadsheets.',
     description:
       'FinanceFlow reporting tools are built for people who need clean outputs, not raw dumps. You can generate spreadsheet-ready exports for analysis and printable PDF reports for review or sharing. This is useful for personal financial reviews, advisor meetings, and keeping clean records without manually formatting exports every month.',
-    metaTitle:
-      'Financial Reporting and Excel/PDF Exports | FinanceFlow Features',
+    metaTitle: 'Financial Reporting and Excel/PDF Exports',
     metaDescription:
       'Generate clean financial reports and Excel or PDF exports with FinanceFlow for budgeting reviews, spending analysis, and record keeping.',
     keyBenefits: [

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldCheck, Lock, Eye, Zap, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Security and Data Protection',
+  title: 'FinanceFlow Security',
   description:
     'Learn how FinanceFlow protects your financial data with encryption, monitoring, audits, and proactive alerts designed for secure personal finance management.',
   alternates: {

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { CheckCircle, AlertTriangle, Clock, ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'System Status and Uptime',
+  title: 'FinanceFlow Status',
   description:
     'Check real-time FinanceFlow service status, uptime metrics, maintenance notices, and platform availability updates for core product systems.',
   alternates: {
@@ -157,6 +157,31 @@ export default function StatusPage() {
               </Card>
             ))}
           </div>
+        </section>
+
+        <section
+          aria-labelledby="status-updates-heading"
+          className="space-y-3 rounded-2xl border border-border/60 bg-card/40 p-6"
+        >
+          <h2
+            id="status-updates-heading"
+            className="text-xl font-semibold tracking-tight"
+          >
+            How status updates are published
+          </h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            FinanceFlow posts updates here when maintenance windows begin, when
+            incidents are under investigation, and when services return to
+            normal operation. The goal is to give users a clear timeline so they
+            can decide whether to retry a workflow, wait for a fix, or contact
+            support with account-specific details.
+          </p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            For the fastest support response, include the impacted feature,
+            approximate time, and any visible error message. Reports with
+            specific details help distinguish product outages from connection
+            issues, account permissions, or temporary browser problems.
+          </p>
         </section>
 
         <div className="text-center pt-8">

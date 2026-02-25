@@ -5,7 +5,7 @@ import { LandingNavbar } from '@/components/landing-navbar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'About and Mission',
+  title: 'About FinanceFlow',
   description:
     'Learn why FinanceFlow was built and how it helps people manage budgets, subscriptions, and financial decisions with clearer data and AI insights.',
   alternates: {

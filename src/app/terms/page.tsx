@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | FinanceFlow Account, Billing, and Usage Terms',
+  title: 'FinanceFlow Terms of Service',
   description:
     'Read the FinanceFlow Terms of Service covering account responsibilities, acceptable use, subscriptions, billing, service availability, and support.',
   alternates: {

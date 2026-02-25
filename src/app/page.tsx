@@ -203,6 +203,9 @@ export default function LandingPage() {
               </FadeIn>
             </div>
 
+            <h2 className="sr-only">
+              FinanceFlow dashboard preview and product interface
+            </h2>
             <FadeIn delay={0.4} className="w-full">
               <InteractiveHero />
             </FadeIn>

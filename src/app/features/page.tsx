@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { featurePages } from '@/lib/feature-pages'
 
 export const metadata: Metadata = {
-  title: 'Features: Budgeting, AI Insights, and Reporting',
+  title: 'FinanceFlow Features',
   description:
     'Explore FinanceFlow features for budgeting, cash flow forecasting, subscription tracking, AI financial insights, and financial reporting exports.',
   alternates: {

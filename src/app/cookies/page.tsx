@@ -4,7 +4,7 @@ import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy and Preferences',
+  title: 'FinanceFlow Cookie Policy',
   description:
     'Read the FinanceFlow Cookie Policy to learn how cookies are used for authentication, security, preferences, analytics, and platform functionality.',
   alternates: {
@@ -79,6 +79,12 @@ export default function CookiesPage() {
             core features to work properly, while others help us understand
             platform usage patterns so the product can be improved over time.
           </p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Browser controls differ, so the names of settings may vary by
+            device. If you restrict storage technologies, review sign-in and
+            session behavior after changes to confirm the product still works as
+            expected.
+          </p>
           <div className="grid gap-6">
             <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
               <CardHeader>
@@ -100,7 +106,7 @@ export default function CookiesPage() {
               <CardContent className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 <p>
                   We use cookies for several reasons, including security,
-                  authentication, and remembering your preferences.
+                  sign-in, and remembering your preferences across visits.
                 </p>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
@@ -118,6 +124,10 @@ export default function CookiesPage() {
                   <li>
                     <strong>Analytics:</strong> To understand how users interact
                     with our platform.
+                  </li>
+                  <li>
+                    <strong>Performance:</strong> To help us evaluate service
+                    reliability and improve the product experience.
                   </li>
                 </ul>
               </CardContent>

@@ -18,11 +18,20 @@ export const metadata: Metadata = {
     description:
       'See how FinanceFlow uses encryption, continuous monitoring, audits, and alerts to protect account and financial data.',
     url: '/security',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow security page',
+      },
+    ],
   },
   twitter: {
     title: 'FinanceFlow Security',
     description:
       'See how FinanceFlow uses encryption, continuous monitoring, audits, and alerts to protect account and financial data.',
+    images: ['/twitter-image'],
   },
 }
 

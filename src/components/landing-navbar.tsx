@@ -16,7 +16,19 @@ export function LandingNavbar() {
           <Link href="/">
             <Logo size="lg" />
           </Link>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden md:flex items-center gap-1">
+              <Link href="/features">
+                <Button variant="ghost" size="sm">
+                  Features
+                </Button>
+              </Link>
+              <Link href="/plans">
+                <Button variant="ghost" size="sm">
+                  Pricing
+                </Button>
+              </Link>
+            </div>
             <ThemeToggle />
             {session ? (
               <Link href="/dashboard">

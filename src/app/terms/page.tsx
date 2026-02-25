@@ -17,11 +17,20 @@ export const metadata: Metadata = {
     description:
       'Review the terms governing account use, subscriptions, billing, and service availability for FinanceFlow.',
     url: '/terms',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow terms of service',
+      },
+    ],
   },
   twitter: {
     title: 'FinanceFlow Terms of Service',
     description:
       'Review the terms governing account use, subscriptions, billing, and service availability for FinanceFlow.',
+    images: ['/twitter-image'],
   },
 }
 

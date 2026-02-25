@@ -18,11 +18,20 @@ export const metadata: Metadata = {
     description:
       'Monitor FinanceFlow uptime, maintenance notices, and real-time service availability updates.',
     url: '/status',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow system status',
+      },
+    ],
   },
   twitter: {
     title: 'FinanceFlow System Status',
     description:
       'Monitor FinanceFlow uptime, maintenance notices, and real-time service availability updates.',
+    images: ['/twitter-image'],
   },
 }
 

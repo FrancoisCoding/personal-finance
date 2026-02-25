@@ -16,11 +16,20 @@ export const metadata: Metadata = {
     description:
       'Review how FinanceFlow collects, uses, protects, and retains personal and financial information.',
     url: '/privacy',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow privacy policy',
+      },
+    ],
   },
   twitter: {
     title: 'FinanceFlow Privacy Policy',
     description:
       'Review how FinanceFlow collects, uses, protects, and retains personal and financial information.',
+    images: ['/twitter-image'],
   },
 }
 

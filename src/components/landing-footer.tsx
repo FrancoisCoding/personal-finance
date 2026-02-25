@@ -28,7 +28,7 @@ export function LandingFooter() {
               <a
                 href="https://www.linkedin.com/in/francoiscoding/"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 aria-label="LinkedIn"
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               >
@@ -47,6 +47,7 @@ export function LandingFooter() {
           <FooterColumn
             title="Platform"
             links={[
+              { label: 'Features', href: '/features' },
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Pricing', href: '/plans' },
               { label: 'Security', href: '/security' },

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { featurePages } from '@/lib/feature-pages'
 
 const getSiteUrl = () => {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
@@ -11,12 +12,24 @@ const getSiteUrl = () => {
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl()
   const lastModified = new Date()
+  const featurePageEntries = featurePages.map((featurePage) => ({
+    url: `${siteUrl}/features/${featurePage.slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+    lastModified,
+  }))
 
   return [
     {
       url: `${siteUrl}/`,
       changeFrequency: 'weekly',
       priority: 1,
+      lastModified,
+    },
+    {
+      url: `${siteUrl}/features`,
+      changeFrequency: 'weekly',
+      priority: 0.85,
       lastModified,
     },
     {
@@ -61,5 +74,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
       lastModified,
     },
+    ...featurePageEntries,
   ]
 }

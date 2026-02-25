@@ -15,11 +15,20 @@ export const metadata: Metadata = {
     description:
       'Learn how FinanceFlow uses cookies for authentication, security, preferences, analytics, and platform features.',
     url: '/cookies',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'FinanceFlow cookie policy',
+      },
+    ],
   },
   twitter: {
     title: 'FinanceFlow Cookie Policy',
     description:
       'Learn how FinanceFlow uses cookies for authentication, security, preferences, analytics, and platform features.',
+    images: ['/twitter-image'],
   },
 }
 

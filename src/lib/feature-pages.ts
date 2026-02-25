@@ -29,7 +29,7 @@ export const featurePages: IFeaturePageContent[] = [
     metaTitle:
       'Budgeting and Cash Flow Forecasting Software | FinanceFlow Features',
     metaDescription:
-      'Explore FinanceFlow budgeting and cash flow forecasting tools to track spending, monitor category limits, and plan upcoming bills with clearer monthly visibility.',
+      'Explore FinanceFlow budgeting and cash flow forecasting tools to track spending, monitor category limits, and plan bills with clearer monthly visibility.',
     keyBenefits: [
       'Track category budgets and overspending risk in one dashboard',
       'See projected cash flow and upcoming outflows before due dates',

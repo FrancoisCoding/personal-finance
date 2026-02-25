@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Support & Help Center',
+  title: 'Support: Billing and Product Help',
   description:
     'Get FinanceFlow support, contact help, and browse answers to billing, account, exports, and security questions in the FinanceFlow help center.',
   alternates: {

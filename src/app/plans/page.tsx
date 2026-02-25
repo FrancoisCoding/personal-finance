@@ -325,238 +325,252 @@ export default function PlansPage() {
           ) : null}
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-border/70 bg-card/90">
-            <CardHeader>
-              <CardTitle className="text-xl">Demo mode</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Explore the experience with curated sample data.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2 text-balance">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                  <span>No subscription required</span>
-                </li>
-                <li className="flex items-start gap-2 text-balance">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                  <span>Guided product walkthrough</span>
-                </li>
-                <li className="flex items-start gap-2 text-balance">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                  <span>Ideal for evaluation and recruiting demos</span>
-                </li>
-                <li className="flex items-start gap-2 text-balance">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                  <span>AI Assistant chat is disabled in demo mode</span>
-                </li>
-              </ul>
-              <Button
-                variant="outline"
-                className="min-h-11"
-                onClick={handleEnterDemo}
-              >
-                Enter demo mode
-              </Button>
-            </CardContent>
-          </Card>
-
-          {shouldShowPlanLoading ? (
-            <Card className="border-border/70 bg-card/90 lg:col-span-2">
-              <CardContent className="flex min-h-[220px] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <section aria-labelledby="plans-grid-heading" className="space-y-4">
+          <h2
+            id="plans-grid-heading"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            Compare FinanceFlow plan options
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Review what is included, what is limited, and which plan is the best
+            fit for your financial workflow before choosing a subscription.
+          </p>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-border/70 bg-card/90">
+              <CardHeader>
+                <CardTitle className="text-xl">Demo mode</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Explore the experience with curated sample data.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2 text-balance">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                    <span>No subscription required</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-balance">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                    <span>Guided product walkthrough</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-balance">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                    <span>Ideal for evaluation and recruiting demos</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-balance">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                    <span>AI Assistant chat is disabled in demo mode</span>
+                  </li>
+                </ul>
+                <Button
+                  variant="outline"
+                  className="min-h-11"
+                  onClick={handleEnterDemo}
+                >
+                  Enter demo mode
+                </Button>
               </CardContent>
             </Card>
-          ) : (
-            availablePlans.map((plan) => {
-              const isFreePlan = plan.plan === 'FREE'
-              const isPopularPlan = plan.plan === 'PRO'
-              const isCurrentPlan = currentPlan === plan.plan
-              const isSubmitting = isSubmittingPlan === plan.plan
-              const displayedPricing = getDisplayedPlanPricing(
-                plan,
-                billingInterval
-              )
-              const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
-              return (
-                <Card
-                  key={plan.plan}
-                  className={
-                    'relative border-border/70 bg-card/90 ' +
-                    (isPopularPlan ? 'ring-1 ring-emerald-500/40' : '')
-                  }
-                >
-                  {isPopularPlan ? (
-                    <div className="absolute inset-x-4 -top-3 flex justify-center">
-                      <span className="inline-flex min-h-7 items-center rounded-full border border-emerald-300/35 bg-emerald-400 px-3.5 py-1 text-xs font-semibold tracking-[0.08em] text-slate-950 shadow-sm shadow-emerald-950/20">
-                        Most popular
-                      </span>
-                    </div>
-                  ) : null}
-                  <CardHeader>
+
+            {shouldShowPlanLoading ? (
+              <Card className="border-border/70 bg-card/90 lg:col-span-2">
+                <CardContent className="flex min-h-[220px] items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </CardContent>
+              </Card>
+            ) : (
+              availablePlans.map((plan) => {
+                const isFreePlan = plan.plan === 'FREE'
+                const isPopularPlan = plan.plan === 'PRO'
+                const isCurrentPlan = currentPlan === plan.plan
+                const isSubmitting = isSubmittingPlan === plan.plan
+                const displayedPricing = getDisplayedPlanPricing(
+                  plan,
+                  billingInterval
+                )
+                const isDisabled = isSuperUser || isCurrentPlan || isSubmitting
+                return (
+                  <Card
+                    key={plan.plan}
+                    className={
+                      'relative border-border/70 bg-card/90 ' +
+                      (isPopularPlan ? 'ring-1 ring-emerald-500/40' : '')
+                    }
+                  >
                     {isPopularPlan ? (
-                      <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-300/90">
-                        Best value for active users
-                      </p>
+                      <div className="absolute inset-x-4 -top-3 flex justify-center">
+                        <span className="inline-flex min-h-7 items-center rounded-full border border-emerald-300/35 bg-emerald-400 px-3.5 py-1 text-xs font-semibold tracking-[0.08em] text-slate-950 shadow-sm shadow-emerald-950/20">
+                          Most popular
+                        </span>
+                      </div>
                     ) : null}
-                    <CardTitle className="space-y-2.5">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-2 text-lg">
-                          <span>{plan.name}</span>
-                          {isCurrentPlan ? (
-                            <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-                              Current
-                            </span>
-                          ) : null}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {displayedPricing.compareAtMonthlyPriceLabel ? (
-                          <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
-                              {displayedPricing.compareAtMonthlyPriceLabel}
-                            </span>
-                            <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-                              {displayedPricing.savingsLabel ?? 'Discount'}
-                            </span>
-                          </div>
-                        ) : null}
-                        <span
-                          className={
-                            'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
-                            (isPopularPlan
-                              ? 'text-emerald-200'
-                              : 'text-foreground')
-                          }
-                        >
-                          {displayedPricing.displayedPriceLabel}
-                        </span>
-                        {displayedPricing.detailLabel ? (
-                          <p className="text-xs font-medium text-muted-foreground">
-                            {displayedPricing.detailLabel}
-                          </p>
-                        ) : null}
-                      </div>
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {plan.description}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      {plan.featureList.map((feature) => (
-                        <li
-                          key={feature}
-                          className="flex items-start gap-2 text-balance"
-                        >
-                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div
-                      className={
-                        'rounded-xl border p-4 space-y-4 ' +
-                        (isCurrentPlan
-                          ? 'border-emerald-400/35 bg-emerald-500/5'
-                          : 'border-border/60 bg-muted/10')
-                      }
-                    >
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/80">
-                          Included on this plan
+                    <CardHeader>
+                      {isPopularPlan ? (
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-300/90">
+                          Best value for active users
                         </p>
-                        <ul className="space-y-2 text-sm">
-                          {planCapabilitiesByPlan[
-                            plan.plan as keyof typeof planCapabilitiesByPlan
-                          ].included.map((item) => (
-                            <li key={item} className="flex items-start gap-2">
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-                              <span className="text-foreground/90">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="space-y-2 border-t border-border/50 pt-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                          Limited on this plan
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                          {planCapabilitiesByPlan[
-                            plan.plan as keyof typeof planCapabilitiesByPlan
-                          ].limited.map((item) => (
-                            <li key={item} className="flex items-start gap-2">
-                              <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/70" />
-                              <span className="text-muted-foreground">
-                                {item}
+                      ) : null}
+                      <CardTitle className="space-y-2.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="flex items-center gap-2 text-lg">
+                            <span>{plan.name}</span>
+                            {isCurrentPlan ? (
+                              <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                                Current
                               </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    <Button
-                      className={
-                        'min-h-11 ' +
-                        (isPopularPlan
-                          ? 'w-full bg-emerald-400 text-slate-950 hover:bg-emerald-300'
-                          : '')
-                      }
-                      variant={isPopularPlan ? 'default' : 'outline'}
-                      disabled={isDisabled}
-                      onClick={() => {
-                        if (isFreePlan) {
-                          if (!session?.user?.id) {
-                            router.push(
-                              `/auth/register?callbackUrl=${encodeURIComponent('/dashboard')}`
-                            )
-                            return
-                          }
-                          if (isCurrentPlan) {
-                            router.push('/dashboard')
-                            return
-                          }
-                          router.push('/billing')
-                          return
+                            ) : null}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {displayedPricing.compareAtMonthlyPriceLabel ? (
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              <span className="text-muted-foreground line-through decoration-muted-foreground/70 decoration-2">
+                                {displayedPricing.compareAtMonthlyPriceLabel}
+                              </span>
+                              <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+                                {displayedPricing.savingsLabel ?? 'Discount'}
+                              </span>
+                            </div>
+                          ) : null}
+                          <span
+                            className={
+                              'block text-3xl font-semibold tracking-tight sm:text-4xl ' +
+                              (isPopularPlan
+                                ? 'text-emerald-200'
+                                : 'text-foreground')
+                            }
+                          >
+                            {displayedPricing.displayedPriceLabel}
+                          </span>
+                          {displayedPricing.detailLabel ? (
+                            <p className="text-xs font-medium text-muted-foreground">
+                              {displayedPricing.detailLabel}
+                            </p>
+                          ) : null}
+                        </div>
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {plan.description}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        {plan.featureList.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-start gap-2 text-balance"
+                          >
+                            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div
+                        className={
+                          'rounded-xl border p-4 space-y-4 ' +
+                          (isCurrentPlan
+                            ? 'border-emerald-400/35 bg-emerald-500/5'
+                            : 'border-border/60 bg-muted/10')
                         }
-                        handleSelectPlan(plan.plan as 'BASIC' | 'PRO')
-                      }}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Redirecting...
-                        </>
-                      ) : isSuperUser ? (
-                        'Superuser access enabled'
-                      ) : isFreePlan && isCurrentPlan ? (
-                        'Current plan'
-                      ) : isFreePlan ? (
-                        session?.user?.id ? (
-                          'Manage in billing'
+                      >
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground/80">
+                            Included on this plan
+                          </p>
+                          <ul className="space-y-2 text-sm">
+                            {planCapabilitiesByPlan[
+                              plan.plan as keyof typeof planCapabilitiesByPlan
+                            ].included.map((item) => (
+                              <li key={item} className="flex items-start gap-2">
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                                <span className="text-foreground/90">
+                                  {item}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="space-y-2 border-t border-border/50 pt-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                            Limited on this plan
+                          </p>
+                          <ul className="space-y-2 text-sm">
+                            {planCapabilitiesByPlan[
+                              plan.plan as keyof typeof planCapabilitiesByPlan
+                            ].limited.map((item) => (
+                              <li key={item} className="flex items-start gap-2">
+                                <MinusCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/70" />
+                                <span className="text-muted-foreground">
+                                  {item}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                      <Button
+                        className={
+                          'min-h-11 ' +
+                          (isPopularPlan
+                            ? 'w-full bg-emerald-400 text-slate-950 hover:bg-emerald-300'
+                            : '')
+                        }
+                        variant={isPopularPlan ? 'default' : 'outline'}
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (isFreePlan) {
+                            if (!session?.user?.id) {
+                              router.push(
+                                `/auth/register?callbackUrl=${encodeURIComponent('/dashboard')}`
+                              )
+                              return
+                            }
+                            if (isCurrentPlan) {
+                              router.push('/dashboard')
+                              return
+                            }
+                            router.push('/billing')
+                            return
+                          }
+                          handleSelectPlan(plan.plan as 'BASIC' | 'PRO')
+                        }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Redirecting...
+                          </>
+                        ) : isSuperUser ? (
+                          'Superuser access enabled'
+                        ) : isFreePlan && isCurrentPlan ? (
+                          'Current plan'
+                        ) : isFreePlan ? (
+                          session?.user?.id ? (
+                            'Manage in billing'
+                          ) : (
+                            'Get started free'
+                          )
+                        ) : isCurrentPlan ? (
+                          'Current plan'
+                        ) : session?.user?.id ? (
+                          `Sign up for ${plan.name}`
                         ) : (
-                          'Get started free'
-                        )
-                      ) : isCurrentPlan ? (
-                        'Current plan'
-                      ) : session?.user?.id ? (
-                        `Sign up for ${plan.name}`
-                      ) : (
-                        `Sign in for ${plan.name}`
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )
-            })
-          )}
+                          `Sign in for ${plan.name}`
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
+          </section>
         </section>
 
         <div className="text-sm text-muted-foreground">
           Already a member?{' '}
           <Link href="/auth/login" className="text-foreground underline">
-            Sign in
+            Sign in to your account
           </Link>{' '}
           or manage your plan from{' '}
           <Link href="/billing" className="text-foreground underline">

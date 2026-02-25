@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { featurePages } from '@/lib/feature-pages'
 
 export const metadata: Metadata = {
-  title: 'Features | Budgeting, Subscriptions, AI Insights, and Reporting',
+  title: 'Features: Budgeting, AI Insights, and Reporting',
   description:
     'Explore FinanceFlow features for budgeting, cash flow forecasting, subscription tracking, AI financial insights, and financial reporting exports.',
   alternates: {
@@ -81,6 +81,12 @@ export default function FeaturesPage() {
             insights, and exports. Each page explains what the feature does,
             when to use it, and how it helps in real workflows.
           </p>
+          <p className="mx-auto max-w-3xl text-sm leading-6 text-muted-foreground">
+            These pages are designed for people comparing personal finance
+            software, researching budgeting workflows, or evaluating how
+            FinanceFlow handles recurring bills, reporting, and AI-assisted
+            financial guidance.
+          </p>
           <div className="flex justify-center gap-3">
             <Link href="/plans">
               <Button>
@@ -95,6 +101,7 @@ export default function FeaturesPage() {
         </section>
 
         <section className="grid gap-6 md:grid-cols-2">
+          <h2 className="sr-only">FinanceFlow feature guides</h2>
           {featurePages.map((featurePage) => (
             <Card
               key={featurePage.slug}
@@ -122,7 +129,7 @@ export default function FeaturesPage() {
                 </ul>
                 <Link href={`/features/${featurePage.slug}`}>
                   <Button variant="outline" className="min-h-11">
-                    Read feature guide
+                    Read {featurePage.categoryLabel} guide
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>

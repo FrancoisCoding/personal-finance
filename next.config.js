@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://js.stripe.com",
+  "script-src 'self' 'unsafe-inline' https://accounts.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://js.stripe.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Pricing | Free, Basic & Pro Personal Finance Plans',
+  title: 'Pricing: Free, Basic, and Pro Plans',
   description:
     'Compare FinanceFlow Free, Basic, and Pro plans with monthly and annual billing, AI features, exports, and premium finance tools to choose the right plan fast.',
   alternates: {

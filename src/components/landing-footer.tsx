@@ -47,6 +47,7 @@ export function LandingFooter() {
           <FooterColumn
             title="Platform"
             links={[
+              { label: 'About', href: '/about' },
               { label: 'Features', href: '/features' },
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Pricing', href: '/plans' },
@@ -56,6 +57,7 @@ export function LandingFooter() {
           <FooterColumn
             title="Support"
             links={[
+              { label: 'Contact', href: '/contact' },
               { label: 'Help Center', href: '/support' },
               { label: 'Status', href: '/status' },
             ]}
@@ -87,9 +89,9 @@ function FooterColumn({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <h4 className="font-bold text-xs uppercase tracking-[0.2em] text-foreground/80">
+      <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-foreground/80">
         {title}
-      </h4>
+      </h3>
       <ul className="flex flex-col gap-4">
         {links.map((link) => (
           <li key={link.label}>

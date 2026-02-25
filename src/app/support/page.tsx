@@ -3,9 +3,9 @@
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import Script from 'next/script'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Accordion } from '@/components/ui/accordion'
-import { ContactForm } from '@/components/support/contact-form'
 import { Info } from 'lucide-react'
 
 const contactOptions = [
@@ -97,29 +97,126 @@ export default function SupportPage() {
             Get fast answers, contact support, and resolve common issues without
             breaking your workflow.
           </p>
+          <p className="text-sm text-muted-foreground">
+            This page covers common account, billing, exports, and product
+            questions. For direct contact options, use our contact page or email
+            support with your account email and issue details for faster help.
+          </p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {contactOptions.map((option) => (
-            <Card
-              key={option.title}
-              className="border-border/60 bg-card/50 backdrop-blur-sm"
+        <section
+          aria-labelledby="support-contact-options-heading"
+          className="space-y-4"
+        >
+          <h2
+            id="support-contact-options-heading"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            Support and contact options
+          </h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Choose the support path that matches your issue. Billing and account
+            questions are usually fastest by email, while service interruptions
+            should be checked against the status page first.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {contactOptions.map((option) => (
+              <Card
+                key={option.title}
+                className="border-border/60 bg-card/50 backdrop-blur-sm"
+              >
+                <CardHeader>
+                  <CardTitle className="text-lg">{option.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground leading-relaxed">
+                  {option.description}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="support-guidance-heading"
+          className="space-y-4"
+        >
+          <h2
+            id="support-guidance-heading"
+            className="text-2xl font-semibold tracking-tight"
+          >
+            Before contacting support
+          </h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Checking a few details first can resolve many issues quickly. Review
+            your plan status in Billing, confirm the page where the issue
+            occurred, and note the time or steps that led to the problem. If you
+            are reporting a billing issue, include the last four digits of the
+            payment method shown in your billing portal. If you are reporting a
+            product bug, include screenshots or the feature name so the team can
+            reproduce the issue faster.
+          </p>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <Link
+              href="/contact"
+              className="font-medium text-primary hover:underline"
             >
-              <CardHeader>
-                <CardTitle className="text-lg">{option.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground leading-relaxed">
-                {option.description}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              Contact options
+            </Link>
+            <Link
+              href="/status"
+              className="font-medium text-primary hover:underline"
+            >
+              Check service status
+            </Link>
+            <Link
+              href="/billing"
+              className="font-medium text-primary hover:underline"
+            >
+              Open billing
+            </Link>
+          </div>
+        </section>
 
         <div className="grid gap-12 xl:grid-cols-[1.1fr_0.9fr] items-start">
           <div className="space-y-8">
-            <div id="contact-form">
-              <ContactForm />
-            </div>
+            <section
+              id="contact-form"
+              aria-labelledby="contact-support-heading"
+              className="space-y-4"
+            >
+              <h2
+                id="contact-support-heading"
+                className="text-2xl font-semibold tracking-tight"
+              >
+                Contact support
+              </h2>
+              <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
+                <CardContent className="p-6 space-y-4 text-sm leading-6 text-muted-foreground">
+                  <p>
+                    For billing, account, and product support, email{' '}
+                    <a
+                      href="mailto:support@financeflow.dev"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      support@financeflow.dev
+                    </a>{' '}
+                    or visit the dedicated contact page for the best contact
+                    path for your issue.
+                  </p>
+                  <p>
+                    We typically respond within one business day. For security
+                    concerns, include &ldquo;Security&rdquo; in the subject and
+                    add reproduction steps or screenshots when possible.
+                  </p>
+                  <Link
+                    href="/contact"
+                    className="inline-flex font-medium text-primary hover:underline"
+                  >
+                    Open contact page
+                  </Link>
+                </CardContent>
+              </Card>
+            </section>
 
             <Card className="border-emerald-500/20 bg-emerald-500/5 backdrop-blur-sm shadow-sm overflow-hidden border">
               <div className="bg-emerald-500/10 px-6 py-3 border-b border-emerald-500/10 flex items-center gap-2">

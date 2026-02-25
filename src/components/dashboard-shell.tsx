@@ -217,6 +217,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
       return {
         label: currentNavigationItem.name,
         icon: currentNavigationItem.icon,
+        description: currentNavigationItem.description,
       }
     }
 
@@ -266,6 +267,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
     return {
       label: normalizedLabel,
       icon: fallbackIcons[firstSegment] ?? LayoutGrid,
+      description: `${normalizedLabel} workspace in FinanceFlow.`,
     }
   }, [navigation, pathname])
 
@@ -291,6 +293,27 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
   useEffect(() => {
     setIsMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const title = `${activePageMeta.label} | FinanceFlow App`
+    document.title = title
+
+    const description =
+      activePageMeta.description ??
+      `${activePageMeta.label} workspace in FinanceFlow personal finance app.`
+    let descriptionMetaTag = document.querySelector(
+      'meta[name="description"]'
+    ) as HTMLMetaElement | null
+
+    if (!descriptionMetaTag) {
+      descriptionMetaTag = document.createElement('meta')
+      descriptionMetaTag.name = 'description'
+      document.head.appendChild(descriptionMetaTag)
+    }
+
+    descriptionMetaTag.content = description
+  }, [activePageMeta.description, activePageMeta.label])
 
   useEffect(() => {
     try {
@@ -907,8 +930,10 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
                     onBlur={handleSearchBlur}
                     aria-label="Search the app or ask a question"
                     aria-expanded={isSearchOpen}
-                    aria-controls={searchListboxId}
-                    aria-activedescendant={activeOptionId}
+                    aria-controls={isSearchOpen ? searchListboxId : undefined}
+                    aria-activedescendant={
+                      isSearchOpen ? activeOptionId : undefined
+                    }
                     ref={searchInputRef}
                   />
                   <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
@@ -1193,6 +1218,7 @@ export function DashboardShell({ children, session }: IDashboardShellProps) {
             </div>
 
             <main id="main-content" tabIndex={-1} className="flex-1 p-4 lg:p-6">
+              <h1 className="sr-only">{activePageMeta.label}</h1>
               {children}
             </main>
           </div>

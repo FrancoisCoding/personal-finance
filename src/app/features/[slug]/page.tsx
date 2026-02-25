@@ -151,6 +151,7 @@ export default async function FeatureDetailPage({
         </section>
 
         <section className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+          <h2 className="sr-only">Feature details, use cases, and FAQs</h2>
           <Card className="border-border/60 bg-card/70 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-2xl">

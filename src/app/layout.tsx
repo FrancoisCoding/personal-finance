@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   metadataBase,
   applicationName: 'FinanceFlow',
   title: {
-    default: 'FinanceFlow | Personal Finance App for Budgeting, Insights & AI',
+    default: 'FinanceFlow | Personal Finance Budgeting and AI Insights App',
     template: '%s | FinanceFlow',
   },
   description:

@@ -37,7 +37,7 @@ export function LandingNavbar() {
             ) : (
               <>
                 <Link href="/auth/login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost">Sign in to FinanceFlow</Button>
                 </Link>
                 <Link href="/auth/register">
                   <Button>Get Started</Button>

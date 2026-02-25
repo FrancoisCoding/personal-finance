@@ -1,8 +1,29 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'Read the FinanceFlow Terms of Service covering account responsibilities, acceptable use, subscriptions, billing, service availability, and support.',
+  alternates: {
+    canonical: '/terms',
+  },
+  openGraph: {
+    title: 'FinanceFlow Terms of Service',
+    description:
+      'Review the terms governing account use, subscriptions, billing, and service availability for FinanceFlow.',
+    url: '/terms',
+  },
+  twitter: {
+    title: 'FinanceFlow Terms of Service',
+    description:
+      'Review the terms governing account use, subscriptions, billing, and service availability for FinanceFlow.',
+  },
+}
 
 export default function TermsPage() {
   return (

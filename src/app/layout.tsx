@@ -40,6 +40,7 @@ const metadataBase = (() => {
 
 export const metadata: Metadata = {
   metadataBase,
+  applicationName: 'FinanceFlow',
   title: {
     default: 'FinanceFlow | AI-Powered Personal Finance Management',
     template: '%s | FinanceFlow',
@@ -54,8 +55,28 @@ export const metadata: Metadata = {
     'money management',
   ],
   authors: [{ name: 'FinanceFlow Team' }],
+  creator: 'FinanceFlow',
+  publisher: 'FinanceFlow',
+  category: 'finance',
+  manifest: '/manifest.webmanifest',
   alternates: {
     canonical: '/',
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
   openGraph: {
     title: 'FinanceFlow | AI-Powered Personal Finance Management',

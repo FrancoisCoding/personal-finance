@@ -1,7 +1,28 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'Read the FinanceFlow Privacy Policy to understand how we collect, use, protect, and retain account, transaction, and usage data.',
+  alternates: {
+    canonical: '/privacy',
+  },
+  openGraph: {
+    title: 'FinanceFlow Privacy Policy',
+    description:
+      'Review how FinanceFlow collects, uses, protects, and retains personal and financial information.',
+    url: '/privacy',
+  },
+  twitter: {
+    title: 'FinanceFlow Privacy Policy',
+    description:
+      'Review how FinanceFlow collects, uses, protects, and retains personal and financial information.',
+  },
+}
 
 export default function PrivacyPage() {
   return (

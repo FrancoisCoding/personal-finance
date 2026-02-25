@@ -2,6 +2,7 @@
 
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
+import Script from 'next/script'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Accordion } from '@/components/ui/accordion'
 import { ContactForm } from '@/components/support/contact-form'
@@ -56,9 +57,29 @@ const faqItems = [
   },
 ]
 
+const supportStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
+    },
+  })),
+}
+
 export default function SupportPage() {
   return (
     <div className="min-h-screen bg-background">
+      <Script
+        id="financeflow-support-faq-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(supportStructuredData),
+        }}
+      />
       <LandingNavbar />
       <main
         id="main-content"

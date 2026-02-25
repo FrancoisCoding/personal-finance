@@ -1,9 +1,30 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CheckCircle, AlertTriangle, Clock, ArrowRight } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'System Status',
+  description:
+    'Check real-time FinanceFlow service status, uptime metrics, maintenance notices, and platform availability updates for core product systems.',
+  alternates: {
+    canonical: '/status',
+  },
+  openGraph: {
+    title: 'FinanceFlow System Status',
+    description:
+      'Monitor FinanceFlow uptime, maintenance notices, and real-time service availability updates.',
+    url: '/status',
+  },
+  twitter: {
+    title: 'FinanceFlow System Status',
+    description:
+      'Monitor FinanceFlow uptime, maintenance notices, and real-time service availability updates.',
+  },
+}
 
 const services = [
   { name: 'Core Dashboard', status: 'operational', uptime: '100%' },

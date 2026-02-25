@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Script from 'next/script'
 import { useSession } from 'next-auth/react'
 import { CheckCircle2, Loader2, MinusCircle } from 'lucide-react'
 import { LandingNavbar } from '@/components/landing-navbar'
@@ -60,6 +61,50 @@ const publicPlanCatalog = [
     ],
   },
 ] as const
+
+const plansStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'FinanceFlow pricing plans',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      item: {
+        '@type': 'Offer',
+        name: 'FinanceFlow Free',
+        price: '0',
+        priceCurrency: 'USD',
+        category: 'Free plan',
+        url: 'https://www.financeflow.dev/plans',
+      },
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      item: {
+        '@type': 'Offer',
+        name: 'FinanceFlow Basic',
+        price: '5',
+        priceCurrency: 'USD',
+        category: 'Monthly plan',
+        url: 'https://www.financeflow.dev/plans',
+      },
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      item: {
+        '@type': 'Offer',
+        name: 'FinanceFlow Pro',
+        price: '10',
+        priceCurrency: 'USD',
+        category: 'Monthly plan',
+        url: 'https://www.financeflow.dev/plans',
+      },
+    },
+  ],
+}
 
 const planCapabilitiesByPlan = {
   FREE: {
@@ -205,6 +250,13 @@ export default function PlansPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Script
+        id="financeflow-plans-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(plansStructuredData),
+        }}
+      />
       <LandingNavbar />
       <main
         id="main-content"

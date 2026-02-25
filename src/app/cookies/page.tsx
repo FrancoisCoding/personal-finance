@@ -1,6 +1,27 @@
+import type { Metadata } from 'next'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy',
+  description:
+    'Read the FinanceFlow Cookie Policy to learn how cookies are used for authentication, security, preferences, analytics, and platform functionality.',
+  alternates: {
+    canonical: '/cookies',
+  },
+  openGraph: {
+    title: 'FinanceFlow Cookie Policy',
+    description:
+      'Learn how FinanceFlow uses cookies for authentication, security, preferences, analytics, and platform features.',
+    url: '/cookies',
+  },
+  twitter: {
+    title: 'FinanceFlow Cookie Policy',
+    description:
+      'Learn how FinanceFlow uses cookies for authentication, security, preferences, analytics, and platform features.',
+  },
+}
 
 export default function CookiesPage() {
   return (

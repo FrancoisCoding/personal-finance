@@ -5,7 +5,7 @@ const getSiteUrl = () => {
   if (configuredUrl) {
     return configuredUrl.replace(/\/+$/, '')
   }
-  return 'https://financeflow.dev'
+  return 'https://www.financeflow.dev'
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -38,9 +38,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
     },
     {
+      url: `${siteUrl}/cookies`,
+      changeFrequency: 'monthly',
+      priority: 0.3,
+      lastModified,
+    },
+    {
       url: `${siteUrl}/terms`,
       changeFrequency: 'monthly',
       priority: 0.4,
+      lastModified,
+    },
+    {
+      url: `${siteUrl}/security`,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+      lastModified,
+    },
+    {
+      url: `${siteUrl}/status`,
+      changeFrequency: 'daily',
+      priority: 0.5,
       lastModified,
     },
   ]

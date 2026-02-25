@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Script from 'next/script'
 import {
   motion,
   useReducedMotion,
@@ -78,6 +79,42 @@ const features = [
   },
 ]
 
+const homeStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'FinanceFlow',
+    url: 'https://www.financeflow.dev',
+    logo: 'https://www.financeflow.dev/icon.png',
+    sameAs: ['https://www.linkedin.com/in/francoiscoding/'],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'FinanceFlow',
+    url: 'https://www.financeflow.dev',
+    description:
+      'AI-powered personal finance management for budgeting, subscriptions, exports, and financial insights.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'FinanceFlow',
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web',
+    url: 'https://www.financeflow.dev',
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'USD',
+      lowPrice: '0',
+      highPrice: '10',
+      offerCount: '3',
+    },
+    description:
+      'FinanceFlow helps users track accounts, manage budgets, monitor subscriptions, export reports, and use AI-assisted financial guidance in a modern web app.',
+  },
+]
+
 export default function LandingPage() {
   const router = useRouter()
   const { startDemoMode } = useDemoMode()
@@ -89,6 +126,13 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
+      <Script
+        id="financeflow-home-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(homeStructuredData),
+        }}
+      />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-50 focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"

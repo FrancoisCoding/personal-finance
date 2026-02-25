@@ -5,7 +5,7 @@ const getSiteUrl = () => {
   if (configuredUrl) {
     return configuredUrl.replace(/\/+$/, '')
   }
-  return 'https://financeflow.dev'
+  return 'https://www.financeflow.dev'
 }
 
 export default function robots(): MetadataRoute.Robots {
@@ -14,7 +14,16 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: ['/', '/plans', '/privacy', '/support', '/terms'],
+      allow: [
+        '/',
+        '/plans',
+        '/privacy',
+        '/support',
+        '/terms',
+        '/cookies',
+        '/security',
+        '/status',
+      ],
       disallow: [
         '/admin',
         '/api',

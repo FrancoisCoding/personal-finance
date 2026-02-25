@@ -1,9 +1,30 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LandingNavbar } from '@/components/landing-navbar'
 import { LandingFooter } from '@/components/landing-footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldCheck, Lock, Eye, Zap, ArrowRight } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Security',
+  description:
+    'Learn how FinanceFlow protects your financial data with encryption, monitoring, audits, and proactive alerts designed for secure personal finance management.',
+  alternates: {
+    canonical: '/security',
+  },
+  openGraph: {
+    title: 'FinanceFlow Security',
+    description:
+      'See how FinanceFlow uses encryption, continuous monitoring, audits, and alerts to protect account and financial data.',
+    url: '/security',
+  },
+  twitter: {
+    title: 'FinanceFlow Security',
+    description:
+      'See how FinanceFlow uses encryption, continuous monitoring, audits, and alerts to protect account and financial data.',
+  },
+}
 
 export default function SecurityPage() {
   return (

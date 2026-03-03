@@ -77,11 +77,10 @@ const renderClap = (timeSinceBeat) => {
 
   const envelope = Math.exp(-timeSinceBeat * 26)
   const noise =
-    Math.sin(2 * Math.PI * 1400 * timeSinceBeat) * 0.3 +
-    Math.sin(2 * Math.PI * 2300 * timeSinceBeat) * 0.24 +
-    Math.sin(2 * Math.PI * 3100 * timeSinceBeat) * 0.12
+    Math.sin(2 * Math.PI * 1120 * timeSinceBeat) * 0.22 +
+    Math.sin(2 * Math.PI * 1760 * timeSinceBeat) * 0.14
 
-  return noise * envelope * 0.3
+  return noise * envelope * 0.18
 }
 
 const renderHat = (timeSinceHit, openAmount) => {
@@ -92,11 +91,10 @@ const renderHat = (timeSinceHit, openAmount) => {
   const decay = openAmount > 0.5 ? 38 : 72
   const envelope = Math.exp(-timeSinceHit * decay)
   const noise =
-    Math.sin(2 * Math.PI * 5200 * timeSinceHit) * 0.18 +
-    Math.sin(2 * Math.PI * 7600 * timeSinceHit) * 0.12 +
-    Math.sin(2 * Math.PI * 9800 * timeSinceHit) * 0.08
+    Math.sin(2 * Math.PI * 3600 * timeSinceHit) * 0.1 +
+    Math.sin(2 * Math.PI * 5200 * timeSinceHit) * 0.06
 
-  return noise * envelope * 0.18
+  return noise * envelope * 0.08
 }
 
 const renderPad = (time, barIndex, energy, beatDuck) => {
@@ -142,24 +140,13 @@ const renderPluck = (time, sixteenthIndex, energy) => {
 const renderLead = (time, eighthIndex, energy) => {
   const note = noteFrequencies[leadPattern[eighthIndex % leadPattern.length]]
   const localTime = time % (beatDuration / 2)
-  const envelope = Math.exp(-localTime * 5.4) * energy * 0.18
-  const vibrato = 1 + Math.sin(2 * Math.PI * 5 * time) * 0.004
+  const envelope = Math.exp(-localTime * 5.4) * energy * 0.14
+  const vibrato = 1 + Math.sin(2 * Math.PI * 4 * time) * 0.002
 
   return (
     Math.sin(2 * Math.PI * note * vibrato * time) * envelope +
-    Math.sin(2 * Math.PI * note * 1.5 * time) * envelope * 0.18
+    Math.sin(2 * Math.PI * note * 1.5 * time) * envelope * 0.12
   )
-}
-
-const renderRiser = (timeInBar, barIndex, energy) => {
-  if (barIndex % 8 !== 7 || timeInBar < barDuration * 0.58) {
-    return 0
-  }
-
-  const localTime = timeInBar - barDuration * 0.58
-  const envelope = clamp(localTime / (barDuration * 0.42), 0, 1) * energy * 0.16
-  const sweepFrequency = 260 + localTime * 920
-  return Math.sin(2 * Math.PI * sweepFrequency * localTime) * envelope
 }
 
 const samples = new Int16Array(totalSamples)
@@ -172,7 +159,6 @@ for (let index = 0; index < totalSamples; index += 1) {
   const sixteenthIndex = Math.floor(time / sixteenthDuration)
   const timeSinceBeat = time - beatIndex * beatDuration
   const timeSinceSixteenth = time - sixteenthIndex * sixteenthDuration
-  const timeInBar = time - barIndex * barDuration
 
   const introEnergy = mixSection(time, 0, 4, durationSeconds, 10)
   const grooveEnergy = mixSection(time, 2.5, 4, durationSeconds, 8)
@@ -198,16 +184,7 @@ for (let index = 0; index < totalSamples; index += 1) {
     eighthIndex,
     leadEnergy * 0.9 + liftEnergy * 0.34 + finaleEnergy * 0.22
   )
-  const riser = renderRiser(timeInBar, barIndex, liftEnergy)
-  const shimmer =
-    Math.sin(2 * Math.PI * (0.09 + (barIndex % 5) * 0.008) * time) *
-    (0.02 + liftEnergy * 0.01)
-
-  const mixed = clamp(
-    kick + clap + hat + pad + bass + pluck + lead + riser + shimmer,
-    -1,
-    1
-  )
+  const mixed = clamp(kick + clap + hat + pad + bass + pluck + lead, -1, 1)
   samples[index] = Math.floor(mixed * 32767)
 }
 

@@ -462,15 +462,16 @@ export const PlanningCluster: React.FC<{ frame: number }> = ({ frame }) => {
       <FloatingPanel padding={22} style={{ minHeight: 388, opacity: reveal }}>
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            display: 'grid',
+            gap: 10,
           }}
         >
           <div style={{ color: colors.white, fontSize: 24, fontWeight: 800 }}>
             Upcoming renewals
           </div>
-          <MetricPill label="3 renewals flagged" accent={colors.gold} />
+          <div style={{ display: 'flex' }}>
+            <MetricPill label="3 flagged this month" accent={colors.gold} />
+          </div>
         </div>
         <div style={{ marginTop: 18, display: 'grid', gap: 12 }}>
           {[

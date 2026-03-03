@@ -29,22 +29,22 @@ import {
 const introStartFrame = 0
 const introDuration = 150
 const overviewStartFrame = 150
-const overviewDuration = 180
-const transitionOneStartFrame = 330
-const transitionDuration = 60
-const movementStartFrame = 390
-const movementDuration = 180
+const overviewDuration = 168
+const transitionOneStartFrame = 318
+const transitionDuration = 84
+const movementStartFrame = 402
+const movementDuration = 168
 const transitionTwoStartFrame = 570
-const planningStartFrame = 630
-const planningDuration = 180
-const transitionThreeStartFrame = 810
-const assistantStartFrame = 870
-const assistantDuration = 180
-const transitionFourStartFrame = 1050
-const powerStartFrame = 1110
-const powerDuration = 180
-const finaleStartFrame = 1290
-const finaleDuration = 120
+const planningStartFrame = 654
+const planningDuration = 168
+const transitionThreeStartFrame = 822
+const assistantStartFrame = 906
+const assistantDuration = 168
+const transitionFourStartFrame = 1074
+const powerStartFrame = 1158
+const powerDuration = 168
+const finaleStartFrame = 1326
+const finaleDuration = 150
 
 const IntroScene: React.FC = () => {
   const frame = useCurrentFrame()
@@ -73,7 +73,7 @@ const IntroScene: React.FC = () => {
           <HeaderLockup
             caption="FinanceFlow"
             title={'Money, without\nthe mess.'}
-            subtitle="Track balances, spot trends, plan ahead, and ask better questions in one product that looks alive."
+            subtitle="See every balance, catch overspending sooner, and make calmer money moves from one clear home for your finances."
             maxWidth={520}
           />
           <div
@@ -84,9 +84,9 @@ const IntroScene: React.FC = () => {
               flexWrap: 'wrap',
             }}
           >
-            <MetricPill label="Track less manually" accent={colors.teal} />
-            <MetricPill label="Notice more earlier" accent={colors.aqua} />
-            <MetricPill label="Plan with less friction" accent={colors.gold} />
+            <MetricPill label="Balances in one view" accent={colors.teal} />
+            <MetricPill label="Spot issues sooner" accent={colors.aqua} />
+            <MetricPill label="Plan without chaos" accent={colors.gold} />
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -151,40 +151,39 @@ const SplitScene: React.FC<{
 
 const TransitionPunch: React.FC<{
   accent: string
-  chips: string[]
   lead: string
   support: string
-}> = ({ accent, chips, lead, support }) => {
+}> = ({ accent, lead, support }) => {
   const frame = useCurrentFrame()
   const enter = spring({
     frame,
     fps: 30,
     config: {
-      damping: 15,
-      stiffness: 210,
-      mass: 0.78,
+      damping: 17,
+      stiffness: 190,
+      mass: 0.86,
     },
   })
-  const glowX = interpolate(frame, [0, 60], [220, 1040], {
+  const glowX = interpolate(frame, [0, transitionDuration], [160, 1120], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
-  const words = lead.split(' ')
+  const lines = lead.split('\n')
 
   return (
     <AbsoluteFill
       style={{
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '0 120px',
+        padding: '0 112px',
       }}
     >
       <div
         style={{
           position: 'absolute',
-          inset: '18% 10% 18% 10%',
-          borderRadius: 52,
-          background: `radial-gradient(circle at ${glowX}px 50%, ${accent}26, transparent 28%), linear-gradient(135deg, rgba(8, 18, 37, 0.92), rgba(5, 11, 23, 0.84))`,
+          inset: '16% 8% 16% 8%',
+          borderRadius: 58,
+          background: `radial-gradient(circle at ${glowX}px 50%, ${accent}30, transparent 26%), linear-gradient(135deg, rgba(8, 18, 37, 0.92), rgba(5, 11, 23, 0.84))`,
           border: `1px solid ${colors.border}`,
           boxShadow: '0 30px 80px rgba(0,0,0,0.34)',
         }}
@@ -192,155 +191,104 @@ const TransitionPunch: React.FC<{
       <div
         style={{
           position: 'absolute',
-          left: 180,
-          top: 170,
-          width: 230,
-          height: 100,
-          borderRadius: 30,
-          border: `1px solid ${accent}33`,
-          background: `${accent}12`,
-          transform: `translateX(${interpolate(frame, [0, 60], [-120, 0])}px) rotate(-9deg)`,
-          opacity: interpolate(frame, [0, 16, 60], [0, 0.56, 0.3], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          }),
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          right: 180,
-          bottom: 154,
-          width: 260,
-          height: 110,
-          borderRadius: 34,
-          border: `1px solid ${colors.white}1c`,
-          background: 'rgba(255,255,255,0.04)',
-          transform: `translateX(${interpolate(frame, [0, 60], [120, 0])}px) rotate(8deg)`,
-          opacity: interpolate(frame, [0, 16, 60], [0, 0.42, 0.24], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          }),
+          left: 132,
+          right: 132,
+          top: '50%',
+          height: 28,
+          borderRadius: 999,
+          transform: `translateY(${interpolate(frame, [0, transitionDuration], [42, 126])}px) scaleX(${interpolate(
+            frame,
+            [0, 24, transitionDuration],
+            [0.16, 1, 1.04],
+            {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            }
+          )})`,
+          background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+          filter: 'blur(14px)',
+          opacity: interpolate(
+            frame,
+            [0, 18, 68, transitionDuration],
+            [0, 0.95, 0.7, 0],
+            {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            }
+          ),
         }}
       />
       <div
         style={{
           position: 'relative',
           textAlign: 'center',
-          transform: `scale(${interpolate(enter, [0, 1], [0.92, 1])}) translateY(${interpolate(enter, [0, 1], [24, 0])}px)`,
+          transform: `scale(${interpolate(enter, [0, 1], [0.94, 1])}) translateY(${interpolate(enter, [0, 1], [32, 0])}px)`,
           opacity: enter,
         }}
       >
         <div
           style={{
             color: accent,
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: 800,
             textTransform: 'uppercase',
-            letterSpacing: '0.22em',
+            letterSpacing: '0.24em',
           }}
         >
           FinanceFlow
         </div>
         <div
           style={{
-            marginTop: 18,
+            marginTop: 22,
             color: colors.white,
             fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-            display: 'flex',
-            gap: 14,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
+            display: 'grid',
+            gap: 0,
           }}
         >
-          {words.map((word, index) => {
-            const wordSpring = spring({
-              frame: frame - index * 4,
+          {lines.map((line, index) => {
+            const lineSpring = spring({
+              frame: frame - index * 6,
               fps: 30,
               config: {
                 damping: 15,
-                stiffness: 240,
-                mass: 0.8,
+                stiffness: 220,
+                mass: 0.9,
               },
             })
 
             return (
-              <span
-                key={`${word}-${index}`}
+              <div
+                key={`${line}-${index}`}
                 style={{
-                  display: 'inline-block',
-                  fontSize: 86,
-                  lineHeight: 0.94,
+                  fontSize: 122,
+                  lineHeight: 0.9,
                   fontWeight: 700,
                   letterSpacing: '-0.065em',
-                  transform: `translateY(${interpolate(wordSpring, [0, 1], [40, 0])}px) rotate(${interpolate(
-                    wordSpring,
+                  transform: `translateY(${interpolate(lineSpring, [0, 1], [40, 0])}px) rotate(${interpolate(
+                    lineSpring,
                     [0, 1],
                     [index % 2 === 0 ? -8 : 8, 0]
                   )}deg)`,
-                  opacity: wordSpring,
+                  opacity: lineSpring,
                 }}
               >
-                {word}
-              </span>
+                {line}
+              </div>
             )
           })}
         </div>
         <div
           style={{
-            marginTop: 16,
+            marginTop: 18,
             color: colors.muted,
-            fontSize: 28,
-            lineHeight: 1.44,
-            maxWidth: 760,
+            fontSize: 21,
+            lineHeight: 1.45,
+            maxWidth: 620,
+            marginInline: 'auto',
           }}
         >
           {support}
-        </div>
-        <div
-          style={{
-            marginTop: 26,
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          {chips.map((chip, index) => (
-            <div
-              key={chip}
-              style={{
-                padding: '12px 16px',
-                borderRadius: 999,
-                border: `1px solid ${index === 0 ? `${accent}55` : colors.border}`,
-                background:
-                  index === 0 ? `${accent}18` : 'rgba(255,255,255,0.04)',
-                color: colors.white,
-                fontSize: 16,
-                fontWeight: 700,
-                transform: `translateY(${interpolate(
-                  frame,
-                  [16 + index * 4, 42 + index * 4],
-                  [18, 0],
-                  {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                  }
-                )}px)`,
-                opacity: interpolate(
-                  frame,
-                  [16 + index * 4, 42 + index * 4],
-                  [0, 1],
-                  {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                  }
-                ),
-              }}
-            >
-              {chip}
-            </div>
-          ))}
         </div>
       </div>
     </AbsoluteFill>
@@ -407,22 +355,33 @@ const FinaleScene: React.FC = () => {
             letterSpacing: '-0.065em',
           }}
         >
-          Track less.
+          Know where
           <br />
-          Notice more.
+          you stand.
         </div>
         <div
           style={{
             marginTop: 18,
+            color: colors.teal,
+            fontSize: 24,
+            fontWeight: 800,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Move with clarity.
+        </div>
+        <div
+          style={{
+            marginTop: 14,
             color: colors.muted,
-            fontSize: 28,
-            lineHeight: 1.48,
-            maxWidth: 760,
+            fontSize: 24,
+            lineHeight: 1.5,
+            maxWidth: 720,
             marginInline: 'auto',
           }}
         >
-          Budgets, subscriptions, AI guidance, investments, invoices, and
-          exports in one cleaner flow.
+          FinanceFlow keeps balances, spending, planning, and guidance in one
+          calm system, so the next money move stays obvious.
         </div>
         <div
           style={{
@@ -434,7 +393,7 @@ const FinaleScene: React.FC = () => {
           }}
         >
           <MetricPill label="Start free" accent={colors.teal} />
-          <MetricPill label="Try the demo" accent={colors.aqua} />
+          <MetricPill label="See the demo" accent={colors.aqua} />
           <MetricPill label="financeflow.dev" accent={colors.gold} />
         </div>
       </div>
@@ -477,7 +436,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       }}
     >
       <StageBackground />
-      <Audio src={staticFile('financeflow-pulse.wav')} volume={0.56} />
+      <Audio src={staticFile('financeflow-pulse.wav')} volume={0.62} />
 
       <Sequence from={introStartFrame} durationInFrames={introDuration}>
         <AbsoluteFill style={{ opacity: introOpacity }}>
@@ -490,7 +449,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           <SplitScene
             caption="At a glance"
             title={'The signal.\nNot the clutter.'}
-            subtitle="Overview condenses balances, trends, nudges, and next moves into a surface you can actually scan."
+            subtitle="See balances, trends, nudges, and the next move in one surface that stays easy to scan."
             sceneFrame={frame - overviewStartFrame}
             visual={<OverviewCluster frame={frame - overviewStartFrame} />}
           />
@@ -503,9 +462,8 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.gold}
-          chips={['Merchant clarity', 'Auto-categories', 'Zero guessing']}
-          lead="Swipes get stories."
-          support="Every transaction lands with context, not a mystery merchant name and a shrug."
+          lead={'Know\nevery swipe.'}
+          support="Transactions stop looking like noise."
         />
       </Sequence>
 
@@ -514,7 +472,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           <SplitScene
             caption="Money movement"
             title={'Readable in.\nReadable out.'}
-            subtitle="Accounts stay in sync, transaction history stays legible, and categorization stays fast."
+            subtitle="Every inflow and outflow lands with merchant, category, and account context that is easy to trust."
             sceneFrame={frame - movementStartFrame}
             visual={<MoneyMovementCluster frame={frame - movementStartFrame} />}
           />
@@ -527,9 +485,8 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.teal}
-          chips={['Renewals', 'Forecasts', 'Gentle warnings']}
-          lead="Catch it early."
-          support="Budgets, renewals, and soft warnings work better before they become clean-up work."
+          lead={'Catch it\nbefore it grows.'}
+          support="Budgets and renewals stay ahead of the month."
         />
       </Sequence>
 
@@ -538,7 +495,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           <SplitScene
             caption="Planning"
             title={'Renew less.\nReact less.'}
-            subtitle="Subscriptions and category pacing stay in the same loop, so the plan stays honest."
+            subtitle="Stay ahead of renewals and spending pace before they turn into cleanup."
             sceneFrame={frame - planningStartFrame}
             visual={<PlanningCluster frame={frame - planningStartFrame} />}
           />
@@ -551,9 +508,8 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.aqua}
-          chips={['Ask better', 'See patterns', 'Act faster']}
-          lead="Ask sharper."
-          support="The assistant turns vague money anxiety into specific next actions grounded in your actual data."
+          lead={'Ask what\nyour money needs.'}
+          support="AI guidance turns vague money stress into specific next steps."
         />
       </Sequence>
 
@@ -562,7 +518,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           <SplitScene
             caption="Assistant"
             title={'Less finance\nfog.'}
-            subtitle="Questions sound conversational, but the answers stay precise, calm, and tied to your numbers."
+            subtitle="Ask plain-English questions and get calm answers grounded in your actual numbers."
             sceneFrame={frame - assistantStartFrame}
             visual={<AssistantCluster frame={frame - assistantStartFrame} />}
           />
@@ -575,9 +531,8 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.violet}
-          chips={['Investments', 'Invoices', 'Exports']}
-          lead="Grow without sprawl."
-          support="Investments, invoices, and exports stay inside the same product instead of splitting into more tools."
+          lead={'Grow deeper.\nStay calm.'}
+          support="Investments, invoices, and exports stay in the same flow."
         />
       </Sequence>
 
@@ -586,7 +541,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           <SplitScene
             caption="Power tools"
             title={'More depth.\nSame calm.'}
-            subtitle="When finances get bigger, the product stays coherent instead of sending you somewhere else."
+            subtitle="When finances get deeper, the product stays coherent instead of sending you into more tools."
             sceneFrame={frame - powerStartFrame}
             visual={<PowerToolsCluster frame={frame - powerStartFrame} />}
           />

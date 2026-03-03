@@ -100,12 +100,12 @@ export const IntroMosaic: React.FC<{ frame: number }> = ({ frame }) => {
           style={{
             marginTop: 10,
             color: colors.white,
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: 700,
             lineHeight: 1.3,
           }}
         >
-          “Dining is up 18%. Cap it at $140 this week.”
+          “Dining is running hot. Shift $40 back to groceries this week.”
         </div>
       </FloatingPanel>
     </div>
@@ -119,9 +119,9 @@ export const OverviewCluster: React.FC<{ frame: number }> = ({ frame }) => {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '1.18fr 0.82fr',
+        gridTemplateColumns: '1.12fr 0.88fr',
         gap: 18,
-        width: 680,
+        width: 696,
       }}
     >
       <FloatingPanel
@@ -189,7 +189,7 @@ export const OverviewCluster: React.FC<{ frame: number }> = ({ frame }) => {
           padding={20}
           rotate={3}
           style={{
-            minHeight: 186,
+            minHeight: 172,
             opacity: reveal,
           }}
         >
@@ -199,30 +199,41 @@ export const OverviewCluster: React.FC<{ frame: number }> = ({ frame }) => {
           <div
             style={{
               marginTop: 10,
-              color: colors.white,
-              fontSize: 28,
+              color: colors.gold,
+              fontSize: 42,
               fontWeight: 800,
-              lineHeight: 1.15,
+              letterSpacing: '-0.06em',
             }}
           >
-            One budget needs attention before the month gets away from you.
+            $64 over plan
+          </div>
+          <div
+            style={{
+              marginTop: 10,
+              color: colors.white,
+              fontSize: 20,
+              fontWeight: 700,
+              lineHeight: 1.28,
+            }}
+          >
+            Dining is the only category that needs a trim this week.
           </div>
         </FloatingPanel>
         <FloatingPanel
           padding={20}
           style={{
-            minHeight: 176,
+            minHeight: 188,
             opacity: reveal,
           }}
         >
           <div style={{ color: colors.muted, fontSize: 14, fontWeight: 700 }}>
             Next up
           </div>
-          <div style={{ marginTop: 14, display: 'grid', gap: 12 }}>
+          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
             {[
-              ['Spotify renewal', 'Mar 8', colors.aqua],
-              ['Review dining cap', 'Today', colors.teal],
-            ].map(([label, meta, accent]) => (
+              ['Spotify renewal', 'Entertainment', 'Mar 8', colors.aqua],
+              ['Dining check', 'Food & dining', 'Today', colors.teal],
+            ].map(([label, meta, dueDate, accent], index) => (
               <div
                 key={label}
                 style={{
@@ -230,14 +241,15 @@ export const OverviewCluster: React.FC<{ frame: number }> = ({ frame }) => {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   paddingBottom: 10,
-                  borderBottom: `1px solid ${colors.border}`,
+                  borderBottom:
+                    index === 1 ? 'none' : `1px solid ${colors.border}`,
                 }}
               >
                 <div>
                   <div
                     style={{
                       color: colors.white,
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: 700,
                     }}
                   >
@@ -253,15 +265,26 @@ export const OverviewCluster: React.FC<{ frame: number }> = ({ frame }) => {
                     {meta}
                   </div>
                 </div>
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: 999,
-                    background: accent as string,
-                    boxShadow: `0 0 18px ${accent}aa`,
-                  }}
-                />
+                <div style={{ display: 'grid', justifyItems: 'end', gap: 6 }}>
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: accent as string,
+                      boxShadow: `0 0 18px ${accent}aa`,
+                    }}
+                  />
+                  <div
+                    style={{
+                      color: colors.muted,
+                      fontSize: 13,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {dueDate}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -364,11 +387,16 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
         </div>
         <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
           {[
-            ['Northwind Payroll', '+$4,800', colors.teal],
-            ['Whole Foods', '-$186', colors.white],
-            ['Netflix', '-$16.99', colors.coral],
-            ['Card payment', '-$72', colors.gold],
-          ].map(([merchant, amount, accent]) => (
+            ['Northwind Payroll', 'Income · Payroll', '+$4,800', colors.teal],
+            ['Whole Foods', 'Groceries · Food & dining', '-$186', colors.white],
+            [
+              'Netflix',
+              'Subscription · Entertainment',
+              '-$16.99',
+              colors.coral,
+            ],
+            ['Card payment', 'Transfer · Credit card', '-$72', colors.gold],
+          ].map(([merchant, category, amount, accent]) => (
             <div
               key={merchant}
               style={{
@@ -395,10 +423,10 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
                   style={{
                     marginTop: 4,
                     color: colors.muted,
-                    fontSize: 14,
+                    fontSize: 13,
                   }}
                 >
-                  Clear merchant + category context
+                  {category}
                 </div>
               </div>
               <div
@@ -442,7 +470,7 @@ export const PlanningCluster: React.FC<{ frame: number }> = ({ frame }) => {
           <div style={{ color: colors.white, fontSize: 24, fontWeight: 800 }}>
             Upcoming renewals
           </div>
-          <MetricPill label="Caught early" accent={colors.gold} />
+          <MetricPill label="3 renewals flagged" accent={colors.gold} />
         </div>
         <div style={{ marginTop: 18, display: 'grid', gap: 12 }}>
           {[
@@ -597,30 +625,28 @@ export const AssistantCluster: React.FC<{ frame: number }> = ({ frame }) => {
             Ask anything
           </div>
           <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-            {[
-              'Why did spending spike?',
-              'What should I trim first?',
-              'How am I trending this month?',
-            ].map((prompt, index) => (
-              <div
-                key={prompt}
-                style={{
-                  borderRadius: 16,
-                  padding: '14px 16px',
-                  border: `1px solid ${colors.border}`,
-                  background:
-                    index === 1
-                      ? 'rgba(76,240,215,0.12)'
-                      : 'rgba(255,255,255,0.03)',
-                  color: colors.white,
-                  fontSize: 16,
-                  fontWeight: 700,
-                  lineHeight: 1.35,
-                }}
-              >
-                {prompt}
-              </div>
-            ))}
+            {['Where did February drift?', 'What should I trim this week?'].map(
+              (prompt, index) => (
+                <div
+                  key={prompt}
+                  style={{
+                    borderRadius: 16,
+                    padding: '14px 16px',
+                    border: `1px solid ${colors.border}`,
+                    background:
+                      index === 1
+                        ? 'rgba(76,240,215,0.12)'
+                        : 'rgba(255,255,255,0.03)',
+                    color: colors.white,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {prompt}
+                </div>
+              )
+            )}
           </div>
         </FloatingPanel>
 
@@ -632,12 +658,12 @@ export const AssistantCluster: React.FC<{ frame: number }> = ({ frame }) => {
             style={{
               marginTop: 10,
               color: colors.white,
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: 800,
-              lineHeight: 1.18,
+              lineHeight: 1.22,
             }}
           >
-            Two changes could free up $140 this week.
+            Two small changes can free up $140 this week.
           </div>
         </FloatingPanel>
       </div>
@@ -648,16 +674,16 @@ export const AssistantCluster: React.FC<{ frame: number }> = ({ frame }) => {
         </div>
         <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
           {[
-            ['You', 'Why did spending jump this month?', colors.white, true],
+            ['You', 'Why did dining jump this month?', colors.white, true],
             [
               'FinanceFlow',
-              'Dining rose 18%, and two subscriptions renewed earlier than usual.',
+              'Dining rose 18%, and Spotify renewed before your usual grocery reset.',
               colors.teal,
               false,
             ],
             [
               'FinanceFlow',
-              'Best move: pause one unused plan and cap dining at $140 this week.',
+              'Best move: hold dining to $140 and pause one unused subscription.',
               colors.aqua,
               false,
             ],

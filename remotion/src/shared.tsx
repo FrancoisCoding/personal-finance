@@ -73,7 +73,10 @@ export const SectionEyebrow: React.FC<{ label: string }> = ({ label }) => {
         alignItems: 'center',
         gap: 12,
         borderRadius: 999,
-        padding: '11px 18px',
+        padding: '12px 20px',
+        minHeight: 46,
+        whiteSpace: 'nowrap',
+        width: 'fit-content',
         color: colors.white,
         background: 'rgba(255,255,255,0.04)',
         border: `1px solid ${colors.border}`,
@@ -100,11 +103,11 @@ export const SectionEyebrow: React.FC<{ label: string }> = ({ label }) => {
 
 export const StageBackground: React.FC = () => {
   const frame = useCurrentFrame()
-  const { height } = useVideoConfig()
-  const horizonShift = interpolate(frame, [0, 1410], [-60, 60])
-  const ribbonOne = interpolate(frame, [0, 1410], [-220, 160])
-  const ribbonTwo = interpolate(frame, [0, 1410], [160, -200])
-  const ribbonThree = interpolate(frame, [0, 1410], [40, -120])
+  const { durationInFrames, height } = useVideoConfig()
+  const horizonShift = interpolate(frame, [0, durationInFrames], [-60, 60])
+  const ribbonOne = interpolate(frame, [0, durationInFrames], [-220, 160])
+  const ribbonTwo = interpolate(frame, [0, durationInFrames], [160, -200])
+  const ribbonThree = interpolate(frame, [0, durationInFrames], [40, -120])
 
   return (
     <AbsoluteFill
@@ -267,8 +270,8 @@ export const HeaderLockup: React.FC<{
         style={{
           marginTop: 18,
           color: colors.muted,
-          fontSize: 24,
-          lineHeight: 1.5,
+          fontSize: 22,
+          lineHeight: 1.46,
           maxWidth,
         }}
       >
@@ -333,13 +336,18 @@ export const MetricPill: React.FC<{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 10,
-        padding: '12px 16px',
+        padding: '12px 18px',
+        minHeight: 46,
         borderRadius: 999,
         border: `1px solid ${accent}55`,
         background: `${accent}18`,
         color: colors.white,
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: 700,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+        width: 'fit-content',
+        flexShrink: 0,
       }}
     >
       <span

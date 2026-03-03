@@ -151,10 +151,11 @@ const SplitScene: React.FC<{
 
 const TransitionPunch: React.FC<{
   accent: string
+  chips: string[]
   lead: string
   support: string
   startFrame: number
-}> = ({ accent, lead, support, startFrame }) => {
+}> = ({ accent, chips, lead, support, startFrame }) => {
   const frame = useCurrentFrame() - startFrame
   const enter = spring({
     frame,
@@ -169,6 +170,7 @@ const TransitionPunch: React.FC<{
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
+  const words = lead.split(' ')
 
   return (
     <AbsoluteFill
@@ -186,6 +188,40 @@ const TransitionPunch: React.FC<{
           background: `radial-gradient(circle at ${glowX}px 50%, ${accent}26, transparent 28%), linear-gradient(135deg, rgba(8, 18, 37, 0.92), rgba(5, 11, 23, 0.84))`,
           border: `1px solid ${colors.border}`,
           boxShadow: '0 30px 80px rgba(0,0,0,0.34)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: 180,
+          top: 170,
+          width: 230,
+          height: 100,
+          borderRadius: 30,
+          border: `1px solid ${accent}33`,
+          background: `${accent}12`,
+          transform: `translateX(${interpolate(frame, [0, 60], [-120, 0])}px) rotate(-9deg)`,
+          opacity: interpolate(frame, [0, 16, 60], [0, 0.56, 0.3], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          }),
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          right: 180,
+          bottom: 154,
+          width: 260,
+          height: 110,
+          borderRadius: 34,
+          border: `1px solid ${colors.white}1c`,
+          background: 'rgba(255,255,255,0.04)',
+          transform: `translateX(${interpolate(frame, [0, 60], [120, 0])}px) rotate(8deg)`,
+          opacity: interpolate(frame, [0, 16, 60], [0, 0.42, 0.24], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          }),
         }}
       />
       <div
@@ -212,13 +248,44 @@ const TransitionPunch: React.FC<{
             marginTop: 18,
             color: colors.white,
             fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-            fontSize: 86,
-            lineHeight: 0.94,
-            fontWeight: 700,
-            letterSpacing: '-0.065em',
+            display: 'flex',
+            gap: 14,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
           }}
         >
-          {lead}
+          {words.map((word, index) => {
+            const wordSpring = spring({
+              frame: frame - index * 4,
+              fps: 30,
+              config: {
+                damping: 15,
+                stiffness: 240,
+                mass: 0.8,
+              },
+            })
+
+            return (
+              <span
+                key={`${word}-${index}`}
+                style={{
+                  display: 'inline-block',
+                  fontSize: 86,
+                  lineHeight: 0.94,
+                  fontWeight: 700,
+                  letterSpacing: '-0.065em',
+                  transform: `translateY(${interpolate(wordSpring, [0, 1], [40, 0])}px) rotate(${interpolate(
+                    wordSpring,
+                    [0, 1],
+                    [index % 2 === 0 ? -8 : 8, 0]
+                  )}deg)`,
+                  opacity: wordSpring,
+                }}
+              >
+                {word}
+              </span>
+            )
+          })}
         </div>
         <div
           style={{
@@ -230,6 +297,51 @@ const TransitionPunch: React.FC<{
           }}
         >
           {support}
+        </div>
+        <div
+          style={{
+            marginTop: 26,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          {chips.map((chip, index) => (
+            <div
+              key={chip}
+              style={{
+                padding: '12px 16px',
+                borderRadius: 999,
+                border: `1px solid ${index === 0 ? `${accent}55` : colors.border}`,
+                background:
+                  index === 0 ? `${accent}18` : 'rgba(255,255,255,0.04)',
+                color: colors.white,
+                fontSize: 16,
+                fontWeight: 700,
+                transform: `translateY(${interpolate(
+                  frame,
+                  [16 + index * 4, 42 + index * 4],
+                  [18, 0],
+                  {
+                    extrapolateLeft: 'clamp',
+                    extrapolateRight: 'clamp',
+                  }
+                )}px)`,
+                opacity: interpolate(
+                  frame,
+                  [16 + index * 4, 42 + index * 4],
+                  [0, 1],
+                  {
+                    extrapolateLeft: 'clamp',
+                    extrapolateRight: 'clamp',
+                  }
+                ),
+              }}
+            >
+              {chip}
+            </div>
+          ))}
         </div>
       </div>
     </AbsoluteFill>
@@ -392,6 +504,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.gold}
+          chips={['Merchant clarity', 'Auto-categories', 'Zero guessing']}
           lead="Swipes get stories."
           support="Every transaction lands with context, not a mystery merchant name and a shrug."
           startFrame={transitionOneStartFrame}
@@ -416,6 +529,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.teal}
+          chips={['Renewals', 'Forecasts', 'Gentle warnings']}
           lead="Catch it early."
           support="Budgets, renewals, and soft warnings work better before they become clean-up work."
           startFrame={transitionTwoStartFrame}
@@ -440,6 +554,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.aqua}
+          chips={['Ask better', 'See patterns', 'Act faster']}
           lead="Ask sharper."
           support="The assistant turns vague money anxiety into specific next actions grounded in your actual data."
           startFrame={transitionThreeStartFrame}
@@ -464,6 +579,7 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       >
         <TransitionPunch
           accent={colors.violet}
+          chips={['Investments', 'Invoices', 'Exports']}
           lead="Grow without sprawl."
           support="Investments, invoices, and exports stay inside the same product instead of splitting into more tools."
           startFrame={transitionFourStartFrame}

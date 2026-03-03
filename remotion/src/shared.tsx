@@ -243,6 +243,8 @@ export const HeaderLockup: React.FC<{
   subtitle: string
   maxWidth?: number
 }> = ({ caption, title, subtitle, maxWidth = 520 }) => {
+  const titleLines = title.split('\n')
+
   return (
     <div style={{ maxWidth }}>
       <SectionEyebrow label={caption} />
@@ -257,7 +259,9 @@ export const HeaderLockup: React.FC<{
           letterSpacing: '-0.06em',
         }}
       >
-        {title}
+        {titleLines.map((line) => (
+          <div key={line}>{line}</div>
+        ))}
       </div>
       <div
         style={{

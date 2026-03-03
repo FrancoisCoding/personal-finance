@@ -72,7 +72,7 @@ const IntroScene: React.FC = () => {
         <div style={{ opacity: heroIn }}>
           <HeaderLockup
             caption="FinanceFlow"
-            title="Money, without\nthe mess."
+            title={'Money, without\nthe mess.'}
             subtitle="Track balances, spot trends, plan ahead, and ask better questions in one product that looks alive."
             maxWidth={520}
           />
@@ -154,9 +154,8 @@ const TransitionPunch: React.FC<{
   chips: string[]
   lead: string
   support: string
-  startFrame: number
-}> = ({ accent, chips, lead, support, startFrame }) => {
-  const frame = useCurrentFrame() - startFrame
+}> = ({ accent, chips, lead, support }) => {
+  const frame = useCurrentFrame()
   const enter = spring({
     frame,
     fps: 30,
@@ -349,7 +348,7 @@ const TransitionPunch: React.FC<{
 }
 
 const FinaleScene: React.FC = () => {
-  const frame = useCurrentFrame() - finaleStartFrame
+  const frame = useCurrentFrame()
   const inSpring = spring({
     frame,
     fps: 30,
@@ -507,7 +506,6 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           chips={['Merchant clarity', 'Auto-categories', 'Zero guessing']}
           lead="Swipes get stories."
           support="Every transaction lands with context, not a mystery merchant name and a shrug."
-          startFrame={transitionOneStartFrame}
         />
       </Sequence>
 
@@ -532,7 +530,6 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           chips={['Renewals', 'Forecasts', 'Gentle warnings']}
           lead="Catch it early."
           support="Budgets, renewals, and soft warnings work better before they become clean-up work."
-          startFrame={transitionTwoStartFrame}
         />
       </Sequence>
 
@@ -557,7 +554,6 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           chips={['Ask better', 'See patterns', 'Act faster']}
           lead="Ask sharper."
           support="The assistant turns vague money anxiety into specific next actions grounded in your actual data."
-          startFrame={transitionThreeStartFrame}
         />
       </Sequence>
 
@@ -582,7 +578,6 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
           chips={['Investments', 'Invoices', 'Exports']}
           lead="Grow without sprawl."
           support="Investments, invoices, and exports stay inside the same product instead of splitting into more tools."
-          startFrame={transitionFourStartFrame}
         />
       </Sequence>
 

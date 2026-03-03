@@ -18,17 +18,17 @@ export const IntroMosaic: React.FC<{ frame: number }> = ({ frame }) => {
     <div
       style={{
         position: 'relative',
-        width: 620,
-        height: 450,
+        width: 600,
+        height: 420,
       }}
     >
       <FloatingPanel
         padding={20}
-        rotate={-4}
+        rotate={-3}
         style={{
           position: 'absolute',
-          left: 12,
-          top: 26,
+          left: 16,
+          top: 34,
           width: 228,
           transform: `translateY(${interpolate(reveal, [0, 1], [28, 0])}px) rotate(-4deg)`,
           opacity: reveal,
@@ -57,9 +57,9 @@ export const IntroMosaic: React.FC<{ frame: number }> = ({ frame }) => {
         padding={24}
         style={{
           position: 'absolute',
-          right: 16,
-          top: 6,
-          width: 332,
+          right: 10,
+          top: 12,
+          width: 326,
           transform: `translateY(${interpolate(reveal, [0, 1], [44, 0])}px)`,
           opacity: reveal,
         }}
@@ -83,12 +83,12 @@ export const IntroMosaic: React.FC<{ frame: number }> = ({ frame }) => {
 
       <FloatingPanel
         padding={18}
-        rotate={3}
+        rotate={2}
         style={{
           position: 'absolute',
-          left: 76,
-          bottom: 44,
-          width: 248,
+          left: 116,
+          bottom: 20,
+          width: 270,
           transform: `translateY(${interpolate(reveal, [0, 1], [36, 0])}px) rotate(3deg)`,
           opacity: reveal,
         }}
@@ -106,22 +106,6 @@ export const IntroMosaic: React.FC<{ frame: number }> = ({ frame }) => {
           }}
         >
           “Dining is up 18%. Cap it at $140 this week.”
-        </div>
-      </FloatingPanel>
-
-      <FloatingPanel
-        padding={18}
-        style={{
-          position: 'absolute',
-          right: 44,
-          bottom: 22,
-          width: 188,
-          opacity: reveal,
-        }}
-      >
-        <div style={{ display: 'grid', gap: 10 }}>
-          <StatCard accent={colors.aqua} label="Runway" value="13d" />
-          <StatCard accent={colors.gold} label="Renewals" value="3" />
         </div>
       </FloatingPanel>
     </div>
@@ -295,19 +279,16 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
   return (
     <div
       style={{
-        position: 'relative',
+        display: 'grid',
+        gridTemplateColumns: '0.88fr 1.12fr',
+        gap: 18,
         width: 680,
-        height: 390,
       }}
     >
       <FloatingPanel
         padding={20}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 46,
-          width: 286,
-          minHeight: 254,
+          minHeight: 286,
           opacity: reveal,
         }}
       >
@@ -353,12 +334,8 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
 
       <FloatingPanel
         padding={20}
-        rotate={-1}
+        rotate={-1.5}
         style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          width: 392,
           minHeight: 332,
           opacity: reveal,
         }}
@@ -390,6 +367,7 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
             ['Northwind Payroll', '+$4,800', colors.teal],
             ['Whole Foods', '-$186', colors.white],
             ['Netflix', '-$16.99', colors.coral],
+            ['Card payment', '-$72', colors.gold],
           ].map(([merchant, amount, accent]) => (
             <div
               key={merchant}
@@ -436,33 +414,6 @@ export const MoneyMovementCluster: React.FC<{ frame: number }> = ({
           ))}
         </div>
       </FloatingPanel>
-
-      <FloatingPanel
-        padding={16}
-        rotate={4}
-        style={{
-          position: 'absolute',
-          left: 238,
-          bottom: 34,
-          width: 188,
-          opacity: reveal,
-        }}
-      >
-        <div style={{ color: colors.muted, fontSize: 14, fontWeight: 700 }}>
-          Category lift
-        </div>
-        <div
-          style={{
-            marginTop: 12,
-            color: colors.white,
-            fontSize: 22,
-            fontWeight: 800,
-            lineHeight: 1.2,
-          }}
-        >
-          Swipes stop looking cryptic.
-        </div>
-      </FloatingPanel>
     </div>
   )
 }
@@ -477,7 +428,7 @@ export const PlanningCluster: React.FC<{ frame: number }> = ({ frame }) => {
         display: 'grid',
         gridTemplateColumns: '1.04fr 0.96fr',
         gap: 18,
-        width: 690,
+        width: 670,
       }}
     >
       <FloatingPanel padding={22} style={{ minHeight: 388, opacity: reveal }}>
@@ -497,6 +448,7 @@ export const PlanningCluster: React.FC<{ frame: number }> = ({ frame }) => {
           {[
             ['Spotify', '$11.99', 'Mar 8', colors.aqua],
             ['Notion', '$8.00', 'Mar 26', colors.violet],
+            ['Canva Pro', '$14.99', 'Apr 2', colors.gold],
           ].map(([label, value, date, accent]) => (
             <div
               key={label}
@@ -541,7 +493,7 @@ export const PlanningCluster: React.FC<{ frame: number }> = ({ frame }) => {
       <FloatingPanel
         padding={22}
         rotate={-2}
-        style={{ minHeight: 388, opacity: reveal }}
+        style={{ minHeight: 388, opacity: reveal, overflow: 'hidden' }}
       >
         <div style={{ color: colors.white, fontSize: 24, fontWeight: 800 }}>
           Budget forecast
@@ -633,9 +585,9 @@ export const AssistantCluster: React.FC<{ frame: number }> = ({ frame }) => {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: '0.76fr 1.24fr',
+        gridTemplateColumns: '0.7fr 1.3fr',
         gap: 18,
-        width: 720,
+        width: 700,
         alignItems: 'center',
       }}
     >
@@ -686,23 +638,6 @@ export const AssistantCluster: React.FC<{ frame: number }> = ({ frame }) => {
             }}
           >
             Two changes could free up $140 this week.
-          </div>
-        </FloatingPanel>
-
-        <FloatingPanel padding={18} style={{ opacity: reveal }}>
-          <div style={{ color: colors.muted, fontSize: 14, fontWeight: 700 }}>
-            Tone
-          </div>
-          <div
-            style={{
-              marginTop: 10,
-              color: colors.white,
-              fontSize: 19,
-              fontWeight: 700,
-              lineHeight: 1.34,
-            }}
-          >
-            Calm answers. Real numbers. Zero finance jargon spiral.
           </div>
         </FloatingPanel>
       </div>
@@ -770,7 +705,7 @@ export const PowerToolsCluster: React.FC<{ frame: number }> = ({ frame }) => {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: 18,
-        width: 700,
+        width: 676,
       }}
     >
       <FloatingPanel padding={22} style={{ minHeight: 386, opacity: reveal }}>
@@ -882,6 +817,7 @@ export const PowerToolsCluster: React.FC<{ frame: number }> = ({ frame }) => {
           {[
             ['INV-1042', 'Northwind Systems', '$1,200', 'Paid', colors.teal],
             ['INV-1043', 'Studio Cobalt', '$480', 'Sent', colors.aqua],
+            ['INV-1044', 'Local Design Co.', '$310', 'Draft', colors.gold],
           ].map(([id, client, amount, status, accent]) => (
             <div
               key={id}

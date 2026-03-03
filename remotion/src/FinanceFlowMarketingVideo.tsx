@@ -1,152 +1,171 @@
 import React from 'react'
 import {
   AbsoluteFill,
+  Audio,
   Sequence,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
-  useVideoConfig,
 } from 'remotion'
+
 import {
+  AnimatedHeadline,
   colors,
-  GridBackground,
-  progress,
+  HeaderLockup,
+  MetricPill,
   sceneOpacity,
-  SectionEyebrow,
+  StageBackground,
 } from './shared'
 import {
-  AccountsTransactionsScreen,
-  AssistantScreen,
-  DashboardOverviewScreen,
-  PowerToolsScreen,
-  SubscriptionBudgetScreen,
+  AssistantCluster,
+  IntroMosaic,
+  MoneyMovementCluster,
+  OverviewCluster,
+  PlanningCluster,
+  PowerToolsCluster,
 } from './screens'
 
-const introDuration = 180
+const introStartFrame = 0
+const introDuration = 150
 const overviewStartFrame = 150
-const overviewDuration = 300
-const movementStartFrame = 420
-const movementDuration = 300
-const planningStartFrame = 690
-const planningDuration = 300
-const assistantStartFrame = 960
-const assistantDuration = 330
-const toolsStartFrame = 1260
-const toolsDuration = 270
-const finaleStartFrame = 1500
-const finaleDuration = 300
+const overviewDuration = 180
+const transitionOneStartFrame = 330
+const transitionDuration = 60
+const movementStartFrame = 390
+const movementDuration = 180
+const transitionTwoStartFrame = 570
+const planningStartFrame = 630
+const planningDuration = 180
+const transitionThreeStartFrame = 810
+const assistantStartFrame = 870
+const assistantDuration = 180
+const transitionFourStartFrame = 1050
+const powerStartFrame = 1110
+const powerDuration = 180
+const finaleStartFrame = 1290
+const finaleDuration = 120
 
 const IntroScene: React.FC = () => {
   const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
   const heroIn = spring({
     frame,
-    fps,
+    fps: 30,
     config: {
-      damping: 16,
-      stiffness: 120,
-      mass: 0.9,
+      damping: 18,
+      stiffness: 180,
+      mass: 0.85,
     },
   })
 
-  const screenshotIn = progress(frame, 24, 36)
-
   return (
-    <AbsoluteFill style={{ padding: '72px 86px' }}>
+    <AbsoluteFill style={{ padding: '70px 74px' }}>
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '0.82fr 1.18fr',
-          gap: 28,
+          gridTemplateColumns: '0.9fr 1.1fr',
+          gap: 34,
           alignItems: 'center',
           height: '100%',
         }}
       >
         <div style={{ opacity: heroIn }}>
-          <SectionEyebrow label="Playful finance" />
+          <HeaderLockup
+            caption="FinanceFlow"
+            title="Money, without\nthe mess."
+            subtitle="Track balances, spot trends, plan ahead, and ask better questions in one product that looks alive."
+            maxWidth={520}
+          />
           <div
             style={{
-              marginTop: 22,
-              color: colors.white,
-              fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-              fontSize: 90,
-              fontWeight: 700,
-              lineHeight: 0.96,
-              letterSpacing: '-0.06em',
-            }}
-          >
-            Your money,
-            <br />
-            finally in one
-            <br />
-            good-looking place.
-          </div>
-          <div
-            style={{
-              marginTop: 24,
-              color: colors.muted,
-              fontSize: 28,
-              lineHeight: 1.45,
-              maxWidth: 500,
-            }}
-          >
-            FinanceFlow turns budgets, subscriptions, AI guidance, invoices, and
-            investments into one calm product experience.
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 14,
               marginTop: 28,
+              display: 'flex',
+              gap: 12,
               flexWrap: 'wrap',
             }}
           >
-            {['Track cash', 'Plan smarter', 'Ask AI', 'Stay ahead'].map(
-              (label, index) => (
-                <div
-                  key={label}
-                  style={{
-                    borderRadius: 999,
-                    border: `1px solid ${index === 2 ? 'rgba(53,223,202,0.42)' : colors.border}`,
-                    background:
-                      index === 2
-                        ? 'rgba(53,223,202,0.12)'
-                        : 'rgba(255,255,255,0.03)',
-                    padding: '14px 18px',
-                    color: index === 2 ? colors.white : colors.muted,
-                    fontSize: 18,
-                    fontWeight: 700,
-                  }}
-                >
-                  {label}
-                </div>
-              )
-            )}
+            <MetricPill label="Track less manually" accent={colors.teal} />
+            <MetricPill label="Notice more earlier" accent={colors.aqua} />
+            <MetricPill label="Plan with less friction" accent={colors.gold} />
           </div>
         </div>
-
-        <div
-          style={{
-            transform: `translateY(${interpolate(screenshotIn, [0, 1], [40, 0])}px) rotate(${interpolate(
-              screenshotIn,
-              [0, 1],
-              [2.2, 0]
-            )}deg) scale(${interpolate(screenshotIn, [0, 1], [0.96, 1])})`,
-            opacity: screenshotIn,
-          }}
-        >
-          <DashboardOverviewScreen frame={frame + 40} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <IntroMosaic frame={frame} />
         </div>
       </div>
     </AbsoluteFill>
   )
 }
 
-const OverviewScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - overviewStartFrame
-  const opacity = sceneOpacity(frame, overviewStartFrame, overviewDuration)
-  const scale = interpolate(localFrame, [0, overviewDuration], [0.96, 1.02], {
+const SplitScene: React.FC<{
+  caption: string
+  title: string
+  subtitle: string
+  sceneFrame: number
+  visual: React.ReactNode
+}> = ({ caption, title, subtitle, sceneFrame, visual }) => {
+  return (
+    <AbsoluteFill style={{ padding: '70px 74px' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '0.74fr 1.26fr',
+          gap: 28,
+          alignItems: 'center',
+          height: '100%',
+        }}
+      >
+        <div>
+          <AnimatedHeadline
+            frame={sceneFrame}
+            lines={title.split('\n')}
+            accent={colors.teal}
+          />
+          <div
+            style={{
+              marginTop: 18,
+              display: 'inline-block',
+            }}
+          >
+            <MetricPill label={caption} accent={colors.white} />
+          </div>
+          <div
+            style={{
+              marginTop: 18,
+              color: colors.muted,
+              fontSize: 24,
+              lineHeight: 1.5,
+              maxWidth: 420,
+            }}
+          >
+            {subtitle}
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {visual}
+        </div>
+      </div>
+    </AbsoluteFill>
+  )
+}
+
+const TransitionPunch: React.FC<{
+  accent: string
+  lead: string
+  support: string
+  startFrame: number
+}> = ({ accent, lead, support, startFrame }) => {
+  const frame = useCurrentFrame() - startFrame
+  const enter = spring({
+    frame,
+    fps: 30,
+    config: {
+      damping: 15,
+      stiffness: 210,
+      mass: 0.78,
+    },
+  })
+  const glowX = interpolate(frame, [0, 60], [220, 1040], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
@@ -154,340 +173,158 @@ const OverviewScene: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        padding: '54px 68px',
-        opacity,
-        transform: `scale(${scale})`,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '0 120px',
       }}
     >
-      <DashboardOverviewScreen frame={localFrame} />
-    </AbsoluteFill>
-  )
-}
-
-const MovementScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - movementStartFrame
-  const opacity = sceneOpacity(frame, movementStartFrame, movementDuration)
-
-  return (
-    <AbsoluteFill style={{ padding: '72px 72px', opacity }}>
-      <div style={{ marginBottom: 26 }}>
-        <SectionEyebrow label="Money movement" />
-      </div>
       <div
         style={{
-          color: colors.white,
-          fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-          fontSize: 68,
-          fontWeight: 700,
-          lineHeight: 0.98,
-          letterSpacing: '-0.05em',
-          maxWidth: 860,
+          position: 'absolute',
+          inset: '18% 10% 18% 10%',
+          borderRadius: 52,
+          background: `radial-gradient(circle at ${glowX}px 50%, ${accent}26, transparent 28%), linear-gradient(135deg, rgba(8, 18, 37, 0.92), rgba(5, 11, 23, 0.84))`,
+          border: `1px solid ${colors.border}`,
+          boxShadow: '0 30px 80px rgba(0,0,0,0.34)',
         }}
-      >
-        Accounts stay synced.
-        <br />
-        Transactions stay readable.
-      </div>
+      />
       <div
         style={{
-          marginTop: 16,
-          color: colors.muted,
-          fontSize: 26,
-          lineHeight: 1.45,
-          maxWidth: 760,
+          position: 'relative',
+          textAlign: 'center',
+          transform: `scale(${interpolate(enter, [0, 1], [0.92, 1])}) translateY(${interpolate(enter, [0, 1], [24, 0])}px)`,
+          opacity: enter,
         }}
       >
-        No spreadsheet juggling. No mystery charges without context. Just one
-        clean workflow from balance to category.
-      </div>
-      <div
-        style={{
-          marginTop: 34,
-          transform: `translateY(${interpolate(localFrame, [0, 30], [28, 0], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          })}px)`,
-        }}
-      >
-        <AccountsTransactionsScreen frame={localFrame} />
-      </div>
-    </AbsoluteFill>
-  )
-}
-
-const PlanningScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - planningStartFrame
-  const opacity = sceneOpacity(frame, planningStartFrame, planningDuration)
-
-  return (
-    <AbsoluteFill style={{ padding: '70px 72px', opacity }}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '0.58fr 1.42fr',
-          gap: 28,
-          alignItems: 'start',
-        }}
-      >
-        <div style={{ paddingTop: 20 }}>
-          <SectionEyebrow label="Planning" />
-          <div
-            style={{
-              marginTop: 22,
-              color: colors.white,
-              fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-              fontSize: 64,
-              lineHeight: 0.98,
-              fontWeight: 700,
-              letterSpacing: '-0.05em',
-            }}
-          >
-            Renewals,
-            <br />
-            budgets, and
-            <br />
-            gentle warnings.
-          </div>
-          <div
-            style={{
-              marginTop: 18,
-              color: colors.muted,
-              fontSize: 24,
-              lineHeight: 1.48,
-            }}
-          >
-            FinanceFlow nudges you before money gets messy.
-          </div>
+        <div
+          style={{
+            color: accent,
+            fontSize: 18,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.22em',
+          }}
+        >
+          FinanceFlow
         </div>
-        <div>
-          <SubscriptionBudgetScreen frame={localFrame} />
+        <div
+          style={{
+            marginTop: 18,
+            color: colors.white,
+            fontFamily: 'Sora, Manrope, system-ui, sans-serif',
+            fontSize: 86,
+            lineHeight: 0.94,
+            fontWeight: 700,
+            letterSpacing: '-0.065em',
+          }}
+        >
+          {lead}
         </div>
-      </div>
-    </AbsoluteFill>
-  )
-}
-
-const AssistantScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - assistantStartFrame
-  const opacity = sceneOpacity(frame, assistantStartFrame, assistantDuration)
-
-  return (
-    <AbsoluteFill style={{ padding: '72px 72px', opacity }}>
-      <div style={{ marginBottom: 24 }}>
-        <SectionEyebrow label="Assistant" />
-      </div>
-      <div
-        style={{
-          color: colors.white,
-          fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-          fontSize: 70,
-          lineHeight: 0.98,
-          fontWeight: 700,
-          letterSpacing: '-0.05em',
-          maxWidth: 920,
-        }}
-      >
-        Ask a better money question.
-        <br />
-        Get a calmer answer.
-      </div>
-      <div
-        style={{
-          marginTop: 18,
-          color: colors.muted,
-          fontSize: 26,
-          lineHeight: 1.45,
-          maxWidth: 760,
-        }}
-      >
-        It feels like chatting, but the guidance stays grounded in your budgets,
-        cash flow, and actual behavior.
-      </div>
-      <div style={{ marginTop: 28 }}>
-        <AssistantScreen frame={localFrame} />
-      </div>
-    </AbsoluteFill>
-  )
-}
-
-const ToolsScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - toolsStartFrame
-  const opacity = sceneOpacity(frame, toolsStartFrame, toolsDuration)
-
-  return (
-    <AbsoluteFill style={{ padding: '72px 72px', opacity }}>
-      <div style={{ marginBottom: 24 }}>
-        <SectionEyebrow label="Power tools" />
-      </div>
-      <div
-        style={{
-          color: colors.white,
-          fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-          fontSize: 66,
-          lineHeight: 0.98,
-          fontWeight: 700,
-          letterSpacing: '-0.05em',
-          maxWidth: 900,
-        }}
-      >
-        When life gets bigger,
-        <br />
-        the product grows with it.
-      </div>
-      <div
-        style={{
-          marginTop: 18,
-          color: colors.muted,
-          fontSize: 24,
-          lineHeight: 1.46,
-          maxWidth: 760,
-        }}
-      >
-        Investments, invoices, and richer reporting live inside the same
-        experience instead of splintering into ten other tools.
-      </div>
-      <div style={{ marginTop: 30 }}>
-        <PowerToolsScreen frame={localFrame} />
+        <div
+          style={{
+            marginTop: 16,
+            color: colors.muted,
+            fontSize: 28,
+            lineHeight: 1.44,
+            maxWidth: 760,
+          }}
+        >
+          {support}
+        </div>
       </div>
     </AbsoluteFill>
   )
 }
 
 const FinaleScene: React.FC = () => {
-  const frame = useCurrentFrame()
-  const localFrame = frame - finaleStartFrame
-  const opacity = sceneOpacity(frame, finaleStartFrame, finaleDuration)
+  const frame = useCurrentFrame() - finaleStartFrame
+  const inSpring = spring({
+    frame,
+    fps: 30,
+    config: {
+      damping: 16,
+      stiffness: 190,
+      mass: 0.82,
+    },
+  })
 
   return (
     <AbsoluteFill
       style={{
-        padding: '82px 90px',
-        alignItems: 'center',
+        padding: '88px 84px',
         justifyContent: 'center',
-        opacity,
+        alignItems: 'center',
       }}
     >
       <div
         style={{
-          width: 1180,
-          borderRadius: 42,
+          width: 1140,
+          borderRadius: 44,
           border: `1px solid ${colors.border}`,
           background:
-            'linear-gradient(180deg, rgba(7,17,31,0.95), rgba(4,12,24,0.97))',
-          boxShadow: '0 34px 96px rgba(0,0,0,0.48)',
-          padding: '46px 54px 54px',
+            'linear-gradient(180deg, rgba(8, 20, 38, 0.95), rgba(5, 12, 24, 0.95))',
+          boxShadow: '0 30px 90px rgba(0,0,0,0.36)',
+          padding: '46px 52px 54px',
+          transform: `translateY(${interpolate(inSpring, [0, 1], [36, 0])}px) scale(${interpolate(
+            inSpring,
+            [0, 1],
+            [0.94, 1]
+          )})`,
+          opacity: inSpring,
           textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-          transform: `scale(${interpolate(localFrame, [0, 30], [0.94, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          })})`,
         }}
       >
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            background:
-              'radial-gradient(circle at 20% 20%, rgba(53,223,202,0.12), transparent 28%), radial-gradient(circle at 80% 30%, rgba(98,212,255,0.1), transparent 26%), radial-gradient(circle at 50% 88%, rgba(248,189,83,0.08), transparent 22%)',
+            color: colors.teal,
+            fontSize: 18,
+            fontWeight: 800,
+            textTransform: 'uppercase',
+            letterSpacing: '0.24em',
           }}
-        />
-        <div style={{ position: 'relative' }}>
-          <SectionEyebrow label="FinanceFlow" />
-          <div
-            style={{
-              marginTop: 26,
-              color: colors.white,
-              fontFamily: 'Sora, Manrope, system-ui, sans-serif',
-              fontSize: 74,
-              lineHeight: 0.98,
-              fontWeight: 700,
-              letterSpacing: '-0.05em',
-            }}
-          >
-            Finance that feels
-            <br />
-            playful, clear, and finally connected.
-          </div>
-          <div
-            style={{
-              marginTop: 20,
-              color: colors.muted,
-              fontSize: 28,
-              lineHeight: 1.48,
-              maxWidth: 840,
-              marginInline: 'auto',
-            }}
-          >
-            Budgets, subscriptions, AI guidance, investments, invoices, and
-            exports. One product, one flow, and far less chaos.
-          </div>
-          <div
-            style={{
-              marginTop: 34,
-              display: 'flex',
-              gap: 16,
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            {[
-              ['Start free', colors.white],
-              ['Try demo', colors.gold],
-              ['Go Pro', colors.teal],
-            ].map(([label, color], index) => (
-              <div
-                key={label}
-                style={{
-                  borderRadius: 999,
-                  padding: '16px 24px',
-                  border: `1px solid ${color}44`,
-                  background:
-                    index === 2
-                      ? 'rgba(53,223,202,0.14)'
-                      : 'rgba(255,255,255,0.04)',
-                  color,
-                  fontSize: 22,
-                  fontWeight: 700,
-                  transform: `translateY(${interpolate(
-                    localFrame,
-                    [26 + index * 4, 52 + index * 4],
-                    [20, 0],
-                    {
-                      extrapolateLeft: 'clamp',
-                      extrapolateRight: 'clamp',
-                    }
-                  )}px)`,
-                  opacity: interpolate(
-                    localFrame,
-                    [22 + index * 4, 48 + index * 4],
-                    [0, 1],
-                    {
-                      extrapolateLeft: 'clamp',
-                      extrapolateRight: 'clamp',
-                    }
-                  ),
-                }}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
-          <div
-            style={{
-              marginTop: 34,
-              color: colors.white,
-              fontSize: 28,
-              fontWeight: 700,
-            }}
-          >
-            financeflow.dev
-          </div>
+        >
+          FinanceFlow
+        </div>
+        <div
+          style={{
+            marginTop: 22,
+            color: colors.white,
+            fontFamily: 'Sora, Manrope, system-ui, sans-serif',
+            fontSize: 82,
+            lineHeight: 0.94,
+            fontWeight: 700,
+            letterSpacing: '-0.065em',
+          }}
+        >
+          Track less.
+          <br />
+          Notice more.
+        </div>
+        <div
+          style={{
+            marginTop: 18,
+            color: colors.muted,
+            fontSize: 28,
+            lineHeight: 1.48,
+            maxWidth: 760,
+            marginInline: 'auto',
+          }}
+        >
+          Budgets, subscriptions, AI guidance, investments, invoices, and
+          exports in one cleaner flow.
+        </div>
+        <div
+          style={{
+            marginTop: 28,
+            display: 'flex',
+            gap: 12,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          <MetricPill label="Start free" accent={colors.teal} />
+          <MetricPill label="Try the demo" accent={colors.aqua} />
+          <MetricPill label="financeflow.dev" accent={colors.gold} />
         </div>
       </div>
     </AbsoluteFill>
@@ -496,7 +333,29 @@ const FinaleScene: React.FC = () => {
 
 export const FinanceFlowMarketingVideo: React.FC = () => {
   const frame = useCurrentFrame()
-  const introOpacity = sceneOpacity(frame, 0, introDuration)
+  const introOpacity = sceneOpacity(frame, introStartFrame, introDuration)
+  const overviewOpacity = sceneOpacity(
+    frame,
+    overviewStartFrame,
+    overviewDuration
+  )
+  const movementOpacity = sceneOpacity(
+    frame,
+    movementStartFrame,
+    movementDuration
+  )
+  const planningOpacity = sceneOpacity(
+    frame,
+    planningStartFrame,
+    planningDuration
+  )
+  const assistantOpacity = sceneOpacity(
+    frame,
+    assistantStartFrame,
+    assistantDuration
+  )
+  const powerOpacity = sceneOpacity(frame, powerStartFrame, powerDuration)
+  const finaleOpacity = sceneOpacity(frame, finaleStartFrame, finaleDuration)
 
   return (
     <AbsoluteFill
@@ -506,36 +365,127 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
         background: colors.background,
       }}
     >
-      <GridBackground />
+      <StageBackground />
+      <Audio src={staticFile('financeflow-pulse.wav')} volume={0.56} />
 
-      <Sequence from={0} durationInFrames={introDuration}>
+      <Sequence from={introStartFrame} durationInFrames={introDuration}>
         <AbsoluteFill style={{ opacity: introOpacity }}>
           <IntroScene />
         </AbsoluteFill>
       </Sequence>
 
       <Sequence from={overviewStartFrame} durationInFrames={overviewDuration}>
-        <OverviewScene />
+        <AbsoluteFill style={{ opacity: overviewOpacity }}>
+          <SplitScene
+            caption="At a glance"
+            title={'The signal.\nNot the clutter.'}
+            subtitle="Overview condenses balances, trends, nudges, and next moves into a surface you can actually scan."
+            sceneFrame={frame - overviewStartFrame}
+            visual={<OverviewCluster frame={frame - overviewStartFrame} />}
+          />
+        </AbsoluteFill>
+      </Sequence>
+
+      <Sequence
+        from={transitionOneStartFrame}
+        durationInFrames={transitionDuration}
+      >
+        <TransitionPunch
+          accent={colors.gold}
+          lead="Swipes get stories."
+          support="Every transaction lands with context, not a mystery merchant name and a shrug."
+          startFrame={transitionOneStartFrame}
+        />
       </Sequence>
 
       <Sequence from={movementStartFrame} durationInFrames={movementDuration}>
-        <MovementScene />
+        <AbsoluteFill style={{ opacity: movementOpacity }}>
+          <SplitScene
+            caption="Money movement"
+            title={'Readable in.\nReadable out.'}
+            subtitle="Accounts stay in sync, transaction history stays legible, and categorization stays fast."
+            sceneFrame={frame - movementStartFrame}
+            visual={<MoneyMovementCluster frame={frame - movementStartFrame} />}
+          />
+        </AbsoluteFill>
+      </Sequence>
+
+      <Sequence
+        from={transitionTwoStartFrame}
+        durationInFrames={transitionDuration}
+      >
+        <TransitionPunch
+          accent={colors.teal}
+          lead="Catch it early."
+          support="Budgets, renewals, and soft warnings work better before they become clean-up work."
+          startFrame={transitionTwoStartFrame}
+        />
       </Sequence>
 
       <Sequence from={planningStartFrame} durationInFrames={planningDuration}>
-        <PlanningScene />
+        <AbsoluteFill style={{ opacity: planningOpacity }}>
+          <SplitScene
+            caption="Planning"
+            title={'Renew less.\nReact less.'}
+            subtitle="Subscriptions and category pacing stay in the same loop, so the plan stays honest."
+            sceneFrame={frame - planningStartFrame}
+            visual={<PlanningCluster frame={frame - planningStartFrame} />}
+          />
+        </AbsoluteFill>
+      </Sequence>
+
+      <Sequence
+        from={transitionThreeStartFrame}
+        durationInFrames={transitionDuration}
+      >
+        <TransitionPunch
+          accent={colors.aqua}
+          lead="Ask sharper."
+          support="The assistant turns vague money anxiety into specific next actions grounded in your actual data."
+          startFrame={transitionThreeStartFrame}
+        />
       </Sequence>
 
       <Sequence from={assistantStartFrame} durationInFrames={assistantDuration}>
-        <AssistantScene />
+        <AbsoluteFill style={{ opacity: assistantOpacity }}>
+          <SplitScene
+            caption="Assistant"
+            title={'Less finance\nfog.'}
+            subtitle="Questions sound conversational, but the answers stay precise, calm, and tied to your numbers."
+            sceneFrame={frame - assistantStartFrame}
+            visual={<AssistantCluster frame={frame - assistantStartFrame} />}
+          />
+        </AbsoluteFill>
       </Sequence>
 
-      <Sequence from={toolsStartFrame} durationInFrames={toolsDuration}>
-        <ToolsScene />
+      <Sequence
+        from={transitionFourStartFrame}
+        durationInFrames={transitionDuration}
+      >
+        <TransitionPunch
+          accent={colors.violet}
+          lead="Grow without sprawl."
+          support="Investments, invoices, and exports stay inside the same product instead of splitting into more tools."
+          startFrame={transitionFourStartFrame}
+        />
+      </Sequence>
+
+      <Sequence from={powerStartFrame} durationInFrames={powerDuration}>
+        <AbsoluteFill style={{ opacity: powerOpacity }}>
+          <SplitScene
+            caption="Power tools"
+            title={'More depth.\nSame calm.'}
+            subtitle="When finances get bigger, the product stays coherent instead of sending you somewhere else."
+            sceneFrame={frame - powerStartFrame}
+            visual={<PowerToolsCluster frame={frame - powerStartFrame} />}
+          />
+        </AbsoluteFill>
       </Sequence>
 
       <Sequence from={finaleStartFrame} durationInFrames={finaleDuration}>
-        <FinaleScene />
+        <AbsoluteFill style={{ opacity: finaleOpacity }}>
+          <FinaleScene />
+        </AbsoluteFill>
       </Sequence>
     </AbsoluteFill>
   )

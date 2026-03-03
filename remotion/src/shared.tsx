@@ -3,23 +3,27 @@ import {
   AbsoluteFill,
   Easing,
   interpolate,
+  spring,
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion'
 
 export const colors = {
-  background: '#030712',
-  panel: 'rgba(7, 17, 31, 0.88)',
-  border: 'rgba(112, 146, 198, 0.2)',
-  white: '#f8fafc',
-  muted: '#9fb0c8',
-  teal: '#35dfca',
-  aqua: '#62d4ff',
-  lime: '#9effb7',
-  gold: '#f8bd53',
-  coral: '#ff7d62',
-  violet: '#a98cff',
-  danger: '#ff6b81',
+  background: '#040816',
+  backgroundElevated: '#071225',
+  panel: 'rgba(8, 18, 37, 0.84)',
+  panelStrong: 'rgba(10, 22, 42, 0.94)',
+  border: 'rgba(124, 156, 210, 0.18)',
+  white: '#f8fbff',
+  muted: '#9aa9c4',
+  teal: '#4cf0d7',
+  aqua: '#68c6ff',
+  lime: '#baff74',
+  gold: '#ffc261',
+  coral: '#ff8f73',
+  violet: '#b196ff',
+  danger: '#ff6b86',
+  ink: '#03101d',
 } as const
 
 export const progress = (
@@ -44,13 +48,13 @@ export const sceneOpacity = (
   startFrame: number,
   durationInFrames: number
 ) => {
-  const fadeIn = interpolate(frame, [startFrame, startFrame + 18], [0, 1], {
+  const fadeIn = interpolate(frame, [startFrame, startFrame + 12], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   })
   const fadeOut = interpolate(
     frame,
-    [startFrame + durationInFrames - 24, startFrame + durationInFrames],
+    [startFrame + durationInFrames - 14, startFrame + durationInFrames],
     [1, 0],
     {
       extrapolateLeft: 'clamp',
@@ -69,14 +73,15 @@ export const SectionEyebrow: React.FC<{ label: string }> = ({ label }) => {
         alignItems: 'center',
         gap: 12,
         borderRadius: 999,
+        padding: '11px 18px',
+        color: colors.white,
+        background: 'rgba(255,255,255,0.04)',
         border: `1px solid ${colors.border}`,
-        background: 'rgba(6, 15, 28, 0.7)',
-        padding: '12px 18px',
-        color: colors.teal,
-        fontSize: 18,
-        fontWeight: 700,
+        fontSize: 15,
+        fontWeight: 800,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
+        boxShadow: '0 12px 30px rgba(0,0,0,0.18)',
       }}
     >
       <span
@@ -85,7 +90,7 @@ export const SectionEyebrow: React.FC<{ label: string }> = ({ label }) => {
           height: 10,
           borderRadius: 999,
           background: colors.teal,
-          boxShadow: '0 0 20px rgba(53, 223, 202, 0.7)',
+          boxShadow: '0 0 24px rgba(76, 240, 215, 0.85)',
         }}
       />
       {label}
@@ -93,63 +98,98 @@ export const SectionEyebrow: React.FC<{ label: string }> = ({ label }) => {
   )
 }
 
-export const GridBackground: React.FC = () => {
+export const StageBackground: React.FC = () => {
   const frame = useCurrentFrame()
-  const { width, height } = useVideoConfig()
-
-  const mainGlowX = interpolate(frame, [0, 1800], [width * 0.18, width * 0.82])
-  const mainGlowY = interpolate(frame, [0, 1800], [height * 0.2, height * 0.72])
-  const secondaryGlowX = interpolate(
-    frame,
-    [0, 1800],
-    [width * 0.78, width * 0.28]
-  )
-  const secondaryGlowY = interpolate(
-    frame,
-    [0, 1800],
-    [height * 0.18, height * 0.74]
-  )
+  const { height } = useVideoConfig()
+  const horizonShift = interpolate(frame, [0, 1410], [-60, 60])
+  const ribbonOne = interpolate(frame, [0, 1410], [-220, 160])
+  const ribbonTwo = interpolate(frame, [0, 1410], [160, -200])
+  const ribbonThree = interpolate(frame, [0, 1410], [40, -120])
 
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(circle at ${mainGlowX}px ${mainGlowY}px, rgba(53, 223, 202, 0.14), transparent 24%),
-          radial-gradient(circle at ${secondaryGlowX}px ${secondaryGlowY}px, rgba(98, 212, 255, 0.11), transparent 22%),
-          radial-gradient(circle at 18% 82%, rgba(248, 189, 83, 0.09), transparent 18%),
-          linear-gradient(135deg, #01040b 0%, #06101c 48%, #020711 100%)`,
         overflow: 'hidden',
+        background:
+          'linear-gradient(180deg, #040714 0%, #071224 48%, #030712 100%)',
       }}
     >
       <AbsoluteFill
         style={{
-          backgroundImage:
-            'linear-gradient(rgba(88, 118, 167, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(88, 118, 167, 0.12) 1px, transparent 1px)',
-          backgroundSize: '68px 68px',
-          opacity: 0.42,
+          background: `radial-gradient(circle at 16% 16%, rgba(104, 198, 255, 0.22), transparent 24%),
+            radial-gradient(circle at 78% 18%, rgba(177, 150, 255, 0.18), transparent 22%),
+            radial-gradient(circle at 52% 72%, rgba(255, 194, 97, 0.11), transparent 24%),
+            radial-gradient(circle at 26% 84%, rgba(76, 240, 215, 0.12), transparent 24%)`,
         }}
       />
-      {Array.from({ length: 28 }).map((_, index) => {
-        const left = 4 + ((index * 13) % 90)
-        const top = 6 + ((index * 17) % 86)
-        const drift = interpolate(
-          (frame + index * 9) % 240,
-          [0, 239],
-          [-18, 18]
-        )
-        const scale = interpolate(
-          (frame + index * 11) % 180,
-          [0, 90, 179],
-          [0.8, 1.2, 0.8]
-        )
-        const color =
-          index % 4 === 0
-            ? colors.teal
-            : index % 4 === 1
-              ? colors.aqua
-              : index % 4 === 2
-                ? colors.gold
-                : colors.violet
-
+      <div
+        style={{
+          position: 'absolute',
+          inset: '-12% -6% auto -12%',
+          height: height * 0.68,
+          transform: `translateY(${ribbonOne}px) rotate(-10deg)`,
+          background:
+            'linear-gradient(90deg, rgba(76, 240, 215, 0), rgba(76, 240, 215, 0.17), rgba(104, 198, 255, 0))',
+          filter: 'blur(32px)',
+          opacity: 0.85,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: '22% -18% auto 22%',
+          height: height * 0.5,
+          transform: `translateY(${ribbonTwo}px) rotate(18deg)`,
+          background:
+            'linear-gradient(90deg, rgba(177, 150, 255, 0), rgba(177, 150, 255, 0.18), rgba(255, 194, 97, 0))',
+          filter: 'blur(36px)',
+          opacity: 0.7,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: -140,
+          right: -140,
+          top: height * 0.54,
+          height: height * 0.26,
+          transform: `translateY(${ribbonThree}px) rotate(-6deg)`,
+          background:
+            'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.08), rgba(255,255,255,0))',
+          filter: 'blur(28px)',
+          opacity: 0.52,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          left: -140,
+          right: -140,
+          bottom: -220,
+          height: 420,
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle at 50% 0%, rgba(104, 198, 255, 0.16), rgba(5, 12, 24, 0.02) 60%, transparent 75%)',
+          transform: `translateY(${horizonShift}px)`,
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)',
+          backgroundSize: '120px 120px',
+          maskImage:
+            'linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.24) 60%, transparent 100%)',
+          opacity: 0.32,
+        }}
+      />
+      {Array.from({ length: 26 }).map((_, index) => {
+        const size = index % 3 === 0 ? 3 : 2
+        const left = ((index * 37) % 96) + 1
+        const top = ((index * 23) % 88) + 2
+        const opacity = 0.12 + ((index * 7) % 11) * 0.018
         return (
           <div
             key={index}
@@ -157,13 +197,11 @@ export const GridBackground: React.FC = () => {
               position: 'absolute',
               left: `${left}%`,
               top: `${top}%`,
-              width: index % 5 === 0 ? 12 : 8,
-              height: index % 5 === 0 ? 12 : 8,
+              width: size,
+              height: size,
               borderRadius: 999,
-              background: color,
-              boxShadow: `0 0 28px ${color}40`,
-              opacity: 0.38,
-              transform: `translateY(${drift}px) scale(${scale})`,
+              background: colors.white,
+              opacity,
             }}
           />
         )
@@ -172,189 +210,62 @@ export const GridBackground: React.FC = () => {
   )
 }
 
-export const BrowserFrame: React.FC<{
+export const FloatingPanel: React.FC<{
   children: React.ReactNode
-  height?: number
-  title?: string
-  width?: number
-}> = ({ children, height = 580, title = 'FinanceFlow', width = 1040 }) => {
+  className?: string
+  padding?: number
+  rotate?: number
+  style?: React.CSSProperties
+}> = ({ children, padding = 20, rotate = 0, style }) => {
   return (
     <div
       style={{
-        width,
-        height,
-        borderRadius: 34,
+        borderRadius: 30,
         border: `1px solid ${colors.border}`,
         background:
-          'linear-gradient(180deg, rgba(9, 20, 37, 0.98), rgba(4, 12, 24, 0.98))',
-        boxShadow: '0 30px 90px rgba(0, 0, 0, 0.42)',
-        overflow: 'hidden',
+          'linear-gradient(180deg, rgba(10, 22, 42, 0.94), rgba(7, 17, 34, 0.88))',
+        boxShadow:
+          '0 28px 70px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.05)',
+        padding,
+        transform: `rotate(${rotate}deg)`,
+        backdropFilter: 'blur(18px)',
+        ...style,
       }}
     >
-      <div
-        style={{
-          height: 72,
-          borderBottom: `1px solid ${colors.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 24px',
-          background: 'rgba(255,255,255,0.02)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {['#ff6b81', '#f8bd53', '#35dfca'].map((color) => (
-            <span
-              key={color}
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 999,
-                background: color,
-              }}
-            />
-          ))}
-        </div>
-        <div
-          style={{
-            width: 380,
-            height: 40,
-            borderRadius: 999,
-            border: `1px solid ${colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: colors.muted,
-            fontSize: 16,
-            background: 'rgba(255,255,255,0.03)',
-          }}
-        >
-          {title}
-        </div>
-        <div style={{ color: colors.muted, fontSize: 16 }}>
-          Live product preview
-        </div>
-      </div>
       {children}
     </div>
   )
 }
 
-export const Sidebar: React.FC<{ activeLabel: string }> = ({ activeLabel }) => {
-  const items = [
-    'Overview',
-    'Accounts',
-    'Transactions',
-    'Subscriptions',
-    'Budgets',
-    'Financial Assistant',
-    'Investments',
-    'Invoices',
-    'Billing',
-  ]
-
-  return (
-    <div
-      style={{
-        width: 230,
-        borderRight: `1px solid ${colors.border}`,
-        padding: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-        background:
-          'linear-gradient(180deg, rgba(6, 15, 28, 0.9), rgba(4, 11, 22, 0.96))',
-      }}
-    >
-      <div
-        style={{
-          borderRadius: 22,
-          padding: '16px 18px',
-          background: 'rgba(255,255,255,0.03)',
-          border: `1px solid ${colors.border}`,
-        }}
-      >
-        <div style={{ color: colors.white, fontSize: 24, fontWeight: 700 }}>
-          FinanceFlow
-        </div>
-        <div style={{ marginTop: 6, color: colors.muted, fontSize: 15 }}>
-          Smart finance
-        </div>
-      </div>
-      {items.map((item) => {
-        const isActive = item === activeLabel
-        return (
-          <div
-            key={item}
-            style={{
-              borderRadius: 16,
-              padding: '14px 16px',
-              background: isActive ? 'rgba(53, 223, 202, 0.12)' : 'transparent',
-              border: `1px solid ${isActive ? 'rgba(53, 223, 202, 0.32)' : 'transparent'}`,
-              color: isActive ? colors.white : colors.muted,
-              fontSize: 17,
-              fontWeight: 600,
-            }}
-          >
-            {item}
-          </div>
-        )
-      })}
-      <div
-        style={{
-          marginTop: 'auto',
-          borderRadius: 18,
-          padding: '16px 18px',
-          background: 'rgba(255,255,255,0.03)',
-          border: `1px solid ${colors.border}`,
-          color: colors.muted,
-          fontSize: 15,
-          lineHeight: 1.4,
-        }}
-      >
-        Demo mode keeps the tour playful while the product stays readable.
-      </div>
-    </div>
-  )
-}
-
-export const HeaderRow: React.FC<{
+export const HeaderLockup: React.FC<{
   caption: string
   title: string
   subtitle: string
-}> = ({ caption, title, subtitle }) => {
+  maxWidth?: number
+}> = ({ caption, title, subtitle, maxWidth = 520 }) => {
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div style={{ maxWidth }}>
+      <SectionEyebrow label={caption} />
       <div
         style={{
-          color: colors.teal,
-          fontSize: 14,
-          fontWeight: 700,
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {caption}
-      </div>
-      <div
-        style={{
-          marginTop: 10,
+          marginTop: 24,
           color: colors.white,
-          fontSize: 34,
+          fontFamily: 'Sora, Manrope, system-ui, sans-serif',
+          fontSize: 76,
+          lineHeight: 0.94,
           fontWeight: 700,
-          lineHeight: 1.06,
-          letterSpacing: '-0.04em',
+          letterSpacing: '-0.06em',
         }}
       >
         {title}
       </div>
       <div
         style={{
-          marginTop: 8,
+          marginTop: 18,
           color: colors.muted,
-          fontSize: 18,
-          lineHeight: 1.45,
-          maxWidth: 560,
+          fontSize: 24,
+          lineHeight: 1.5,
+          maxWidth,
         }}
       >
         {subtitle}
@@ -367,28 +278,76 @@ export const StatCard: React.FC<{
   accent: string
   label: string
   value: string
-}> = ({ accent, label, value }) => {
+  detail?: string
+}> = ({ accent, label, value, detail }) => {
   return (
-    <div
+    <FloatingPanel
+      padding={18}
       style={{
-        borderRadius: 22,
-        border: `1px solid ${colors.border}`,
-        background: 'rgba(255,255,255,0.03)',
-        padding: '18px 20px',
+        minHeight: 130,
+        background:
+          'linear-gradient(180deg, rgba(10, 22, 42, 0.92), rgba(8, 16, 31, 0.86))',
       }}
     >
-      <div style={{ color: colors.muted, fontSize: 15 }}>{label}</div>
+      <div style={{ color: colors.muted, fontSize: 14, fontWeight: 700 }}>
+        {label}
+      </div>
       <div
         style={{
-          marginTop: 10,
+          marginTop: 12,
           color: accent,
-          fontSize: 34,
-          fontWeight: 700,
-          letterSpacing: '-0.04em',
+          fontSize: 36,
+          fontWeight: 800,
+          letterSpacing: '-0.05em',
         }}
       >
         {value}
       </div>
+      {detail ? (
+        <div
+          style={{
+            marginTop: 10,
+            color: colors.muted,
+            fontSize: 15,
+            lineHeight: 1.4,
+          }}
+        >
+          {detail}
+        </div>
+      ) : null}
+    </FloatingPanel>
+  )
+}
+
+export const MetricPill: React.FC<{
+  label: string
+  accent: string
+}> = ({ label, accent }) => {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '12px 16px',
+        borderRadius: 999,
+        border: `1px solid ${accent}55`,
+        background: `${accent}18`,
+        color: colors.white,
+        fontSize: 17,
+        fontWeight: 700,
+      }}
+    >
+      <span
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: 999,
+          background: accent,
+          boxShadow: `0 0 20px ${accent}`,
+        }}
+      />
+      {label}
     </div>
   )
 }
@@ -396,7 +355,7 @@ export const StatCard: React.FC<{
 export const TrendBars: React.FC<{ progressValue: number }> = ({
   progressValue,
 }) => {
-  const values = [0.32, 0.48, 0.41, 0.68, 0.61, 0.83, 0.72]
+  const values = [0.36, 0.44, 0.4, 0.7, 0.62, 0.85, 0.78]
   return (
     <div
       style={{
@@ -412,11 +371,15 @@ export const TrendBars: React.FC<{ progressValue: number }> = ({
           style={{
             flex: 1,
             borderRadius: 16,
-            height: `${interpolate(progressValue, [0, 1], [16, value * 150])}px`,
+            height: `${interpolate(progressValue, [0, 1], [12, value * 152])}px`,
             background:
               index > 4
-                ? 'linear-gradient(180deg, rgba(53,223,202,0.18), rgba(53,223,202,1))'
-                : 'linear-gradient(180deg, rgba(98,212,255,0.12), rgba(98,212,255,0.82))',
+                ? 'linear-gradient(180deg, rgba(76,240,215,0.14), rgba(76,240,215,1))'
+                : 'linear-gradient(180deg, rgba(104,198,255,0.12), rgba(104,198,255,0.85))',
+            boxShadow:
+              index > 4
+                ? '0 0 22px rgba(76,240,215,0.24)'
+                : '0 0 20px rgba(104,198,255,0.18)',
           }}
         />
       ))}
@@ -424,54 +387,99 @@ export const TrendBars: React.FC<{ progressValue: number }> = ({
   )
 }
 
-export const Donut: React.FC<{ progressValue: number }> = ({
-  progressValue,
-}) => {
-  const strokeOffset = interpolate(progressValue, [0, 1], [196, 52])
+export const Donut: React.FC<{
+  accent: string
+  label: string
+  progressValue: number
+  value: string
+}> = ({ accent, label, progressValue, value }) => {
+  const strokeOffset = interpolate(progressValue, [0, 1], [218, 78])
   return (
-    <svg width="180" height="180" viewBox="0 0 180 180">
+    <svg width="188" height="188" viewBox="0 0 188 188">
       <circle
-        cx="90"
-        cy="90"
-        r="62"
+        cx="94"
+        cy="94"
+        r="70"
         stroke="rgba(255,255,255,0.06)"
         strokeWidth="20"
         fill="none"
       />
       <circle
-        cx="90"
-        cy="90"
-        r="62"
-        stroke={colors.teal}
+        cx="94"
+        cy="94"
+        r="70"
+        stroke={accent}
         strokeWidth="20"
         fill="none"
         strokeLinecap="round"
-        strokeDasharray="390"
+        strokeDasharray="440"
         strokeDashoffset={strokeOffset}
-        transform="rotate(-90 90 90)"
+        transform="rotate(-90 94 94)"
       />
       <text
-        x="90"
-        y="82"
+        x="94"
+        y="88"
         textAnchor="middle"
         fill={colors.white}
-        style={{ fontSize: 34, fontWeight: 700 }}
+        style={{ fontSize: 34, fontWeight: 800 }}
       >
-        62%
+        {value}
       </text>
       <text
-        x="90"
-        y="108"
+        x="94"
+        y="116"
         textAnchor="middle"
         fill={colors.muted}
         style={{
           fontSize: 14,
+          fontWeight: 700,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
         }}
       >
-        saved
+        {label}
       </text>
     </svg>
+  )
+}
+
+export const AnimatedHeadline: React.FC<{
+  frame: number
+  lines: string[]
+  accent?: string
+}> = ({ frame, lines, accent = colors.white }) => {
+  const { fps } = useVideoConfig()
+
+  return (
+    <div style={{ display: 'grid', gap: 8 }}>
+      {lines.map((line, index) => {
+        const lineSpring = spring({
+          fps,
+          frame: frame - index * 4,
+          config: {
+            damping: 17,
+            stiffness: 190,
+            mass: 0.8,
+          },
+        })
+        return (
+          <div
+            key={line}
+            style={{
+              color: index === lines.length - 1 ? accent : colors.white,
+              fontFamily: 'Sora, Manrope, system-ui, sans-serif',
+              fontSize: 82,
+              lineHeight: 0.93,
+              fontWeight: 700,
+              letterSpacing: '-0.065em',
+              transform: `translateY(${interpolate(lineSpring, [0, 1], [36, 0])}px)`,
+              opacity: lineSpring,
+            }}
+          >
+            {line}
+          </div>
+        )
+      })}
+    </div>
   )
 }

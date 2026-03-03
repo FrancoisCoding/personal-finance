@@ -22,6 +22,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "video:audio": "node scripts/generate-remotion-audio.cjs",
     "video:preview": "remotion studio remotion/index.js",
     "video:render": "remotion render remotion/index.js FinanceFlowMarketingTeaser remotion/renders/financeflow-marketing-teaser.mp4",
     "prepare": "husky install"

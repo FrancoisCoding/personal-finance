@@ -1,11 +1,9 @@
 import React from 'react'
 import {
   AbsoluteFill,
-  Audio,
   Sequence,
   interpolate,
   spring,
-  staticFile,
   useCurrentFrame,
 } from 'remotion'
 
@@ -436,7 +434,6 @@ export const FinanceFlowMarketingVideo: React.FC = () => {
       }}
     >
       <StageBackground />
-      <Audio src={staticFile('financeflow-pulse.wav')} volume={0.62} />
 
       <Sequence from={introStartFrame} durationInFrames={introDuration}>
         <AbsoluteFill style={{ opacity: introOpacity }}>
